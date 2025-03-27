@@ -7,39 +7,60 @@ describe("User Authentication, Update, and Deletion", () => {
   let authToken: string;
 
   beforeAll(async () => {
-    app = new App();   // Instantiate the App class
-    await app.start(); // Start the app before running tests
+    app = new App();
+    await app.start();
 
     // Register a new user for testing the login, update, and delete functionalities
     const res = await request(app.app).post("/graphql").send({
       query: `
         mutation {
-          register(username: "testuser", email: "test@test.com", password: "123456", phone: "1234567890", allergies: ["peanuts"], emergencyContacts: [{name: "John Doe", phone: "9876543210"}]) {
+          register(
+            userName: "testuser", 
+            email: "test@test.com", 
+            password: "123456", 
+            phone_number: "1234567890", 
+            allergies: ["peanuts"], 
+            emergencyContacts: [{name: "John Doe", phone: "9876543210"}]
+          ) {
             token
-            user { id username email }
+            user { 
+              id 
+              userName 
+              email 
+            }
           }
         }
-      `
+      `,
     });
 
-
-    userId = res.body.data.user.id;
-    authToken = res.body.data.token;
+    userId = res.body.data.register.user.id;
+    authToken = res.body.data.register.token;
   });
 
   it("should register a user", async () => {
     const res = await request(app.app).post("/graphql").send({
       query: `
         mutation {
-          register(username: "newuser", email: "newuser@test.com", password: "123456", phone: "1234567890", allergies: ["milk"], emergencyContacts: [{name: "Jane Doe", phone: "1234567890"}]) {
+          register(
+            userName: "newuser", 
+            email: "newuser@test.com", 
+            password: "123456", 
+            phone_number: "1234567890", 
+            allergies: ["milk"], 
+            emergencyContacts: [{name: "Jane Doe", phone: "1234567890"}]
+          ) {
             token
-            user { id username email }
+            user { 
+              id 
+              userName 
+              email 
+            }
           }
         }
-      `
+      `,
     });
-    expect(res.body.data.user.username).toBe("newuser");
-    expect(res.body.data.user.email).toBe("newuser@test.com");
+    expect(res.body.data.register.user.userName).toBe("newuser");
+    expect(res.body.data.register.user.email).toBe("newuser@test.com");
   });
 
   it("should login the user", async () => {
@@ -48,15 +69,19 @@ describe("User Authentication, Update, and Deletion", () => {
         mutation {
           login(email: "test@test.com", password: "123456") {
             token
-            user { id username email }
+            user { 
+              id 
+              userName 
+              email 
+            }
           }
         }
-      `
+      `,
     });
 
-    expect(res.body.data.login.user.username).toBe("testuser");
+    expect(res.body.data.login.user.userName).toBe("testuser");
     expect(res.body.data.login.user.email).toBe("test@test.com");
-    expect(res.body.data.login.token).toBeDefined();  // Ensure the token is returned
+    expect(res.body.data.login.token).toBeDefined();
   });
 
   it("should update a user's profile", async () => {
@@ -66,11 +91,17 @@ describe("User Authentication, Update, and Deletion", () => {
       .send({
         query: `
           mutation {
-            updateUser(username: "updateduser", email: "updateduser@test.com", phone: "1112223333", allergies: ["gluten"], emergencyContacts: [{name: "Updated Contact", phone: "5555555555"}]) {
+            updateUser(
+              userName: "updateduser", 
+              email: "updateduser@test.com", 
+              phone_number: "1112223333", 
+              allergies: ["gluten"], 
+              emergencyContacts: [{name: "Updated Contact", phone: "5555555555"}]
+            ) {
               id
-              username
+              userName
               email
-              phone
+              phone_number
               allergies
               emergencyContacts {
                 name
@@ -78,12 +109,12 @@ describe("User Authentication, Update, and Deletion", () => {
               }
             }
           }
-        `
+        `,
       });
 
-    expect(res.body.data.updateUser.username).toBe("updateduser");
+    expect(res.body.data.updateUser.userName).toBe("updateduser");
     expect(res.body.data.updateUser.email).toBe("updateduser@test.com");
-    expect(res.body.data.updateUser.phone).toBe("1112223333");
+    expect(res.body.data.updateUser.phone_number).toBe("1112223333");
     expect(res.body.data.updateUser.allergies).toContain("gluten");
     expect(res.body.data.updateUser.emergencyContacts[0].name).toBe("Updated Contact");
   });
@@ -97,10 +128,10 @@ describe("User Authentication, Update, and Deletion", () => {
           mutation {
             deleteUser(id: "${userId}") 
           }
-        `
+        `,
       });
 
-    expect(res.body.data.deleteUser).toBe(true);  // Ensure the user is deleted
+    expect(res.body.data.deleteUser).toBe(true);
   });
 
   afterAll(async () => {
