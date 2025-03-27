@@ -1,19 +1,16 @@
-import { App } from "./app";
-import dotenv from "dotenv";
+// index.ts
+import { App } from './app'; // Import your App class
+import dotenv from 'dotenv';
 
-describe("App Server", () => {
-  let app: App;
+// Load environment variables from .env file
+dotenv.config();
 
-  beforeAll(() => {
-    dotenv.config();  // Load the .env file
-    app = new App();  // Create the App instance
-  });
+async function main() {
+  const app = new App();
+  await app.start();
+}
 
-  it("should start the server in the correct environment", () => {
-    if (process.env.NODE_ENV === "production") {
-      expect(app.app).toHaveProperty("listen");
-    } else {
-      expect(app.app).toHaveProperty("listen");
-    }
-  });
+main().catch((error) => {
+  console.error('Failed to start the application:', error);
+  process.exit(1); // Exit with an error code
 });
