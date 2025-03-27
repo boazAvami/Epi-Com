@@ -15,15 +15,20 @@ export const hashPassword = async (password: string) => {
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { password, username, email, phone, allergies, emergencyContacts } = req.body;
+        const { password, userName, email, phone_number, allergies, emergencyContacts, firstName, lastName, date_of_birth, profile_picture_uri, gender } = req.body;
         const hashedPassword = await hashPassword(password);
-        const user = await userModel.create({
+        const user: IUser = await userModel.create({
             email,
             password: hashedPassword,
-            username,
-            phone,
-            allergies: allergies ? allergies : [],
-            emergencyContacts: emergencyContacts ? emergencyContacts : [],
+            userName,
+            phone_number,
+            allergies: allergies || [],
+            emergencyContacts: emergencyContacts || [],
+            firstName: firstName || null,
+            lastName: lastName || null,
+            date_of_birth: date_of_birth || null,
+            profile_picture_uri: profile_picture_uri || null,
+            gender: gender || '',
         });
         res.status(201).send(user);
     } catch (err: unknown) {
@@ -35,7 +40,6 @@ export const register = async (req: Request, res: Response) => {
             const fieldLabels: Record<string, string> = {
                 username: "Username",
                 email: "Email",
-                phone: "Phone",
             };
 
             const prettyField = fieldLabels[field] || field; // Default to field name if not mapped
@@ -50,8 +54,6 @@ export const register = async (req: Request, res: Response) => {
             res.status(400).json({ message: errors.join(", ") });
             return;
         }
-
-        // Handle unexpected errors
         res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
 };
@@ -65,32 +67,26 @@ export const generateToken = (userId: string): tTokens | null => {
     if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
         return null;
     }
-
-    // generate token
     const random = Math.random().toString();
     const accessToken = jwt.sign(
-        { _id: userId, random: random },
+        { _id: userId, random },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: process.env.JWT_TOKEN_EXPIRATION as string } // Explicitly cast to string
+        { expiresIn: process.env.JWT_TOKEN_EXPIRATION as string }
     );
 
     const refreshToken = jwt.sign(
-        { _id: userId, random: random },
+        { _id: userId, random },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION as string } // Explicitly cast to string
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION as string }
     );
     return { accessToken, refreshToken };
 };
 
 export const login = async (req: Request, res: Response) => {
     try {
+        console.log(req.body)
         const user = await userModel.findOne({ email: req.body.email });
-        if (!user) {
-            res.status(400).send('wrong email or password');
-            return;
-        }
-        const validPassword = await bcrypt.compare(req.body.password, user.password);
-        if (!validPassword) {
+        if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
             res.status(400).send('wrong email or password');
             return;
         }
@@ -117,7 +113,7 @@ export const login = async (req: Request, res: Response) => {
             _id: user._id,
         });
     } catch (err) {
-        res.status(400).send(err);
+        res.status(400).send(err.message);
     }
 };
 
@@ -182,9 +178,8 @@ export const refreshToken = async (req: Request, res: Response) => {
         if (!user) {
             res.status(400).send('fail');
             return;
-        }
+        }   
         const tokens = generateToken(user._id);
-
         if (!tokens) {
             res.status(500).send('Server Error');
             return;
@@ -194,12 +189,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         }
         user.refreshToken.push(tokens.refreshToken);
         await user.save();
-
-        res.status(200).send({
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            _id: user._id,
-        });
+        res.status(200).send({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, _id: user._id });
     } catch {
         res.status(500).send('fail');
     }

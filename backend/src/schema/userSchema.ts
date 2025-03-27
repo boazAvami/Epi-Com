@@ -1,6 +1,6 @@
 import { gql } from "apollo-server-express";
 
-export const typeDefs = gql`
+export const userTypeDefs = gql`
   type EmergencyContact {
     name: String!
     phone: String!
@@ -8,11 +8,19 @@ export const typeDefs = gql`
 
   type User {
     id: ID!
-    username: String!
+    userName: String!
     email: String!
-    phone: String!
-    allergies: [String]
-    emergencyContacts: [EmergencyContact]
+    firstName: String
+    lastName: String
+    phone_number: String
+    date_of_birth: String
+    date_joined: String
+    profile_picture_uri: String
+    allergies: [String]!
+    is_connected: Boolean
+    gender: String
+    refreshToken: [String]
+    emergencyContacts: [EmergencyContact]!
   }
 
   type AuthPayload {
@@ -26,22 +34,34 @@ export const typeDefs = gql`
 
   type Mutation {
     register(
-      username: String!
+      userName: String!
       email: String!
       password: String!
-      phone: String!
-      allergies: [String]
-      emergencyContacts: [EmergencyContactInput]
+      firstName: String
+      lastName: String
+      phone_number: String
+      date_of_birth: String
+      profile_picture_uri: String
+      allergies: [String]!
+      gender: String
+      emergencyContacts: [EmergencyContactInput]!
     ): AuthPayload
+
     updateUser(
-      username: String
+      userName: String
       email: String
-      phone: String
-      allergies: String
-      emergencyContacts: [String]
+      firstName: String
+      lastName: String
+      phone_number: String
+      date_of_birth: String
+      profile_picture_uri: String
+      allergies: [String]
+      gender: String
+      emergencyContacts: [EmergencyContactInput]
     ): User!
+
     login(email: String!, password: String!): AuthPayload
-    deleteUser(id: ID!): Boolean  # New deleteUser mutation
+    deleteUser(id: ID!): Boolean
   }
 
   input EmergencyContactInput {

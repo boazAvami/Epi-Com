@@ -34,7 +34,6 @@ export const epiPenTypeDefs = gql`
   }
 
   input AddEpiPenInput {
-    userId: ID!
     location: LocationInput!
     description: String
     expiryDate: String!
@@ -65,6 +64,7 @@ export const epiPenTypeDefs = gql`
   type NearbyEpiPen {
     userId: ID!
     location: Location!
+    contact: Contact
     distance: Float!
     description: String
   }

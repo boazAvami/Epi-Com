@@ -12,7 +12,7 @@ export const epiPenResolvers = {
       }
 
       const epiPen = new EpiPenModel({
-        userId: new mongoose.Types.ObjectId(userId),
+        userId: userId,
         location: input.location,
         description: input.description,
         expiryDate: new Date(input.expiryDate),
@@ -104,6 +104,7 @@ export const epiPenResolvers = {
       return nearbyEpiPens.map((epiPen) => ({
         userId: epiPen.userId,
         location: epiPen.location,
+        contact: epiPen.contact,
         distance: calculateDistance(
           input.location.latitude,
           input.location.longitude,

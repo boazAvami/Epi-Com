@@ -1,14 +1,18 @@
-// app.ts
 import { ApolloServer } from "apollo-server-express";
 import { userResolvers } from "./resolvers/userResolvers";
-import { typeDefs } from "./schema/userSchema";
+import { userTypeDefs } from "./schema/userSchema";
 import express, { Application } from 'express';
-import { mergeResolvers } from '@graphql-tools/merge';
+import { mergeResolvers, mergeTypeDefs } from '@graphql-tools/merge';
 import authMiddleware from "./authentication/auth_middleware";
 import bodyParser from 'body-parser';
 import { authRouter } from "./authentication/auth_route";
+import connectDB from "./config/db";
+import { epiPenResolvers } from "./resolvers/epipenResolvers";
+import { epiPenTypeDefs } from "./schema/epipenSchema";
+import { altairExpress } from 'altair-express-middleware';
 
-const resolvers = mergeResolvers([userResolvers]);
+const PORT = process.env.PORT || 4000;
+
 
 export class App {
   public app: Application;
@@ -27,27 +31,41 @@ export class App {
     });
 
     this.app.use('/auth', authRouter);
-    // this.app.use('/graphql', authMiddleware); 
+    this.app.use('/graphql', authMiddleware); 
 
+    const resolvers = mergeResolvers([userResolvers, epiPenResolvers]);
+    const typeDefs = mergeTypeDefs([userTypeDefs, epiPenTypeDefs]); // Merge typeDefs for both schemas
+
+    
     // Set Apollo Server configuration
     this.server = new ApolloServer({
       typeDefs,
       resolvers,
       context: ({ req }) => {
-        return { userId: req.params.userId };
+        return { userId: (req as any).user?._id };
       },
       introspection: true, // Enable introspection 
     });
   }
 
   public async start() {
+    await connectDB();
+    
     await this.server.start();
     this.server.applyMiddleware({ app: this.app as any });
 
+    // Use Altair GraphQL Client at /playground
+    this.app.use('/playground', altairExpress({
+      endpointURL: '/graphql',
+      initialQuery: `{ me { userName } }`,
+    }));
+    console.log(`🎮 Playground available at http://localhost:${PORT}/playground`);
+
+
     if (process.env.NODE_ENV === "production") {
       // Additional production settings
-      this.app.listen(process.env.PORT || 8080, () => {
-        console.log(`🚀 Server running in production at http://localhost:${process.env.PORT || 8080}${this.server.graphqlPath}`);
+      this.app.listen(PORT || 8080, () => {
+        console.log(`🚀 Server running in production at http://localhost:${PORT || 8080}${this.server.graphqlPath}`);
       });
     } else {
       // Development-specific settings

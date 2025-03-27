@@ -6,7 +6,7 @@ type Payload = {
 };
 
 export default (req: Request, res: Response, next: NextFunction) => {
-    const authorization = req.header('authorization');
+    const authorization = req.header('Authorization');
     const token = authorization && authorization.split(' ')[1];
 
     if (!token) {
@@ -23,7 +23,8 @@ export default (req: Request, res: Response, next: NextFunction) => {
             res.status(401).send('Access Denied');
             return;
         }
-        req.params.userId = (payload as Payload)._id;
+        (req as any).user = { _id: (payload as any)._id }; // ✅ Store user in req.user
+        
         next();
     });
 };

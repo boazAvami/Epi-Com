@@ -3,17 +3,12 @@ import { userModel, IUser } from "../models/User";
 export const userResolvers = {
   Query: {
     me: async (_: any, __: any, { userId }: any) => { // Use userId from context
-      if (!userId) {
-        throw new Error("Not authenticated");
-      }
       return await userModel.findById(userId);
     },
   },
   Mutation: {
     deleteUser: async (_: any, __: any, { userId }: any) => { // Use userId from context
-      if (!userId) {
-        throw new Error("Not authenticated");
-      }
+
       await userModel.deleteOne({ _id: userId });
       return true;
     },
@@ -33,9 +28,7 @@ export const userResolvers = {
       }: Partial<IUser>,
       { userId }: any // Use userId from context
     ) => {
-      if (!userId) {
-        throw new Error("Not authenticated");
-      }
+
       const userToUpdate = await userModel.findById(userId);
       if (!userToUpdate) throw new Error("User not found");
 
