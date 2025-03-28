@@ -1,6 +1,6 @@
 import request from "supertest";
 import mongoose from "mongoose";
-import { IUser, userModel } from "../models/User";
+import { IUser, userModel } from "../models/userModel";
 import bcrypt from 'bcrypt';
 import { App } from "../app";
 

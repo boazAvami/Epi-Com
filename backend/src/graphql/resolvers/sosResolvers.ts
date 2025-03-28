@@ -1,4 +1,4 @@
-import { SOSModel, ISOS } from '../models/Sos';
+import { SOSModel, ISOS } from '../../models/sosModel';
 import mongoose from 'mongoose';
 
 export const sosResolvers = {

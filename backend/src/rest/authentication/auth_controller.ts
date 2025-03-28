@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { IUser, userModel } from '../../models/User';
+import { IUser, userModel } from '../../models/userModel';
 import mongoose, { Document } from 'mongoose';
 import { OAuth2Client } from 'google-auth-library';
 

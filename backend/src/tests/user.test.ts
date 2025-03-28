@@ -1,8 +1,8 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import { App } from '../app';
-import { IUser, userModel } from '../models/User';
-import connectDB from '../config/db';
+import { IUser, userModel } from '../models/userModel';
+import connectDB from '../db/db';
 
 let appInstance: App = new App();
 let accessToken: string;
