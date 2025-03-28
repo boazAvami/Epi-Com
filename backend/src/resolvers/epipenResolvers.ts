@@ -10,7 +10,14 @@ export const epiPenResolvers = {
       if (!userId) {
         throw new Error('User ID is required for adding EpiPen.');
       }
-
+    
+      // Check if the serialNumber already exists
+      const existingEpiPen = await EpiPenModel.findOne({ serialNumber: input.serialNumber });
+      if (existingEpiPen) {
+        throw new Error(`EpiPen with serial number ${input.serialNumber} already exists.`);
+      }
+    
+      // Proceed with adding the EpiPen
       const epiPen = new EpiPenModel({
         userId: userId,
         location: input.location,
@@ -20,9 +27,11 @@ export const epiPenResolvers = {
         image: input.image,
         serialNumber: input.serialNumber,
       });
+    
       await epiPen.save();
-      return { message: 'EpiPen location added successfully' };
+      return { message: 'EpiPen location added successfully', _id: epiPen._id };
     },
+    
     updateEpiPen: async (_: any, { input }: { input: UpdateEpiPenInput }, { userId }: { userId?: string }) => {
       if (!userId) {
         throw new Error('User ID is required for updating EpiPen.');
@@ -46,7 +55,7 @@ export const epiPenResolvers = {
         image: input.image,
         serialNumber: input.serialNumber,
       });
-      return { message: 'EpiPen location updated successfully' };
+      return { message: 'EpiPen location updated successfully' , _id : input._id};
     },
     deleteEpiPen: async (_: any, { input }: { input: DeleteEpiPenInput }, { userId }: { userId?: string }) => {
       if (!userId) {
@@ -103,6 +112,7 @@ export const epiPenResolvers = {
 
       return nearbyEpiPens.map((epiPen) => ({
         userId: epiPen.userId,
+        epiPenId: epiPen._id,
         location: epiPen.location,
         contact: epiPen.contact,
         distance: calculateDistance(

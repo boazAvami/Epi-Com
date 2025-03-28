@@ -63,6 +63,7 @@ export const epiPenTypeDefs = gql`
 
   type NearbyEpiPen {
     userId: ID!
+    epiPenId: ID!
     location: Location!
     contact: Contact
     distance: Float!
@@ -71,6 +72,7 @@ export const epiPenTypeDefs = gql`
 
   type MessageResponse {
     message: String!
+    _id: ID
   }
 
   type Query {

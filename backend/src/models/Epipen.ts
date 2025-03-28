@@ -33,6 +33,8 @@ const epiPenSchema: Schema = new Schema({
   serialNumber: { type: String, required: true },
 });
 
+epiPenSchema.index({ location: '2dsphere' });
+
 export const EpiPenModel = mongoose.model<IEpiPen>('EpiPen', epiPenSchema);
 
 
