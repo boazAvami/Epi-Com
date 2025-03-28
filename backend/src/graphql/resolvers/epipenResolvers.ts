@@ -1,7 +1,7 @@
 // epipenResolvers.ts
-import { AddEpiPenInput, DeleteEpiPenInput, EpiPenModel, IEpiPen, NearbyEpiPenInput, UpdateEpiPenInput } from '../models/Epipen';
+import { AddEpiPenInput, DeleteEpiPenInput, EpiPenModel, IEpiPen, NearbyEpiPenInput, UpdateEpiPenInput } from '../../models/epipenModel';
 import mongoose from 'mongoose';
-import { calculateDistance } from '../utils/geoUtils';
+import { calculateDistance } from '../../utils/geoUtils';
 
 
 export const epiPenResolvers = {

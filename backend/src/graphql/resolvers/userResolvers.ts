@@ -1,4 +1,4 @@
-import { userModel, IUser } from "../models/User";
+import { userModel, IUser } from "../../models/userModel";
 
 export const userResolvers = {
   Query: {

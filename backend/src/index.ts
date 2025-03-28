@@ -7,7 +7,6 @@ dotenv.config();
 
 async function main() {
   const app = new App();
-  await app.initApp();
   await app.start();
 }
 

@@ -1,9 +1,8 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import { App } from '../app';
-import { IUser, userModel } from '../models/User';
-import {  EpiPenModel } from '../models/Epipen'; // Assuming you have an epiPen model
-import connectDB from '../config/db';
+import { IUser, userModel } from '../models/userModel';
+import {  EpiPenModel } from '../models/epipenModel'; // Assuming you have an epiPen model
 
 let appInstance: App = new App();
 
@@ -59,7 +58,7 @@ describe('EpiPen GraphQL Tests', () => {
           expiryDate: '2025-12-01',
           contact: { phone: '1234567890', name: 'John Doe' },
           image: 'https://example.com/epipen.jpg',
-          serialNumber: 'ABC123XYZ',
+          serialNumber: 'ABC123XbYZ',
         },
       };
   
@@ -88,7 +87,7 @@ describe('EpiPen GraphQL Tests', () => {
           expiryDate: '2025-12-01',
           contact: { phone: '1234567890', name: 'John Doe' },
           image: 'https://example.com/epipen.jpg',
-          serialNumber: 'ABC123XYZ',
+          serialNumber: 'ABC123XaYZ',
         },
       };
   
@@ -98,7 +97,7 @@ describe('EpiPen GraphQL Tests', () => {
         .send({ query: addEpiPenMutation, variables: epiPenData });
   
       expect(addResponse.statusCode).toBe(200);
-  
+      console.log(addResponse.body.data);
       // Now, get the ID of the newly created EpiPen
       const epiPenId = addResponse.body.data.addEpiPen._id;
   
@@ -118,7 +117,7 @@ describe('EpiPen GraphQL Tests', () => {
         .send({ query: getEpiPenQuery, variables: { id: epiPenId } });
   
       expect(getResponse.statusCode).toBe(200);
-      expect(getResponse.body.data.epiPenById.serialNumber).toBe('ABC123XYZ');
+      expect(getResponse.body.data.epiPenById.serialNumber).toBe('ABC123XaYZ');
       expect(getResponse.body.data.epiPenById.description).toBe('Emergency EpiPen for allergic reactions');
     });
   
@@ -139,7 +138,7 @@ describe('EpiPen GraphQL Tests', () => {
           expiryDate: '2025-12-01',
           contact: { phone: '1234567890', name: 'John Doe' },
           image: 'https://example.com/epipen.jpg',
-          serialNumber: 'ABC123XYZ',
+          serialNumber: 'ABC123XcYZ',
         },
       };
   
@@ -192,7 +191,7 @@ describe('EpiPen GraphQL Tests', () => {
           expiryDate: '2025-12-01',
           contact: { phone: '1234567890', name: 'John Doe' },
           image: 'https://example.com/epipen.jpg',
-          serialNumber: 'DEF456LMN',
+          serialNumber: 'DEF456LMcN',
         },
       };
   

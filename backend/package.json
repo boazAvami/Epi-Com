@@ -4,7 +4,10 @@
   "description": "Backend repository for EPIPENs social project.",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "rm -rf dist && tsc",
+    "serve": "node dist/index.js",
+    "start": "npm run build && npm run serve",
     "test": "jest"
   },
   "keywords": [],
