@@ -126,7 +126,7 @@ const AddEpiPen = () => {
         value={value}
         onChangeText={onChange}
         keyboardType={keyboardType}
-        className={`flex-1 bg-white rounded-lg shadow p-2 ${missingFields.includes(name) ? 'border border-red-500' : ''}`}
+        className={`w-2/3 border-b border-gray-300 pb-1 ${missingFields.includes(name) ? 'border-b border-red-500' : ''}`}
       />
     </View>
   );
@@ -146,7 +146,7 @@ const AddEpiPen = () => {
                 <TextInput
                     value={locationQuery}
                     onChangeText={setLocationQuery}
-                    className={`p-2 w-2/3 bg-white rounded-lg shadow mb-2 ${missingFields.includes('location') ? 'border border-red-500' : ''}`}
+                    className={`w-2/3 border-b border-gray-300 pb-1 ${missingFields.includes('location') ? 'border-b border-red-500' : ''}`}
                 />
             </View>
 
@@ -170,15 +170,13 @@ const AddEpiPen = () => {
                 )}
             />
 
-            {renderField('Description', description, setDescription, 'description', false)}
-
             <View className="mb-4 flex-row items-center w-full justify-between">
                 <Text className="w-1/3 text-base mr-2 text-black">
                  Expiry Date <Text className="text-red-500">*</Text>
                 </Text>
               <Pressable
                 onPress={() => setShowDatePicker(true)}
-                className={`flex-1 p-2 bg-white rounded-lg shadow ${missingFields.includes('expiryDate') ? 'border border-red-500' : ''}`}
+                className={`w-2/3 border-b border-gray-300 pb-1 ${missingFields.includes('expiryDate') ? 'border-b border-red-500' : ''}`}
               >
                 <Text>{expiryDate ? expiryDate.toDateString(): ""}</Text>
               </Pressable>
@@ -224,6 +222,8 @@ const AddEpiPen = () => {
              ))}
             </View>
         </View>
+
+        {renderField('Description', description, setDescription, 'description', false)}
 
         <View className="flex-row items-center mb-4">
         {!image ? (
