@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, ScrollView, Image, StyleSheet, useWindowDimensions, SafeAreaView } from 'react-native';
+import { View, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/authContext';
 import { Settings } from "lucide-react-native";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -90,7 +90,6 @@ export default function ProfileScreen() {
   const { logout } = useAuth();
   const [user] = useState(mockUser);
   const [posts] = useState(mockPosts);
-  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   // Format date for display
@@ -115,90 +114,93 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
         {/* Profile header section */}
         <View style={[styles.header, { paddingTop: Math.max(20, insets.top) }]}>
-          <TouchableOpacity
-            style={[styles.settingsButton, { top: Math.max(20, insets.top) }]}
-            onPress={() => console.log("Settings pressed")}
+          <TouchableOpacity 
+            style={[styles.settingsButton, { top: Math.max(20, insets.top) }]} 
+            onPress={() => {
+              console.log("Settings button pressed");
+              router.push("/(tabs)/profile_settings");
+            }}
           >
             <Icon as={Settings} size="lg" color="#333333" />
           </TouchableOpacity>
-
-        <Center>
-          <View style={styles.profileImageContainer}>
-            {user.profilePicture ? (
-              <Image
-                source={{ uri: user.profilePicture }}
-                style={styles.profileImage}
-              />
-            ) : (
-              <View style={styles.defaultProfileImage}>
-                <Text size="xl" bold>
-                  {user.username.charAt(0)}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <VStack space="xs" className="items-center mt-2">
-            <Heading size="lg">{user.username}</Heading>
-            <Text>{user.email}</Text>
-            <Text>{user.phone}</Text>
-          </VStack>
-        </Center>
-      </View>
-
-      <Divider style={styles.divider} />
-
-      {/* User posts section */}
-      <Box style={styles.postsContainer}>
-        <Heading size="md" style={styles.sectionTitle}>My Posts</Heading>
-
-        {posts.length === 0 ? (
-          <Text style={styles.emptyState}>You haven't created any posts yet.</Text>
-        ) : (
-          <VStack space="md">
-            {posts.map((post, index) => (
-              <TouchableOpacity
-                key={post.serialNumber}
-                style={styles.postCard}
-                onPress={() => console.log(`View post ${post.serialNumber}`)}
-              >
-                <View style={styles.postContent}>
-                  <View style={styles.postImageContainer}>
-                    <Image
-                      source={{ uri: post.image }}
-                      style={styles.postImage}
-                      defaultSource={require('@/assets/images/no_image_icon.png')}
-                    />
-                  </View>
-
-                  <View style={styles.postDetails}>
-                    <Text numberOfLines={2} bold style={styles.postDescription}>
-                      {post.description}
-                    </Text>
-                    <Text size="sm" style={styles.postLocation}>
-                      {post.location.address}
-                    </Text>
-                    <View style={styles.postFooter}>
-                      <Text
-                        size="xs"
-                        style={[
-                          styles.expiryDate,
-                          isExpiringSoon(post.expiryDate) && styles.expiringSoon
-                        ]}
-                      >
-                        Expires: {formatDate(post.expiryDate)}
+          
+          <Center>
+            <View style={styles.profileImageContainer}>
+              {user.profilePicture ? (
+                <Image 
+                  source={{ uri: user.profilePicture }} 
+                  style={styles.profileImage} 
+                />
+              ) : (
+                <View style={styles.defaultProfileImage}>
+                  <Text size="xl" bold>
+                    {user.username.charAt(0)}
+                  </Text>
+                </View>
+              )}
+            </View>
+            
+            <VStack space="xs" className="items-center mt-2">
+              <Heading size="lg">{user.username}</Heading>
+              <Text>{user.email}</Text>
+              <Text>{user.phone}</Text>
+            </VStack>
+          </Center>
+        </View>
+        
+        <Divider style={styles.divider} />
+        
+        {/* User posts section */}
+        <Box style={styles.postsContainer}>
+          <Heading size="md" style={styles.sectionTitle}>My Posts</Heading>
+          
+          {posts.length === 0 ? (
+            <Text style={styles.emptyState}>You haven't created any posts yet.</Text>
+          ) : (
+            <VStack space="md">
+              {posts.map((post, index) => (
+                <TouchableOpacity 
+                  key={post.serialNumber}
+                  style={styles.postCard}
+                  onPress={() => console.log(`View post ${post.serialNumber}`)}
+                >
+                  <View style={styles.postContent}>
+                    <View style={styles.postImageContainer}>
+                      <Image 
+                        source={{ uri: post.image }} 
+                        style={styles.postImage}
+                        defaultSource={require('@/assets/images/no_image_icon.png')}
+                      />
+                    </View>
+                    
+                    <View style={styles.postDetails}>
+                      <Text numberOfLines={2} bold style={styles.postDescription}>
+                        {post.description}
                       </Text>
-                      <Text size="xs" style={styles.serialNumber}>
-                        #{post.serialNumber}
+                      <Text size="sm" style={styles.postLocation}>
+                        {post.location.address}
                       </Text>
+                      <View style={styles.postFooter}>
+                        <Text 
+                          size="xs" 
+                          style={[
+                            styles.expiryDate,
+                            isExpiringSoon(post.expiryDate) && styles.expiringSoon
+                          ]}
+                        >
+                          Expires: {formatDate(post.expiryDate)}
+                        </Text>
+                        <Text size="xs" style={styles.serialNumber}>
+                          #{post.serialNumber}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </VStack>
-        )}
-      </Box>
+                </TouchableOpacity>
+              ))}
+            </VStack>
+          )}
+        </Box>
       </ScrollView>
     </SafeAreaView>
   );

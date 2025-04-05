@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
+import { 
+  View, 
+  ScrollView, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Image, 
   Alert,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  GestureResponderEvent
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -29,8 +30,29 @@ import { Button } from "@/components/ui/button";
 import { ButtonText } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectInput, SelectIcon, SelectPortal, SelectItem, SelectContent } from "@/components/ui/select";
 
-// Mock user data (would come from your backend/context in a real app)
-const mockUser = {
+// Types
+interface EmergencyContact {
+  name: string;
+  phone: string;
+}
+
+interface UserData {
+  userName: string;
+  password: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone_number: string | null;
+  date_of_birth: Date | null;
+  date_joined: Date;
+  profile_picture_uri: string | null;
+  is_connected: boolean;
+  gender: string;
+  email: string;
+  allergies: string[];
+  emergencyContacts: EmergencyContact[];
+}
+
+const mockUser: UserData = {
   userName: "sarahcollins",
   password: "********",
   firstName: "Sarah",
@@ -55,110 +77,111 @@ const mockUser = {
   ]
 };
 
-export default function SettingsScreen() {
+export default function ProfileSettingsScreen() {
   const router = useRouter();
-  const [user, setUser] = useState(mockUser);
-
-  // Form state management
-  const [userName, setUserName] = useState(user.userName);
-  const [firstName, setFirstName] = useState(user.firstName);
-  const [lastName, setLastName] = useState(user.lastName);
-  const [email, setEmail] = useState(user.email);
-  const [phoneNumber, setPhoneNumber] = useState(user.phone_number);
-  const [gender, setGender] = useState(user.gender);
-  const [dateOfBirth, setDateOfBirth] = useState(user.date_of_birth);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [allergies, setAllergies] = useState(user.allergies.join(", "));
-
+  const [user, setUser] = useState<UserData>(mockUser);
+  
+  // Form state management - using non-nullable string states for form inputs (best practice)
+  const [userName, setUserName] = useState<string>(user.userName);
+  const [firstName, setFirstName] = useState<string>(user.firstName || '');
+  const [lastName, setLastName] = useState<string>(user.lastName || '');
+  const [email, setEmail] = useState<string>(user.email);
+  const [phoneNumber, setPhoneNumber] = useState<string>(user.phone_number || '');
+  const [gender, setGender] = useState<string>(user.gender);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(user.date_of_birth);
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [allergies, setAllergies] = useState<string>(user.allergies.join(", "));
+  
   // Emergency contacts state
-  const [emergencyContacts, setEmergencyContacts] = useState(user.emergencyContacts);
-
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>(user.emergencyContacts);
+  
   // Date picker state
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  
   // Handle date changes
-  const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || dateOfBirth;
+  const onDateChange = (event: any, selectedDate?: Date): void => {
+    const currentDate = selectedDate || dateOfBirth || new Date();
     setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
     setDateOfBirth(currentDate);
   };
-
+  
   // Format date for display
-  const formatDate = (date) => {
+  const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
   };
-
+  
   // Add emergency contact
-  const addEmergencyContact = () => {
+  const addEmergencyContact = (): void => {
     setEmergencyContacts([...emergencyContacts, { name: "", phone: "" }]);
   };
-
+  
   // Update emergency contact
-  const updateEmergencyContact = (index, field, value) => {
+  const updateEmergencyContact = (index: number, field: keyof EmergencyContact, value: string): void => {
     const updatedContacts = [...emergencyContacts];
     updatedContacts[index][field] = value;
     setEmergencyContacts(updatedContacts);
   };
-
+  
   // Remove emergency contact
-  const removeEmergencyContact = (index) => {
+  const removeEmergencyContact = (index: number): void => {
     const updatedContacts = [...emergencyContacts];
     updatedContacts.splice(index, 1);
     setEmergencyContacts(updatedContacts);
   };
-
+  
   // Handle form submission
-  const handleSave = () => {
+  const handleSave = (): void => {
     // Validate form
     if (!userName || !email) {
       Alert.alert("Error", "Username and email are required.");
       return;
     }
-
+    
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match.");
       return;
     }
-
+    
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert("Error", "Please enter a valid email address.");
       return;
     }
-
+    
     // In a real app, you would submit this data to your backend
-    const updatedUser = {
+    // Convert empty strings back to null for database storage (best practice)
+    const updatedUser: UserData = {
       ...user,
       userName,
-      firstName,
-      lastName,
+      firstName: firstName.trim() === '' ? null : firstName,
+      lastName: lastName.trim() === '' ? null : lastName,
       email,
-      phone_number: phoneNumber,
+      phone_number: phoneNumber.trim() === '' ? null : phoneNumber,
       gender,
       date_of_birth: dateOfBirth,
       allergies: allergies.split(",").map(item => item.trim()).filter(item => item),
       emergencyContacts
     };
-
+    
     if (password) {
       updatedUser.password = password; // In a real app, you would handle this securely
     }
-
+    
     // Update local state (in a real app, this would be handled by your backend)
     setUser(updatedUser);
-
+    
     // Show success message
     Alert.alert("Success", "Your profile has been updated.", [
-      { text: "OK", onPress: () => router.back() }
+      { text: "OK", onPress: () => router.push("/(tabs)/profile") }
     ]);
   };
-
+  
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
@@ -167,29 +190,29 @@ export default function SettingsScreen() {
       >
         {/* Header with back button */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Icon as={ChevronLeft} size="lg" color="#333333" />
-          </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => router.push("/(tabs)/profile")}
+        >
+          <Icon as={ChevronLeft} size="lg" color="#333333" />
+        </TouchableOpacity>
           <Heading size="lg">Settings</Heading>
           <View style={styles.placeholder} />
         </View>
-
+        
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Profile Picture Section */}
           <Center style={styles.profilePictureSection}>
             <View style={styles.profileImageContainer}>
               {user.profile_picture_uri ? (
-                <Image
-                  source={{ uri: user.profile_picture_uri }}
-                  style={styles.profileImage}
+                <Image 
+                  source={{ uri: user.profile_picture_uri }} 
+                  style={styles.profileImage} 
                 />
               ) : (
                 <View style={styles.defaultProfileImage}>
                   <Text size="xl" bold>
-                    {firstName && lastName
+                    {firstName && lastName 
                       ? firstName.charAt(0) + lastName.charAt(0)
                       : userName.charAt(0)}
                   </Text>
@@ -200,10 +223,10 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             </View>
           </Center>
-
+          
           <Box style={styles.formContainer}>
             <Heading size="md" style={styles.sectionTitle}>Account Information</Heading>
-
+            
             {/* User Info Form */}
             <VStack space="md">
               <Input>
@@ -213,7 +236,7 @@ export default function SettingsScreen() {
                   onChangeText={setUserName}
                 />
               </Input>
-
+              
               <HStack space="sm" style={styles.nameFields}>
                 <Input style={styles.halfInput}>
                   <InputField
@@ -230,7 +253,7 @@ export default function SettingsScreen() {
                   />
                 </Input>
               </HStack>
-
+              
               <Input>
                 <InputField
                   placeholder="Email"
@@ -240,7 +263,7 @@ export default function SettingsScreen() {
                   autoCapitalize="none"
                 />
               </Input>
-
+              
               <Input>
                 <InputField
                   placeholder="Phone Number"
@@ -249,11 +272,11 @@ export default function SettingsScreen() {
                   keyboardType="phone-pad"
                 />
               </Input>
-
+              
               {/* Gender Selection */}
               <Select
                 selectedValue={gender}
-                onValueChange={value => setGender(value)}
+                onValueChange={(value: string) => setGender(value)}
               >
                 <SelectTrigger>
                   <SelectInput placeholder="Select Gender" />
@@ -268,10 +291,10 @@ export default function SettingsScreen() {
                   </SelectContent>
                 </SelectPortal>
               </Select>
-
+              
               {/* Date of Birth */}
-              <TouchableOpacity
-                style={styles.datePickerButton}
+              <TouchableOpacity 
+                style={styles.datePickerButton} 
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={styles.datePickerButtonText}>
@@ -279,7 +302,7 @@ export default function SettingsScreen() {
                 </Text>
                 <Icon as={Edit2} size="xs" color="#666" />
               </TouchableOpacity>
-
+              
               {showDatePicker && (
                 <DateTimePicker
                   value={dateOfBirth || new Date()}
@@ -290,9 +313,9 @@ export default function SettingsScreen() {
                 />
               )}
             </VStack>
-
+            
             <Divider style={styles.divider} />
-
+            
             {/* Password section */}
             <Heading size="md" style={styles.sectionTitle}>Change Password</Heading>
             <VStack space="md">
@@ -313,9 +336,9 @@ export default function SettingsScreen() {
                 />
               </Input>
             </VStack>
-
+            
             <Divider style={styles.divider} />
-
+            
             {/* Allergies section */}
             <Heading size="md" style={styles.sectionTitle}>Medical Information</Heading>
             <Text style={styles.sectionDescription}>List any allergies or medical conditions that emergency responders should know about.</Text>
@@ -327,22 +350,22 @@ export default function SettingsScreen() {
                 multiline
               />
             </Input>
-
+            
             <Divider style={styles.divider} />
-
+            
             {/* Emergency contacts section */}
             <View style={styles.emergencyContactsHeader}>
               <Heading size="md">Emergency Contacts</Heading>
-              <TouchableOpacity
-                style={styles.addButton}
+              <TouchableOpacity 
+                style={styles.addButton} 
                 onPress={addEmergencyContact}
               >
                 <Text style={styles.addButtonText}>+ Add</Text>
               </TouchableOpacity>
             </View>
-
+            
             <Text style={styles.sectionDescription}>People to contact in case of emergency.</Text>
-
+            
             <VStack space="md" style={styles.emergencyContactsList}>
               {emergencyContacts.map((contact, index) => (
                 <View key={index} style={styles.emergencyContactItem}>
@@ -351,20 +374,20 @@ export default function SettingsScreen() {
                       <InputField
                         placeholder="Contact Name"
                         value={contact.name}
-                        onChangeText={(value) => updateEmergencyContact(index, 'name', value)}
+                        onChangeText={(value: string) => updateEmergencyContact(index, 'name', value)}
                       />
                     </Input>
                     <Input style={styles.contactPhoneInput}>
                       <InputField
                         placeholder="Phone Number"
                         value={contact.phone}
-                        onChangeText={(value) => updateEmergencyContact(index, 'phone', value)}
+                        onChangeText={(value: string) => updateEmergencyContact(index, 'phone', value)}
                         keyboardType="phone-pad"
                       />
                     </Input>
                   </HStack>
                   {emergencyContacts.length > 1 && (
-                    <TouchableOpacity
+                    <TouchableOpacity 
                       style={styles.removeButton}
                       onPress={() => removeEmergencyContact(index)}
                     >
@@ -374,7 +397,7 @@ export default function SettingsScreen() {
                 </View>
               ))}
             </VStack>
-
+            
             {/* Save Button */}
             <Button style={styles.saveButton} onPress={handleSave}>
               <ButtonText>Save Changes</ButtonText>
