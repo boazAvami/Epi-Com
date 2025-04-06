@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Pressable, View, Text, ScrollView, TextInput, Image, Alert, FlatList, SafeAreaView} from 'react-native';
+import { Pressable, View, Text, TextInput, Image, Alert, FlatList, SafeAreaView} from 'react-native';
 import { Button, ButtonText } from "@/components/ui/button";
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from 'react-native-modal-datetime-picker';
-import { Camera, Image as ImageIcon, Trash2 } from 'lucide-react-native';
 
 const AddEpiPen = () => {
   const [location, setLocation] = useState(null);
@@ -15,7 +14,7 @@ const AddEpiPen = () => {
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
-  const [kind, setKind] = useState(null); // 'Junior' or 'Adult'
+  const [kind, setKind] = useState(null); // 'JUNOIR' or 'ADULT'
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -59,7 +58,10 @@ const AddEpiPen = () => {
     const response = await fetch('http://localhost:4000/graphql/files', {
       method: 'POST',
       body: formData,
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2YyYTY5ZTQ0MDc5MmEzNDk2NmY1ZWMiLCJyYW5kb20iOiIwLjgyOTYxMjQyNzQ3MDA3NjciLCJpYXQiOjE3NDM5NTU2MTQsImV4cCI6MTc0NDU2MDQxNH0.f6OytPS2gHqSeK4paR77QA-Q4kT1xzenMAJv_Ml_0KI'}`,
+       },
     });
 
     const result = await response.json();
@@ -94,7 +96,7 @@ const AddEpiPen = () => {
     const graphqlQuery = {
       query: `
         mutation AddEpiPen($input: AddEpiPenInput!) {
-          addEpiPen(input: $input) { id }
+          addEpiPen(input: $input) { _id, message }
         }
       `,
       variables: {
@@ -112,7 +114,11 @@ const AddEpiPen = () => {
 
     await fetch('http://localhost:4000/graphql/', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2YyYTY5ZTQ0MDc5MmEzNDk2NmY1ZWMiLCJyYW5kb20iOiIwLjgyOTYxMjQyNzQ3MDA3NjciLCJpYXQiOjE3NDM5NTU2MTQsImV4cCI6MTc0NDU2MDQxNH0.f6OytPS2gHqSeK4paR77QA-Q4kT1xzenMAJv_Ml_0KI'}`,
+       },
+      
       body: JSON.stringify(graphqlQuery),
     });
   };
@@ -205,17 +211,17 @@ const AddEpiPen = () => {
                 {['Junior', 'Adult'].map((option) => (
                 <Pressable
                 key={option}
-                onPress={() => setKind(option)}
+                onPress={() => setKind(option.toUpperCase())}
                 className={`flex-row items-center px-7 py-2 rounded-lg border ${
                     missingFields.includes('kind')
                       ? 'border-red-500'
-                      : kind === option
+                      : kind === option.toUpperCase()
                       ? 'border-black-600'
                       : 'border-gray-400'
                   }`}
             >
                     <View className={`w-4 h-4 rounded-full mr-3SW ${
-                     kind === option ? 'bg-gray-600' : 'border border-gray-400'}`}
+                     kind === option.toUpperCase() ? 'bg-gray-600' : 'border border-gray-400'}`}
                     />
                     <Text className="text-black capitalize">{option}</Text>
                 </Pressable>
