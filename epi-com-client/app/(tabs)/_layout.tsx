@@ -1,7 +1,7 @@
 import {Redirect, Tabs} from 'expo-router';
 import {View, TouchableOpacity, Text, StyleSheet, Pressable} from 'react-native';
 import {Icon} from "@/components/ui/icon";
-import {CirclePlus, CircleUser, Home, MessageCircle, User} from "lucide-react-native";
+import {CirclePlus, CircleUser, Home, MessageCircle} from "lucide-react-native";
 import {useAuth} from "@/context/authContext";
 
 export default function TabLayout() {
