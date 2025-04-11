@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import { Slot } from 'expo-router';
 import { AuthProvider, useAuth } from '@/context/authContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import {I18nManager} from "react-native";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,8 +25,9 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+    I18nManager.allowRTL(true);
 
-  useEffect(() => {
+    useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }

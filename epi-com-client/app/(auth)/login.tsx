@@ -62,7 +62,7 @@ export default function LoginScreen() {
 
     const LoginCard = () => {
         return (
-            <VStack className="max-w-[440px] w-full" space="md">
+            <VStack className="max-w-[440px] w-full" space="3xl">
                 <VStack className="md:items-center" space="md">
                         <Heading className="md:text-center text-right font-semibold text-[#333333]" size="2xl">
                             ברוך הבא 👋
@@ -175,7 +175,7 @@ export default function LoginScreen() {
                         </Button>
                     </VStack>
                     <HStack className="self-center" space="sm">
-                        <Link onPress={() => router.push('/register')}>
+                        <Link onPress={() => router.push('/register-intro')}>
                             <LinkText
                                 className="font-medium text-primary-700 group-hover/link:text-primary-600  group-hover/pressed:text-primary-700"
                                 size="md"
@@ -191,8 +191,11 @@ export default function LoginScreen() {
     };
 
     return (
-        <ScrollView className="p-16 mt-10">
-            <Center>
+        <ScrollView className="p-16" contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+        }}>
+            <Center className="h-full ">
                 <LoginCard/>
             </Center>
         </ScrollView>
