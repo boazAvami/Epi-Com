@@ -9,7 +9,7 @@ import {BackButton} from "@/components/BackButton";
 
 export default function RegisterIntroScreen() {
     const router: Router = useRouter();
-    const proceedToRegister = () => router.push("/register/step-1");
+    const proceedToRegister = () => router.push("/register/register-stepper");
 
     const RegisterIntro = () => {
         return (
