@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IUser } from '@shared/types';
+import {EGender, IUser} from '@shared/types';
 
 const userSchema = new mongoose.Schema<IUser>({
   userName: {
@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   gender: {
     type: String,
-    enum: ['Male', 'Female', 'Other', ''], // Restrict to valid gender values
+    enum: Object.values(EGender), // Restrict to valid gender values
     default: '',
   },
   email: {
