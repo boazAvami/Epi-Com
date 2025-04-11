@@ -19,7 +19,7 @@ export const register = async (req: Request, res: Response) => {
         const { password, userName, email, phone_number, allergies, emergencyContacts, firstName, lastName, date_of_birth, profile_picture_uri, gender } = req.body;
         const hashedPassword = await hashPassword(password);
         const user: IUser = await userModel.create({
-            email,
+            email: email.toLowerCase(),
             password: hashedPassword,
             userName,
             phone_number,
@@ -85,7 +85,7 @@ export const generateToken = (userId: string): tTokens | null => {
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const user = await userModel.findOne({ email: req.body.email });
+        const user = await userModel.findOne({ email: req.body.email.toLowerCase() });
         if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
             res.status(400).send('wrong email or password');
             return;

@@ -6,7 +6,7 @@ import { VStack } from "@/components/ui/vstack";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useState} from "react";
 import {
     FormControl,
     FormControlError,

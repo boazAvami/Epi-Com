@@ -7,16 +7,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { Slot } from 'expo-router';
-import { AuthProvider, useAuth } from '@/context/authContext';
+import {AuthProvider} from '@/context/authContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import {I18nManager} from "react-native";
+import { useAuth as useAuthStore } from '../stores/useAuth';
 
 SplashScreen.preventAutoHideAsync();
 
-
 function RootLayoutInner() {
-    const { isAuthenticated } = useAuth();
-
     return <Slot screenOptions={{ headerShown: false }} />;
 }
 
@@ -25,7 +22,11 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-    I18nManager.allowRTL(true);
+    const loadStoredAuth = useAuthStore((s) => s.loadStoredAuth);
+    useEffect(() => {
+        loadStoredAuth();
+    }, []);
+
 
     useEffect(() => {
     if (loaded) {

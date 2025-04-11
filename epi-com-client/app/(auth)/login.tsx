@@ -24,9 +24,14 @@ import {loginSchema, LoginSchemaType} from "@/schemas/login-schema";
 export default function LoginScreen() {
     const { login } = useAuth();
     const router: Router = useRouter();
-    const handleLogin = () => {
-        login();
-        router.replace('/');
+    const handleLogin = (email: string, password: string) => {
+        login(email, password).then((result) => {
+            router.replace('/');
+        }).catch((err) => {
+            if (err === 'wrong email or password') {
+                setValidated({ ...validated, emailValid: false });
+            }
+        })
     };
 
     const {
@@ -45,7 +50,7 @@ export default function LoginScreen() {
     const onSubmit = (data: LoginSchemaType) => {
         setValidated({ emailValid: true, passwordValid: true });
         reset();
-        handleLogin();
+        handleLogin(data.email, data.password);
     };
     const [showPassword, setShowPassword] = useState(false);
 
@@ -105,7 +110,7 @@ export default function LoginScreen() {
                             <FormControlError className="justify-end">
                                 <FormControlErrorText>
                                     {errors?.email?.message ||
-                                        (!validated.emailValid && "כתובת מייל לא נמצאה")}
+                                        (!validated.emailValid && "כתובת מייל או סיסמה לא נמצאו")}
                                 </FormControlErrorText>
                                 <FormControlErrorIcon as={AlertTriangle} />
                             </FormControlError>
