@@ -1,109 +1,94 @@
-import request from "supertest";
-import { App } from "../app"; // Assuming your app is correctly exported
+import request from 'supertest';
+import mongoose from 'mongoose';
+import { App } from '../app';
+import { IUser, userModel } from '../models/userModel';
+import connectDB from '../db/db';
 
-describe("User Authentication, Update, and Deletion", () => {
-  let app: App;
-  let userId: string;
-  let authToken: string;
+let appInstance: App = new App();
+let accessToken: string;
+let userId: string;
 
-  beforeAll(async () => {
-    app = new App();   // Instantiate the App class
-    await app.start(); // Start the app before running tests
+beforeAll(async () => {
+  await appInstance.initApp();
+  await userModel.deleteMany();
 
-    // Register a new user for testing the login, update, and delete functionalities
-    const res = await request(app.app).post("/graphql").send({
+  // Register a test user
+  const registerRes = await request(appInstance.app)
+    .post('/auth/register')
+    .send(testUser);
+  
+  // Login the test user
+  const loginRes = await request(appInstance.app)
+    .post('/auth/login')
+    .send({ email: testUser.email, password: testUser.password });
+  
+  accessToken = loginRes.body.accessToken;
+  userId = loginRes.body._id;
+});
+
+afterAll(async () => {
+  await mongoose.connection.close();
+  await appInstance.close();
+});
+
+beforeEach(() => {
+  jest.resetAllMocks();
+});
+
+const testUser: IUser & { password: string } = {
+  userName: 'usertestUser',
+  email: 'usertest@user.com',
+  password: 'testUserPassword123',
+  firstName: 'Test',
+  lastName: 'User',
+  phone_number: '1234567890',
+  allergies: ['Nuts'],
+  emergencyContacts: [{ name: 'Jane Doe', phone: '0987654321' }],
+};
+
+describe('User GraphQL API', () => {
+  it('should fetch the authenticated user', async () => {
+    const response = await request(appInstance.app)
+      .post('/graphql')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ query: '{ me { userName email } }' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.me).toHaveProperty('userName', testUser.userName);
+    expect(response.body.data.me).toHaveProperty('email', testUser.email);
+  });
+
+  it('should update the user profile', async () => {
+    const updatedData = {
       query: `
         mutation {
-          register(username: "testuser", email: "test@test.com", password: "123456", phone: "1234567890", allergies: ["peanuts"], emergencyContacts: [{name: "John Doe", phone: "9876543210"}]) {
-            token
-            user { id username email }
+          updateUser(userName: "updatedUser", firstName: "Updated", phone_number: "1112223333") {
+            userName
+            firstName
+            phone_number
           }
         }
-      `
-    });
+      `,
+    };
 
+    const response = await request(appInstance.app)
+      .post('/graphql')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(updatedData);
 
-    userId = res.body.data.user.id;
-    authToken = res.body.data.token;
+    expect(response.status).toBe(200);
+    expect(response.body.data.updateUser).toHaveProperty('userName', 'updatedUser');
+    expect(response.body.data.updateUser).toHaveProperty('firstName', 'Updated');
+    expect(response.body.data.updateUser).toHaveProperty('phone_number', '1112223333');
   });
 
-  it("should register a user", async () => {
-    const res = await request(app.app).post("/graphql").send({
-      query: `
-        mutation {
-          register(username: "newuser", email: "newuser@test.com", password: "123456", phone: "1234567890", allergies: ["milk"], emergencyContacts: [{name: "Jane Doe", phone: "1234567890"}]) {
-            token
-            user { id username email }
-          }
-        }
-      `
-    });
-    expect(res.body.data.user.username).toBe("newuser");
-    expect(res.body.data.user.email).toBe("newuser@test.com");
-  });
+  it('should delete the user', async () => {
+    const response = await request(appInstance.app)
+      .post('/graphql')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ query: 'mutation { deleteUser(id: "' + userId + '") }' });
 
-  it("should login the user", async () => {
-    const res = await request(app.app).post("/graphql").send({
-      query: `
-        mutation {
-          login(email: "test@test.com", password: "123456") {
-            token
-            user { id username email }
-          }
-        }
-      `
-    });
-
-    expect(res.body.data.login.user.username).toBe("testuser");
-    expect(res.body.data.login.user.email).toBe("test@test.com");
-    expect(res.body.data.login.token).toBeDefined();  // Ensure the token is returned
-  });
-
-  it("should update a user's profile", async () => {
-    const res = await request(app.app)
-      .post("/graphql")
-      .set("Authorization", `Bearer ${authToken}`)
-      .send({
-        query: `
-          mutation {
-            updateUser(username: "updateduser", email: "updateduser@test.com", phone: "1112223333", allergies: ["gluten"], emergencyContacts: [{name: "Updated Contact", phone: "5555555555"}]) {
-              id
-              username
-              email
-              phone
-              allergies
-              emergencyContacts {
-                name
-                phone
-              }
-            }
-          }
-        `
-      });
-
-    expect(res.body.data.updateUser.username).toBe("updateduser");
-    expect(res.body.data.updateUser.email).toBe("updateduser@test.com");
-    expect(res.body.data.updateUser.phone).toBe("1112223333");
-    expect(res.body.data.updateUser.allergies).toContain("gluten");
-    expect(res.body.data.updateUser.emergencyContacts[0].name).toBe("Updated Contact");
-  });
-
-  it("should delete a user", async () => {
-    const res = await request(app.app)
-      .post("/graphql")
-      .set("Authorization", `Bearer ${authToken}`)
-      .send({
-        query: `
-          mutation {
-            deleteUser(id: "${userId}") 
-          }
-        `
-      });
-
-    expect(res.body.data.deleteUser).toBe(true);  // Ensure the user is deleted
-  });
-
-  afterAll(async () => {
-    // Optionally, clean up or disconnect after tests
+    expect(response.status).toBe(200);
+    expect(response.body.data.deleteUser).toBe(true);
   });
 });
