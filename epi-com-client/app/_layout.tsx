@@ -9,6 +9,8 @@ import 'react-native-reanimated';
 import { Slot } from 'expo-router';
 import { AuthProvider, useAuth } from '@/context/authContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import '../i18n';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,11 +38,15 @@ export default function RootLayout() {
   }
 
   return (
-    <GluestackUIProvider mode="light"><ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AuthProvider>
-            <RootLayoutInner />
-        </AuthProvider>
-        <StatusBar style="auto" />
-      </ThemeProvider></GluestackUIProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GluestackUIProvider mode="light">
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <AuthProvider>
+              <RootLayoutInner />
+          </AuthProvider>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </GluestackUIProvider>
+    </GestureHandlerRootView>
   );
 }

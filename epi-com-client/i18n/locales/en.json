@@ -1,0 +1,84 @@
+{
+    "app": {
+      "title": "Where Is Epi"
+    },
+    "search": {
+      "placeholder": "Search for a location...",
+      "no_results": "No results found",
+      "error": "Error searching",
+      "selected_location": "Selected location"
+    },
+    "filters": {
+      "all": "All EpiPens",
+      "nearby": "< 1km"
+    },
+    "epipens": {
+      "nearby": "Nearby EpiPens",
+      "none": "No EpiPens found nearby",
+      "distance": "{{distance}} km away"
+    },
+    "epipen": {
+      "types": {
+        "adult": "Adult",
+        "junior": "Junior"
+      }
+    },
+    "details": {
+      "expiration": "Expiration Date:",
+      "contact": "Contact:",
+      "contactName": "Contact Name:",
+      "contactPhone": "Phone Number:",
+      "hours": "Hours:",
+      "notes": "Notes:",
+      "directions": "Get Directions"
+    },
+    "add": {
+      "title": "Add EpiPen Injector",
+      "name": "EpiPen Name",
+      "type": "EpiPen Type",
+      "notes": "Notes",
+      "location_desc": "Location Description",
+      "location": "Location",
+      "phone": "Phone Number",
+      "contact_info": "Contact Information",
+      "contact_name": "Contact Name",
+      "hours": "Operating Hours",
+      "expire_date": "Expiration Date",
+      "select_month_year": "Select month and year",
+      "photo": "Photo",
+      "use_current": "Use Current Location",
+      "select_custom": "Select Custom Location",
+      "tap_select": "Tap on the map to select location",
+      "description": "Description"
+    },
+    "photo": {
+      "take": "Take a Picture",
+      "choose": "Choose from Gallery",
+      "remove": "Remove Photo"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "change_language": "Change to Hebrew"
+    },
+    "actions": {
+      "openWhatsApp": "Open in WhatsApp"
+    },
+    "validation": {
+      "error_title": "Missing Required Fields",
+      "error_message": "Please fill in all required fields:",
+      "contact_name_required": "Contact name is required",
+      "contact_phone_required": "Phone number is required",
+      "photo_required": "A photo is optional",
+      "location_required": "Please select a location",
+      "expiration_required": "Expiration date is required (MM/YYYY)",
+      "required": "Required",
+      "required_fields": "Fields marked with asterisk (*) are required",
+      "optional": "Optional",
+      "ok": "OK"
+    },
+    "errors": {
+      "location_denied": "Permission to access location was denied",
+      "location_error": "Could not get your location"
+    }
+  }
