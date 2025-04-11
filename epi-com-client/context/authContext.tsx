@@ -5,13 +5,14 @@ type AuthContextType = {
     isAuthenticated: boolean;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    getUserInfo: () => Promise<void>;
     loading: boolean;
 };
 
 const AuthContext: Context<AuthContextType | undefined> = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const { userId, login: storeLogin, logout: storeLogout, loadStoredAuth } = useAuthStore();
+    const { userId, login: storeLogin, logout: storeLogout, loadStoredAuth, getUserInfo } = useAuthStore();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isAuthenticated = !!userId;
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, loading }}>
+        <AuthContext.Provider value={{ isAuthenticated, login, logout, loading, getUserInfo }}>
             {children}
         </AuthContext.Provider>
     );

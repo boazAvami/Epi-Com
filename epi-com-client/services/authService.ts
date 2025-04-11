@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {API_URL} from "@/constants/Env";
+import {getToken} from "@/utils/tokenStorage";
 
 export const login = async (email: string, password: string) => {
     return axios.post(`${API_URL}/auth/login`, { email, password }).then(res => {
@@ -10,7 +11,9 @@ export const login = async (email: string, password: string) => {
 };
 
 export const logout = async (token: string) => {
-    await axios.post(`${API_URL}/auth/logout`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
+    const accessToken: string | null = await getToken();
+
+    await axios.post(`${API_URL}/auth/logout`, {refreshToken: token}, {
+        headers: { Authorization: `Bearer ${accessToken}` },
     });
 };

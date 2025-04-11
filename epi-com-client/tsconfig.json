@@ -4,12 +4,14 @@
     "strict": true,
     "paths": {
       "@/*": [
-        "./*"
+        "./*",
       ],
+      "@shared/types": ["../packages/types/src"],
       "tailwind.config": [
         "./tailwind.config.js"
       ]
-    }
+    },
+    "baseUrl": "."
   },
   "include": [
     "**/*.ts",

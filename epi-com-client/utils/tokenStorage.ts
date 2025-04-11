@@ -28,15 +28,15 @@ export const deleteRefreshToken = async () => {
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
 };
 
-export const saveUser = async (user: any) => {
+export const saveUserId = async (user: any) => {
     await SecureStore.setItemAsync(USER_ID_KEY, JSON.stringify(user));
 };
 
-export const getUser = async () => {
+export const getUserId = async () => {
     const json = await SecureStore.getItemAsync(USER_ID_KEY);
     return json ? JSON.parse(json) : null;
 };
 
-export const deleteUser = async () => {
+export const deleteUserId = async () => {
     await SecureStore.deleteItemAsync(USER_ID_KEY);
 };

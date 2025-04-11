@@ -1,5 +1,5 @@
 import { z } from "zod";
-import {EGender} from "@/shared/enums/gender.enum";
+import {EGender} from "@/utils/gender-utils";
 import {EPhonePrefix} from "@/shared/enums/phone-prefix.enum";
 
 export const registerStep2Schema = z.object({

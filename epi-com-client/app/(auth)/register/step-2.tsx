@@ -14,9 +14,10 @@ import { Text } from "@/components/ui/text";
 import { useRegister } from '@/context/RegisterContext';
 import { registerStep2Schema, registerStep2Type } from '@/schemas/register/step-2-schema';
 import DropdownComponent from "@/components/Dropdown";
-import {genderOptions} from "@/shared/enums/gender.enum";
+import {genderOptions} from "@/utils/gender-utils";
 import DateInput from "@/components/DatePicker";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
+import {RegisterData} from "@/shared/types/register-data.type";
 
 export default function RegisterStep2Screen() {
     const router: Router = useRouter();
@@ -38,7 +39,7 @@ export default function RegisterStep2Screen() {
     });
 
     const onSubmit = (data: registerStep2Type) => {
-        setFormData({ ...formData, ...data });
+        setFormData({ ...formData, ...(data as Partial<RegisterData>) });
         router.push('/register/step-3');
     };
 

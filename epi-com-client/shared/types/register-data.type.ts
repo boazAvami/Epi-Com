@@ -1,4 +1,4 @@
-import { EGender } from '@/shared/enums/gender.enum';
+import {EGender} from "@shared/types";
 
 export type RegisterData = {
     email: string;

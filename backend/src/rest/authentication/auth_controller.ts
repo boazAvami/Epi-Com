@@ -1,9 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { IUser, userModel } from '../../models/userModel';
+import { userModel } from '../../models/userModel';
 import mongoose, { Document } from 'mongoose';
 import { OAuth2Client } from 'google-auth-library';
+import { IUser } from '@shared/types';
 
 export const hashPassword = async (password: string) => {
     try {

@@ -1,10 +1,5 @@
 import {IDropdownItem} from "@/components/Dropdown";
-
-export enum EGender {
-    MALE = 'male',
-    FEMALE = 'female',
-    OTHER = 'other'
-}
+import {EGender} from "@shared/types";
 
 export const genderOptions: IDropdownItem[] = Object.values(EGender).map((gender) => {
     let label = '';

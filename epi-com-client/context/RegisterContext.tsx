@@ -1,4 +1,3 @@
-// context/RegisterContext.tsx
 import React, { createContext, useContext, useState } from 'react';
 import {RegisterData} from "@/shared/types/register-data.type";
 

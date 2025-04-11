@@ -1,4 +1,4 @@
-import {EGender} from "@/shared/enums/gender.enum";
+import {EGender} from "@/utils/gender-utils";
 import {IDropdownItem} from "@/components/Dropdown";
 
 export enum EPhonePrefix {

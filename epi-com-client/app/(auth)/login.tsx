@@ -22,11 +22,15 @@ import {Center} from "@/components/ui/center";
 import {loginSchema, LoginSchemaType} from "@/schemas/login-schema";
 
 export default function LoginScreen() {
-    const { login } = useAuth();
+    const { login, getUserInfo } = useAuth();
     const router: Router = useRouter();
     const handleLogin = (email: string, password: string) => {
-        login(email, password).then((result) => {
-            router.replace('/');
+        login(email, password).then(() => {
+            getUserInfo().then(() => {
+                router.replace('/');
+            }).catch((err) => {
+                console.log(err);
+            });
         }).catch((err) => {
             if (err === 'wrong email or password') {
                 setValidated({ ...validated, emailValid: false });

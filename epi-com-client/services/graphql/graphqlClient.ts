@@ -1,4 +1,4 @@
-import { getToken } from '../utils/tokenStorage';
+import { getToken } from '@/utils/tokenStorage';
 import {GRAPHQL_URL} from "@/constants/Env";
 
 type GraphQLResponse<T> = {
@@ -10,7 +10,7 @@ export const graphqlRequest = async <T = any>(
     query: string,
     variables?: Record<string, any>
 ): Promise<T> => {
-    const token = await getToken();
+    const token: string | null = await getToken();
 
     const res = await fetch(GRAPHQL_URL, {
         method: 'POST',
