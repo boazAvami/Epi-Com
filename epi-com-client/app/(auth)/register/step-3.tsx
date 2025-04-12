@@ -21,6 +21,7 @@ import {RegisterData} from "@/shared/types/register-data.type";
 
 const RegisterStep3Screen = forwardRef<StepRef>((_, ref) => {
     const { formData, setFormData } = useRegister();
+    const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>(Object.values(EAllergy).map((allergy: string) => ({label: allergy, value: allergy})));
     const {
         control,
         handleSubmit,
@@ -28,11 +29,9 @@ const RegisterStep3Screen = forwardRef<StepRef>((_, ref) => {
     } = useForm<registerStep3Type>({
         resolver: zodResolver(registerStep3Schema),
         defaultValues: {
-            allergies: formData.allergies || [],
-        },
+            allergies: formData.allergies,
+        }
     });
-
-    const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>(Object.values(EAllergy).map((allergy: string) => ({label: allergy, value: allergy})));
 
     const onSubmit = (data: registerStep3Type) => {
         setFormData({ ...formData, ...(data as Partial<RegisterData>) });

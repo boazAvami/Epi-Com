@@ -65,7 +65,7 @@ const RegisterStep2Screen = forwardRef<StepRef>((_, ref) => {
             <Center className="h-full">
                 <VStack className="max-w-[440px] w-3/4" space="xl">
                     <Heading className="text-right font-semibold text-[#333]" size="2xl">
-                        כמעט סיימנו!
+                        נעים להכיר!
                     </Heading>
                     <Text className="text-right text-[#4F4F4F]">
                         נשתמש בפרטים האלו כדי לוודא שנוכל ליצור איתכם קשר במקרה חירום.

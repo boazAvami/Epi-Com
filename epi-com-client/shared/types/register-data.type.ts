@@ -1,4 +1,4 @@
-import {EGender} from "@shared/types";
+import {EGender, IEmergencyContact} from "@shared/types";
 
 export type RegisterData = {
     email: string;
@@ -6,7 +6,7 @@ export type RegisterData = {
     userName: string;
     phone_number: string;
     allergies: string[];
-    emergencyContacts: string[];
+    emergencyContacts: IEmergencyContact[] | null;
     firstName: string | null;
     lastName: string | null;
     date_of_birth: string | null;

@@ -39,13 +39,6 @@ const Chips: React.FC<ChipsProps> = (props) => {
         itemVariant,
     } = props;
 
-    useFocusEffect(
-        useCallback(() => {
-            if (setSelectedValues) {
-                setSelectedValues([]);
-            }
-        }, []));
-
     const onSelectItem = (value: string) => {
         if (type === "filter") {
             if (!selectedValues?.includes(value)) {

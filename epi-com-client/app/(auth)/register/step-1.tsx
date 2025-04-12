@@ -35,10 +35,10 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
     } = useForm<registerStep1Type>({
         resolver: zodResolver(registerStep1Schema),
         defaultValues: {
-            email: '',
-            password: '',
-            userName: '',
-            confirmPassword: '',
+            email: formData.email ||'',
+            password: formData.password || '',
+            userName: formData.userName || '',
+            confirmPassword: formData.password || '',
         },
     });
 
