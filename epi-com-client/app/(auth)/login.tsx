@@ -167,15 +167,18 @@ export default function LoginScreen() {
                         </FormControl>
                     </VStack>
                     <VStack className="w-full my-7 " space="lg">
-                        <Button className="w-full" onPress={handleSubmit(onSubmit)}>
+                        <Button
+                            className="w-full"
+                            onPress={handleSubmit(onSubmit)}
+                            style={{backgroundColor: '#FE385C', borderRadius: 20}}>
                             <ButtonText className="font-medium">התחבר</ButtonText>
                         </Button>
                         <Button
+                            style={{borderRadius: 20}}
                             variant="outline"
                             action="secondary"
                             className="w-full gap-1"
-                            onPress={() => {}}
-                        >
+                            onPress={() => {}}>
 
                             <ButtonText className="font-medium">
                                 כניסה דרך גוגל

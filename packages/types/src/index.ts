@@ -1,5 +1,7 @@
 // Interfaces
-export * from './user.interface';
+export * from './interfaces/user.interface';
+export * from './interfaces/emergency-contact.interface';
 
 // Enums
-export * from './gender.enum';
+export * from './enums/gender.enum';
+export * from './enums/allergy.enum';

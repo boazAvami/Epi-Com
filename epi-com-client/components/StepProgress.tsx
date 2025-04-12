@@ -215,6 +215,7 @@ const styles = StyleSheet.create({
     nextButton: {
         backgroundColor: '#FE385C',
         width: '50%',
+        borderRadius: 20
     },
 });
 

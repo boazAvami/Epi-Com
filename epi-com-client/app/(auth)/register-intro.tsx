@@ -37,6 +37,7 @@ export default function RegisterIntroScreen() {
 
                     <Center>
                         <Button
+                            style={{backgroundColor: '#FE385C', borderRadius: 20}}
                             size="lg"
                             onPress={proceedToRegister}>
                             <ButtonText>
