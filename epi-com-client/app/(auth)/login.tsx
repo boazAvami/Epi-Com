@@ -7,9 +7,9 @@ import { HStack } from "@/components/ui/hstack";
 import { Link, LinkText } from "@/components/ui/link";
 import { Router, useRouter } from "expo-router";
 import { VStack } from "@/components/ui/vstack";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
-import GoogleIcon from "@/assets/icons/google-icon";
+import { Button, ButtonText } from "@/components/ui/button";
 import LottieView from 'lottie-react-native';
+import {GoogleLoginButton} from "@/components/GoogleLoginButton";
 
 const loadingMessages = [
     "בודקים את הפרטים שהזנת...",
@@ -69,16 +69,7 @@ const Login = () => {
                             >
                                 <ButtonText className="font-medium">התחבר</ButtonText>
                             </Button>
-                            <Button
-                                style={{ borderRadius: 20 }}
-                                variant="outline"
-                                action="secondary"
-                                className="w-full gap-1"
-                                onPress={() => {}}
-                            >
-                                <ButtonText className="font-medium">כניסה דרך גוגל</ButtonText>
-                                <ButtonIcon as={GoogleIcon} className="text-typography-white" />
-                            </Button>
+                            <GoogleLoginButton></GoogleLoginButton>
                         </VStack>
                         <HStack className="self-center" space="sm">
                             <Link onPress={() => router.push('/register-intro')}>
