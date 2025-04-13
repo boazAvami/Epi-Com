@@ -7,24 +7,49 @@ import LottieView from 'lottie-react-native';
 import { useRouter } from 'expo-router';
 import {useRegister} from "@/context/RegisterContext";
 import {register} from "@/services/authService";
+import {useAuth} from "@/context/authContext";
 
 const RegisterLoadingScreen = () => {
     const { formData } = useRegister();
+    const { login, getUserInfo } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
         const handleRegister = async () => {
-            let redirectPath: 'register-success-indicator' | 'register-error-screen' = 'register-success-indicator';
             try {
                 await register(formData);
             } catch (e) {
-                redirectPath = 'register-error-screen';
-            } finally {
-                setTimeout(() => router.replace(`/(auth)/register/indicator-screens/${redirectPath}`), 1000)
+                throw e;
             }
         }
 
-        handleRegister();
+        const handleLogin = async () => {
+            try {
+                await login(formData.email, formData.password);
+                await getUserInfo()
+            } catch (e) {
+                throw e;
+            }
+        };
+        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        const handleRegisterAndLogin = async () => {
+            let redirectPath: 'register-success-indicator' | 'register-error-screen' = 'register-success-indicator';
+
+            try {
+                await handleRegister();
+                await handleLogin();
+            } catch (e) {
+                console.error(e);
+                redirectPath = 'register-error-screen';
+            }
+
+            await sleep(1000);
+            router.replace(`/(auth)/register/indicator-screens/${redirectPath}`);
+        };
+
+
+        handleRegisterAndLogin();
     }, []);
 
     return (

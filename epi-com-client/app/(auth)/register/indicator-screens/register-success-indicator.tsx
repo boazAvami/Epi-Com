@@ -21,7 +21,7 @@ const RegisterSuccessScreen = () => {
     }, []);
 
     const handleGoToApp = () => {
-        // router.replace('/(tabs)/home');
+        router.replace('/');
     };
 
     return (
