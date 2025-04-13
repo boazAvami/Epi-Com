@@ -14,11 +14,13 @@ const RegisterLoadingScreen = () => {
 
     useEffect(() => {
         const handleRegister = async () => {
+            let redirectPath: 'register-success-indicator' | 'register-error-screen' = 'register-success-indicator';
             try {
                 await register(formData);
-                router.replace('/(auth)/register/indicator-screens/register-success-indicator');
             } catch (e) {
-                // TODO REDIRECT TO ERROR SCREEN
+                redirectPath = 'register-error-screen';
+            } finally {
+                setTimeout(() => router.replace(`/(auth)/register/indicator-screens/${redirectPath}`), 1000)
             }
         }
 
@@ -32,7 +34,7 @@ const RegisterLoadingScreen = () => {
                     source={require('@/assets/animations/register-loading.json')}
                     autoPlay
                     loop
-                    style={{ width: 140, height: 140 }}
+                    style={{ width: 250, height: 250 }}
                 />
                 <Heading className="text-center text-gray-800" size="xl">
                     שומרים את הפרטים...
