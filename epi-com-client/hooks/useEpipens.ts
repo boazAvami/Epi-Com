@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { EpipenMarker, Location } from '../types';
+import { EpipenMarker, Coordinate } from '../types';
 import { calculateDistance } from '../utils/location';
 import { loadMarkers, saveMarkers } from '../utils/storage';
 
@@ -15,7 +15,7 @@ interface UseEpipensResult {
 /**
  * Hook for managing EpiPen markers
  */
-export function useEpipens(userLocation: Location | null): UseEpipensResult {
+export function useEpipens(userLocation: Coordinate | null): UseEpipensResult {
   const [markers, setMarkers] = useState<EpipenMarker[]>([]);
   const [sortedMarkers, setSortedMarkers] = useState<EpipenMarker[]>([]);
   const [selectedEpipen, setSelectedEpipen] = useState<EpipenMarker | null>(null);
@@ -40,8 +40,8 @@ export function useEpipens(userLocation: Location | null): UseEpipensResult {
         const distance = calculateDistance(
           userLocation.latitude,
           userLocation.longitude,
-          marker.location.latitude,
-          marker.location.longitude
+          marker.coordinate.latitude,
+          marker.coordinate.longitude
         );
         
         return {

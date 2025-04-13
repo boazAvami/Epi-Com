@@ -1,21 +1,21 @@
-export interface Location {
+export interface Coordinate {
     latitude: number;
     longitude: number;
   }
   
   export interface Contact {
     name: string;
-    phone: string;
+    phoneNumber: string;
   }
   
   export interface EpipenMarker {
     id: string;
-    location: Location;
+    coordinate: Coordinate;
     description: string;
     type: 'adult' | 'junior';
-    expiryDate: string;
+    expireDate: string;
     contact?: Contact;
-    image?: string | null;
+    photo?: string | null;
     distance?: number;
   }
   
@@ -42,7 +42,7 @@ export interface Location {
     locationDescription: string;
     phoneNumber: string;
     operatingHours: string;
-    expiryDate: string;
+    expireDate: string;
     addPhoto: string;
     useCurrentLocation: string;
     selectCustomLocation: string;

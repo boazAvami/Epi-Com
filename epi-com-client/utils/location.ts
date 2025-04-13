@@ -1,4 +1,4 @@
-import { Location } from '../types';
+import { Coordinate } from '../types';
 
 /**
  * Calculate distance between two coordinates using the Haversine formula
@@ -29,12 +29,12 @@ export function deg2rad(deg: number): number {
 }
 
 /**
- * Get initial region from a location with reasonable zoom levels
+ * Get initial region from a coordinate with reasonable zoom levels
  */
-export function getRegionForCoordinates(location: Location) {
+export function getRegionForCoordinates(coordinate: Coordinate) {
   return {
-    latitude: location.latitude,
-    longitude: location.longitude,
+    latitude: coordinate.latitude,
+    longitude: coordinate.longitude,
     latitudeDelta: 0.0122,
     longitudeDelta: 0.0121,
   };
