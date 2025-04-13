@@ -1,0 +1,85 @@
+{
+    "app": {
+      "title": "איפה אפי"
+    },
+    "search": {
+      "placeholder": "חפש מיקום...",
+      "no_results": "לא נמצאו תוצאות",
+      "error": "שגיאה בחיפוש",
+      "selected_location": "מיקום נבחר"
+    },
+    "filters": {
+      "all": "כל האפיפנים",
+      "nearby": "< 1 ק\"מ"
+    },
+    "epipens": {
+      "nearby": "אפיפנים קרובים",
+      "none": "לא נמצאו אפיפנים בקרבת מקום",
+      "distance": "{{distance}} ק\"מ"
+    },
+    "epipen": {
+      "types": {
+        "adult": "מבוגר",
+        "junior": "ילד"
+      }
+    },
+    "details": {
+      "expiration": "תאריך תפוגה:",
+      "contact": "איש קשר:",
+      "contactName": "שם איש קשר:",
+      "contactPhone": "מספר פלאפון:",
+      "hours": "שעות פעילות:",
+      "notes": "הערות:",
+      "directions": "קבל הוראות הגעה",
+      "maps": "Maps"
+    },
+    "add": {
+      "title": "הוספת מזרק אפיפן",
+      "name": "שם",
+      "type": "סוג אפיפן",
+      "notes": "הערות",
+      "location_desc": "תיאור מיקום",
+      "location": "מיקום",
+      "phone": "מספר פלאפון",
+      "contact_info": "פרטי איש קשר",
+      "contact_name": "שם איש קשר",
+      "hours": "שעות פעילות",
+      "expire_date": "תאריך תפוגה",
+      "select_month_year": "בחר חודש ושנה",
+      "photo": "תמונה",
+      "use_current": "השתמש במיקום הנוכחי",
+      "select_custom": "בחר מיקום מותאם אישית",
+      "tap_select": "לחץ על המפה לבחירת מיקום",
+      "description": "תיאור"
+    },
+    "photo": {
+      "take": "צלם תמונה",
+      "choose": "בחר מהגלריה",
+      "remove": "הסר תמונה"
+    },
+    "buttons": {
+      "cancel": "ביטול",
+      "save": "שמור",
+      "change_language": "עבור לאנגלית"
+    },
+    "actions": {
+      "openWhatsApp": "פתח בווטסאפ"
+    },
+    "validation": {
+      "error_title": "שדות חובה חסרים",
+      "error_message": "אנא מלא את כל שדות החובה:",
+      "contact_name_required": "שם איש קשר הוא שדה חובה",
+      "contact_phone_required": "מספר פלאפון הוא שדה חובה",
+      "photo_required": "תמונה אופציונלית",
+      "location_required": "יש לבחור מיקום",
+      "expiration_required": "יש להזין תאריך תפוגה (חודש/שנה)",
+      "required": "חובה",
+      "required_fields": "שדות המסומנים בכוכבית (*) הם שדות חובה",
+      "optional": "אופציונלי",
+      "ok": "אישור"
+    },
+    "errors": {
+      "location_denied": "הגישה למיקום נדחתה",
+      "location_error": "לא ניתן לקבל את המיקום שלך"
+    }
+  }

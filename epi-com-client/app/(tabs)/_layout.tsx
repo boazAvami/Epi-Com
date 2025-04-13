@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     sosButton: {
-        backgroundColor: '#AF3C3F',
+        backgroundColor: '#FF385C',
         width: 80,
         height: 80,
         borderRadius: 50,
