@@ -1,8 +1,9 @@
 import request from "supertest";
 import mongoose from "mongoose";
-import { IUser, userModel } from "../models/userModel";
+import { userModel } from "../models/userModel";
 import bcrypt from 'bcrypt';
 import { App } from "../app";
+import {IUser} from "@shared/types";
 
 let appInstance: App = new App();
 

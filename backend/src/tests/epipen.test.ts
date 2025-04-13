@@ -1,8 +1,9 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import { App } from '../app';
-import { IUser, userModel } from '../models/userModel';
-import {  EpiPenModel } from '../models/epipenModel'; // Assuming you have an epiPen model
+import { userModel } from '../models/userModel';
+import {  EpiPenModel } from '../models/epipenModel';
+import {IUser} from "@shared/types"; // Assuming you have an epiPen model
 
 let appInstance: App = new App();
 
