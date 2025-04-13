@@ -24,13 +24,9 @@ export const registerStep2Schema = z.object({
         }, {
             message: 'הקידומת אינה תקפה',
         }),
-    date_of_birth: z
-        .string()
-        .refine((val) => {
-            return /^(0?[1-9]|[12][0-9]|3[01])\.(0?[1-9]|1[0-2])\.\d{4}$/.test(val);
-        }, {
-            message: "יש להזין תאריך"
-        }),
+    date_of_birth: z.date({
+        required_error: "יש להזין תאריך לידה",
+    }),
     gender: z.nativeEnum(EGender, {
         message: 'יש לבחור מגדר',
     })

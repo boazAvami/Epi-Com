@@ -23,9 +23,12 @@ type StepRef = {
 type StepProgressProps = {
     children: (onNext: () => void) => ReactNode;
     onFinish?: () => void;
+    successRedirectPath?: string;
+    finishText?: string;
+    nextText?: string;
 };
 
-const StepProgress = ({ children, onFinish }: StepProgressProps) => {
+const StepProgress = ({ children, onFinish, successRedirectPath, nextText = 'המשך', finishText = 'סיים' }: StepProgressProps) => {
     const [step, setStep] = useState(0);
     const router: Router = useRouter();
     const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -91,7 +94,11 @@ const StepProgress = ({ children, onFinish }: StepProgressProps) => {
         if (step < totalSteps - 1) {
             setStep((prev) => prev + 1);
         } else {
-            onFinish?.();
+            if (onFinish) {
+                onFinish();
+            } else {
+                router.replace(successRedirectPath as any);
+            }
         }
     }
 
@@ -144,7 +151,7 @@ const StepProgress = ({ children, onFinish }: StepProgressProps) => {
 
             <View style={styles.buttonContainer}>
                 <Button onPress={handleNext} style={styles.nextButton}>
-                    <ButtonText>{step < totalSteps - 1 ? 'המשך' : 'אני בפנים!'}</ButtonText>
+                    <ButtonText>{step < totalSteps - 1 ? nextText : finishText}</ButtonText>
                 </Button>
             </View>
         </View>
@@ -189,7 +196,7 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     line: {
-        width: 20,
+        width: 10,
         height: 2,
         backgroundColor: '#E7E7E7',
         marginHorizontal: 10,

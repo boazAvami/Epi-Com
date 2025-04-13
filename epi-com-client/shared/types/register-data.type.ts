@@ -9,7 +9,7 @@ export type RegisterData = {
     emergencyContacts: IEmergencyContact[] | null;
     firstName: string | null;
     lastName: string | null;
-    date_of_birth: string | null;
+    date_of_birth: Date | null;
     profile_picture_uri: string | null;
     gender: EGender | null;
 };

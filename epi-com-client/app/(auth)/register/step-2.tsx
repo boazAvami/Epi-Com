@@ -31,7 +31,7 @@ const RegisterStep2Screen = forwardRef<StepRef>((_, ref) => {
             firstName: formData.firstName || '',
             lastName: formData.lastName || '',
             phone_number: formData.phone_number || '',
-            date_of_birth: formData.date_of_birth || '',
+            date_of_birth: formData.date_of_birth || undefined,
             gender: formData.gender || undefined,
         }
     });

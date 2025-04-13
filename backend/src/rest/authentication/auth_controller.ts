@@ -28,7 +28,7 @@ export const register = async (req: Request, res: Response) => {
             emergencyContacts: emergencyContacts || [],
             firstName: firstName || null,
             lastName: lastName || null,
-            date_of_birth: date_of_birth || null,
+            date_of_birth: new Date(date_of_birth) || null,
             profile_picture_uri: profile_picture_uri || null,
             gender: gender || '',
         });
