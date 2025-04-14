@@ -41,6 +41,12 @@ import { genderOptions } from "@/utils/gender-utils";
 import Chips from "@/components/Chips";
 import { ChipItem } from "@/components/Chip";
 
+// Interface for form emergency contacts that allows optional fields during editing
+interface FormEmergencyContact {
+  name?: string;
+  phone?: string;
+}
+
 // Define validation schema for profile settings
 const profileSettingsSchema = z.object({
   userName: z.string().min(1, "Username is required"),
@@ -50,13 +56,13 @@ const profileSettingsSchema = z.object({
   phone_number: z.string().optional(),
   gender: z.string().optional(),
   date_of_birth: z.date().optional(),
-  allergies: z.array(z.string()).default([]),
+  allergies: z.array(z.string()).optional(),
   emergencyContacts: z.array(
     z.object({
       name: z.string().optional(),
       phone: z.string().optional(),
     })
-  ).default([{ name: '', phone: '' }]),
+  ).optional(),
   password: z.string().optional(),
   confirmPassword: z.string().optional(),
   profile_picture_uri: z.string().optional(),
@@ -82,22 +88,25 @@ export default function ProfileSettingsScreen() {
     setValue,
     formState: { errors },
     watch,
-    reset,
   } = useForm<ProfileSettingsFormData>({
     resolver: zodResolver(profileSettingsSchema),
     defaultValues: {
-      userName: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone_number: '',
-      gender: undefined,
-      date_of_birth: undefined,
-      allergies: [],
-      emergencyContacts: [{ name: '', phone: '' }],
+      userName: user?.userName || '',
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || '',
+      phone_number: user?.phone_number || '',
+      gender: user?.gender,
+      date_of_birth: user?.date_of_birth ? new Date(Number(user.date_of_birth)) : undefined,
+      allergies: user?.allergies || [],
+      // Convert IEmergencyContact[] to FormEmergencyContact[]
+      emergencyContacts: user?.emergencyContacts?.map(contact => ({
+        name: contact.name,
+        phone: contact.phone
+      })) || [{ name: '', phone: '' }],
       password: '',
       confirmPassword: '',
-      profile_picture_uri: '',
+      profile_picture_uri: user?.profile_picture_uri || '',
     }
   });
   
@@ -108,39 +117,36 @@ export default function ProfileSettingsScreen() {
         if (!user) {
           await getUserInfo();
         } else {
-          // Convert date_of_birth string to Date object for display
-          let dobDate = undefined;
+          // Initialize form fields with user data
+          setValue('userName', user.userName || '');
+          setValue('firstName', user.firstName || '');
+          setValue('lastName', user.lastName || '');
+          setValue('email', user.email || '');
+          setValue('phone_number', user.phone_number || '');
+          setValue('gender', user.gender);
+          
           if (user.date_of_birth) {
-            dobDate = new Date(user.date_of_birth);
-            // Validate the date object is valid
-            if (isNaN(dobDate.getTime())) {
-              console.warn("Invalid date of birth:", user.date_of_birth);
-              dobDate = undefined;
+            // Convert to number firs
+            const timestamp = Number(user.date_of_birth);
+            const dateObj = new Date(timestamp);
+
+            // Check if the date is valid before setting it
+            if (!isNaN(dateObj.getTime())) {
+              setValue('date_of_birth', dateObj);
             } else {
-              console.log("Valid date of birth:", dobDate.toISOString());
+              console.log('Invalid date, not setting in form');
             }
           }
-
-          // Reset form with user data to ensure clean state
-          reset({
-            userName: user.userName || '',
-            firstName: user.firstName || '',
-            lastName: user.lastName || '',
-            email: user.email || '',
-            phone_number: user.phone_number || '',
-            gender: user.gender,
-            date_of_birth: dobDate,
-            allergies: user.allergies || [],
-            emergencyContacts: user.emergencyContacts && user.emergencyContacts.length > 0 
-              ? user.emergencyContacts.map(contact => ({
-                  name: contact.name,
-                  phone: contact.phone
-                }))
-              : [{ name: '', phone: '' }],
-            password: '',
-            confirmPassword: '',
-            profile_picture_uri: user.profile_picture_uri || '',
-          });
+          
+          setValue('allergies', user.allergies || []);
+          
+          // Convert IEmergencyContact[] to FormEmergencyContact[]
+          setValue('emergencyContacts', user.emergencyContacts?.map(contact => ({
+            name: contact.name,
+            phone: contact.phone
+          })) || [{ name: '', phone: '' }]);
+          
+          setValue('profile_picture_uri', user.profile_picture_uri || '');
         }
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -150,7 +156,7 @@ export default function ProfileSettingsScreen() {
     };
 
     fetchUserData();
-  }, [user, reset]);
+  }, [user]);
 
   // Add emergency contact
   const addEmergencyContact = () => {
@@ -186,62 +192,80 @@ export default function ProfileSettingsScreen() {
     }
   };
   
+  // Convert form emergency contacts to IEmergencyContact[] | null
+  const convertEmergencyContacts = (
+    contacts?: FormEmergencyContact[] | null
+  ): IEmergencyContact[] | null => {
+    if (!contacts || contacts.length === 0) return null;
+    
+    // Filter out invalid contacts (where name or phone is empty)
+    const validContacts = contacts
+      .filter(contact => contact.name && contact.phone) // Only keep contacts with both name and phone
+      .map(contact => ({
+        name: contact.name as string, // We've verified these exist in the filter
+        phone: contact.phone as string
+      }));
+    
+    return validContacts.length > 0 ? validContacts : null;
+  };
+  
   // Handle form submission
   const onSubmit = async (data: ProfileSettingsFormData) => {
     if (data.password !== data.confirmPassword) {
       Alert.alert("Error", "Passwords do not match.");
       return;
     }
+    
+    // Check if any changes were made
+    if (!user) return;
 
+    const formDateStr = data.date_of_birth?.toISOString();
+    const userDateStr = user.date_of_birth ? new Date(Number(user.date_of_birth)).toISOString() : undefined;
+    console.log('Comparing dates:', formDateStr, userDateStr);
+    
+    const hasChanges = 
+      data.userName !== user.userName ||
+      data.firstName !== (user.firstName || '') ||
+      data.lastName !== (user.lastName || '') ||
+      data.email !== user.email ||
+      data.phone_number !== (user.phone_number || '') ||
+      data.gender !== (user.gender || '') ||
+      formDateStr !== userDateStr ||
+      JSON.stringify(data.allergies) !== JSON.stringify(user.allergies || []) ||
+      JSON.stringify(data.emergencyContacts) !== JSON.stringify(user.emergencyContacts?.map(contact => ({
+        name: contact.name,
+        phone: contact.phone
+      })) || []);
+    
+    // If no changes, show message and return
+    if (!hasChanges && !data.password) {
+      Alert.alert("Info", "No changes detected.", [
+        { text: "OK", onPress: () => router.push("/(tabs)/profile") }
+      ]);
+      return;
+    }
+    
+    // Prepare data for update with type conversion for emergency contacts
+    const updatedUserData: Partial<RegisterData> = {
+      userName: data.userName,
+      firstName: data.firstName?.trim() === '' ? null : data.firstName,
+      lastName: data.lastName?.trim() === '' ? null : data.lastName,
+      email: data.email,
+      phone_number: data.phone_number?.trim() === '' ? undefined : data.phone_number,
+      gender: data.gender as EGender || null,
+      date_of_birth: data.date_of_birth || null,
+      allergies: data.allergies?.length ? data.allergies : [],
+      emergencyContacts: convertEmergencyContacts(data.emergencyContacts)
+    };
+    
+    // Add password only if provided
+    if (data.password) {
+      updatedUserData.password = data.password;
+    }
+    
     try {
       setIsLoading(true);
-      
-      // Create valid emergency contacts array
-      let validEmergencyContacts: IEmergencyContact[] | null = null;
-      
-      if (data.emergencyContacts && data.emergencyContacts.length > 0) {
-        const validContacts = data.emergencyContacts
-          .filter(contact => contact.name && contact.phone)
-          .map(contact => ({
-            name: contact.name as string,
-            phone: contact.phone as string
-          }));
-        
-        if (validContacts.length > 0) {
-          validEmergencyContacts = validContacts;
-        }
-      }
-      
-      // Prepare data for update
-      const updatedUserData: Partial<RegisterData> = {
-        userName: data.userName,
-        firstName: data.firstName?.trim() === '' ? null : data.firstName,
-        lastName: data.lastName?.trim() === '' ? null : data.lastName,
-        email: data.email,
-        phone_number: data.phone_number?.trim() === '' ? undefined : data.phone_number,
-        gender: data.gender as EGender || null,
-        date_of_birth: data.date_of_birth || null,
-        // Ensure allergies is always an array
-        allergies: data.allergies || [],
-        // Apply our validated emergency contacts
-        emergencyContacts: validEmergencyContacts
-      };
-      
-      // Add password only if provided
-      if (data.password) {
-        updatedUserData.password = data.password;
-      }
-      
-      // Log what we're sending for debugging
-      console.log("Updating user with:", JSON.stringify({
-        ...updatedUserData,
-        password: updatedUserData.password ? '****' : undefined
-      }, null, 2));
-      
-      // Send the update request
       await UpdateUser(updatedUserData);
-      
-      // Refresh user data
       await getUserInfo();
       
       Alert.alert("Success", "Your profile has been updated.", [
@@ -372,7 +396,7 @@ export default function ProfileSettingsScreen() {
                       <Input>
                         <InputField
                           placeholder="First Name"
-                          value={value || ''}
+                          value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
                         />
@@ -389,7 +413,7 @@ export default function ProfileSettingsScreen() {
                       <Input>
                         <InputField
                           placeholder="Last Name"
-                          value={value || ''}
+                          value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
                         />
@@ -432,7 +456,7 @@ export default function ProfileSettingsScreen() {
                     <PhoneNumberInput 
                       onChange={onChange} 
                       onBlur={onBlur} 
-                      value={value || ''}
+                      value={value}
                       isInvalid={!!errors.phone_number}
                     />
                   )}
@@ -468,13 +492,16 @@ export default function ProfileSettingsScreen() {
                 <Controller
                   name="date_of_birth"
                   control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <DateInput 
-                      onChange={onChange} 
-                      onBlur={onBlur} 
-                      value={value}
-                    />
-                  )}
+                  render={({ field: { onChange, onBlur, value } }) => {
+                    console.log('date_of_birth value in Controller:', value);
+                    return (
+                      <DateInput 
+                        onChange={onChange} 
+                        onBlur={onBlur} 
+                        value={value}
+                      />
+                    );
+                  }}
                 />
                 <FormControlError>
                   <FormControlErrorText>{errors.date_of_birth?.message}</FormControlErrorText>
@@ -496,7 +523,7 @@ export default function ProfileSettingsScreen() {
                     <Input>
                       <InputField
                         placeholder="New Password"
-                        value={value || ''}
+                        value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
                         secureTextEntry
@@ -514,7 +541,7 @@ export default function ProfileSettingsScreen() {
                     <Input>
                       <InputField
                         placeholder="Confirm New Password"
-                        value={value || ''}
+                        value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
                         secureTextEntry
@@ -542,10 +569,7 @@ export default function ProfileSettingsScreen() {
                     items={allergiesItems}
                     setItems={setAllergiesItems}
                     selectedValues={value || []}
-                    setSelectedValues={(selectedValues) => {
-                      console.log("Selected allergies:", selectedValues);
-                      onChange(selectedValues);
-                    }}
+                    setSelectedValues={onChange}
                   />
                 )}
               />
@@ -582,10 +606,7 @@ export default function ProfileSettingsScreen() {
                           <InputField
                             placeholder="Contact Name"
                             value={value || ''}
-                            onChangeText={(text) => {
-                              console.log(`Setting emergency contact ${index} name to:`, text);
-                              onChange(text);
-                            }}
+                            onChangeText={onChange}
                             onBlur={onBlur}
                           />
                         </Input>
@@ -603,10 +624,7 @@ export default function ProfileSettingsScreen() {
                       control={control}
                       render={({ field: { onChange, onBlur, value } }) => (
                         <PhoneNumberInput 
-                          onChange={(text) => {
-                            console.log(`Setting emergency contact ${index} phone to:`, text);
-                            onChange(text);
-                          }}
+                          onChange={onChange} 
                           onBlur={onBlur} 
                           value={value || ''}
                           isInvalid={!!errors?.emergencyContacts?.[index]?.phone}
