@@ -1,27 +1,42 @@
 // epipenModel.ts
 import mongoose, { Schema, Document } from 'mongoose';
-import {  Location } from '../utils/geoUtils';
 
 export interface Contact {
   phone: string;
   name: string;
 }
 
+export enum EpiPenKind {
+  JUNIOR = 'JUNIOR',
+  ADULT = 'ADULT',
+}
+
 export interface IEpiPen extends Document {
   userId: mongoose.Types.ObjectId;
-  location: Location;
+  location: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
   description: string;
   expiryDate: Date;
   contact: Contact;
   image: string; // Base64 or URL
   serialNumber: string;
+  kind: EpiPenKind;
 }
 
 const epiPenSchema: Schema = new Schema({
   userId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   location: {
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
   },
   description: { type: String },
   expiryDate: { type: Date, required: true },
@@ -31,14 +46,12 @@ const epiPenSchema: Schema = new Schema({
   },
   image: { type: String },
   serialNumber: { type: String, required: true },
+  kind: { type: String, enum: EpiPenKind, required: true },
 });
 
 epiPenSchema.index({ location: '2dsphere' });
 
 export const EpiPenModel = mongoose.model<IEpiPen>('EpiPen', epiPenSchema);
-
-
-
 
 export interface AddEpiPenInput {
     location: { latitude: number; longitude: number };
@@ -47,6 +60,7 @@ export interface AddEpiPenInput {
     contact: { phone: string; name: string };
     image?: string;
     serialNumber: string;
+    kind: EpiPenKind;
   }
   
   export interface UpdateEpiPenInput {
@@ -57,6 +71,7 @@ export interface AddEpiPenInput {
     contact?: { phone: string; name: string };
     image?: string;
     serialNumber?: string;
+    kind?: EpiPenKind;
   }
   
   export interface DeleteEpiPenInput {

@@ -4,6 +4,8 @@ import DropdownComponent from "@/components/Dropdown";
 import { phonePrefixOptions } from "@/shared/enums/phone-prefix.enum";
 import { Input, InputField } from "@/components/ui/input";
 import { HStack } from "@/components/ui/hstack";
+import { useAppTranslation } from '@/hooks/useAppTranslation';
+
 interface IPhoneNumberInputProps {
     onChange: (value: string) => void;
     onBlur?: (...event: any[]) => void;
@@ -24,6 +26,7 @@ const PhoneNumberInput = ({
                               value = '',
                               isInvalid
                           }: IPhoneNumberInputProps) => {
+    const { t, isRtl } = useAppTranslation();
     const [phonePrefix, setPhonePrefix] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
 
@@ -60,8 +63,8 @@ const PhoneNumberInput = ({
             <View style={{ flex: 2 }}>
                 <Input>
                     <InputField
-                        className="text-right"
-                        placeholder="מספר טלפון"
+                        className={isRtl ? "text-right" : "text-left"}
+                        placeholder={t('auth.register.step2.phone')}
                         keyboardType="phone-pad"
                         value={phoneNumber}
                         onChangeText={onPhoneNumberChange}

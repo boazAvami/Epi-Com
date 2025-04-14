@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Modal, View, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
+import { Modal, View, KeyboardAvoidingView, Platform, Alert, TouchableOpacity, Text, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
-import { Coordinate } from '../../types';
+import { Location } from '../../types';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { EpipenForm, EpipenFormData } from './EpipenForm';
 import { RTLText } from '../shared/RTLComponents';
@@ -15,9 +15,10 @@ interface AddEpipenModalProps {
   selectingLocation: boolean;
   onCancel: () => void;
   onSave: (data: EpipenFormData) => void;
-  userLocation: Coordinate | null;
-  customLocation?: Coordinate | null;
-  onSelectCustomLocation?: () => void;
+  userLocation: Location | null;
+  customLocation?: Location | null;
+  onSelectCustomLocation?: (formData?: Partial<EpipenFormData>) => void;
+  savedFormData?: Partial<EpipenFormData>;
 }
 
 export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
@@ -27,13 +28,25 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
   onSave,
   userLocation,
   customLocation,
-  onSelectCustomLocation
+  onSelectCustomLocation,
+  savedFormData = {}
 }) => {
   const { t } = useAppTranslation();
   const [formData, setFormData] = useState<Partial<EpipenFormData>>({});
   
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['25%', '35%'], []); 
+
+  // Initialize form data with saved data when modal becomes visible or savedFormData changes
+  useEffect(() => {
+    if (visible && Object.keys(savedFormData).length > 0) {
+      console.log('Restoring saved form data:', savedFormData);
+      setFormData(prevData => ({
+        ...prevData,
+        ...savedFormData
+      }));
+    }
+  }, [visible, savedFormData]);
 
   const handleOpenPhotoOptions = useCallback(() => {
     bottomSheetRef.current?.expand();
@@ -51,6 +64,7 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
   
   useEffect(() => {
     if (customLocation) {
+      console.log('AddEpipenModal received custom location:', customLocation);
       setFormData(prevData => ({
         ...prevData,
         coordinate: customLocation
@@ -131,9 +145,9 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
   // Handler for selecting custom location
   const handleSelectCustomLocation = useCallback(() => {
     if (onSelectCustomLocation) {
-      onSelectCustomLocation();
+      onSelectCustomLocation(formData);
     }
-  }, [onSelectCustomLocation]);
+  }, [onSelectCustomLocation, formData]);
 
   return (
     <Modal

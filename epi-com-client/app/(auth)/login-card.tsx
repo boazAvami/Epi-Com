@@ -15,6 +15,8 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {forwardRef, useImperativeHandle, useState} from "react";
 import { loginSchema, LoginSchemaType } from "@/schemas/login-schema";
+import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { RTLText } from '@/components/shared/RTLComponents';
 
 export type LoginCardHandle = {
     submit: () => void;
@@ -28,6 +30,7 @@ const LoginCard = forwardRef<LoginCardHandle, LoginCardProps>((props, ref) => {
     const { login, getUserInfo } = useAuth();
     const router: Router = useRouter();
     const [showPassword, setShowPassword] = useState<boolean>(false);
+    const { t, isRtl } = useAppTranslation();
 
     const handleLogin = async (email: string, password: string) => {
         props.setIsLoading(true);
@@ -72,13 +75,13 @@ const LoginCard = forwardRef<LoginCardHandle, LoginCardProps>((props, ref) => {
 
     return (
         <VStack className="w-full" space="3xl">
-            <VStack className="md:items-center" space="md">
-                <Heading className="md:text-center text-right font-semibold text-[#333333]" size="2xl">
-                    ברוך הבא 👋
-                </Heading>
-                <Text className="md:text-center text-right text-[#4F4F4F]">
-                    התחבר כדי לשמור על עצמך ועל אחרים.
-                </Text>
+            <VStack className={`${isRtl ? 'items-end' : 'items-start'} md:items-center`} space="md">
+                <RTLText className="font-semibold text-[#333333] md:text-center">
+                    {t('auth.welcome')}
+                </RTLText>
+                <RTLText className="text-[#4F4F4F] md:text-center">
+                    {t('auth.login_subtitle')}
+                </RTLText>
             </VStack>
             <VStack className="w-full mt-10">
                 <VStack space="xl" className="w-full">
@@ -93,8 +96,8 @@ const LoginCard = forwardRef<LoginCardHandle, LoginCardProps>((props, ref) => {
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input>
                                     <InputField
-                                        className="text-right"
-                                        placeholder="כתובת מייל"
+                                        className={isRtl ? "text-right" : "text-left"}
+                                        placeholder={t('auth.email')}
                                         value={value}
                                         onChangeText={onChange}
                                         onBlur={onBlur}
@@ -103,11 +106,11 @@ const LoginCard = forwardRef<LoginCardHandle, LoginCardProps>((props, ref) => {
                                 </Input>
                             )}
                         />
-                        <FormControlError className="justify-end">
+                        <FormControlError className={isRtl ? "justify-end" : "justify-start"}>
+                            <FormControlErrorIcon as={AlertTriangle} />
                             <FormControlErrorText>
                                 {errors?.email?.message}
                             </FormControlErrorText>
-                            <FormControlErrorIcon as={AlertTriangle} />
                         </FormControlError>
                     </FormControl>
                     <FormControl
@@ -124,9 +127,9 @@ const LoginCard = forwardRef<LoginCardHandle, LoginCardProps>((props, ref) => {
                                         <InputIcon as={showPassword ? EyeIcon : EyeOffIcon} />
                                     </InputSlot>
                                     <InputField
-                                        className="text-right"
+                                        className={isRtl ? "text-right" : "text-left"}
                                         type={showPassword ? "text" : "password"}
-                                        placeholder="סיסמה"
+                                        placeholder={t('auth.password')}
                                         value={value}
                                         onChangeText={onChange}
                                         onBlur={onBlur}
@@ -135,11 +138,11 @@ const LoginCard = forwardRef<LoginCardHandle, LoginCardProps>((props, ref) => {
                                 </Input>
                             )}
                         />
-                        <FormControlError className="justify-end">
+                        <FormControlError className={isRtl ? "justify-end" : "justify-start"}>
+                            <FormControlErrorIcon as={AlertTriangle} />
                             <FormControlErrorText>
                                 {errors?.password?.message}
                             </FormControlErrorText>
-                            <FormControlErrorIcon as={AlertTriangle} />
                         </FormControlError>
                     </FormControl>
                 </VStack>

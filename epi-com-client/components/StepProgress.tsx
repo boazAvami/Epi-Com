@@ -13,8 +13,9 @@ import {
 } from 'react-native';
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
-import { ArrowRight } from "lucide-react-native";
+import { ArrowRight, ArrowLeft } from "lucide-react-native";
 import { Router, useRouter } from "expo-router";
+import { useAppTranslation } from '@/hooks/useAppTranslation';
 
 type StepRef = {
     onNext: () => Promise<void>;
@@ -28,10 +29,15 @@ type StepProgressProps = {
     nextText?: string;
 };
 
-const StepProgress = ({ children, onFinish, successRedirectPath, nextText = 'המשך', finishText = 'סיים' }: StepProgressProps) => {
+const StepProgress = ({ children, onFinish, successRedirectPath, nextText, finishText }: StepProgressProps) => {
     const [step, setStep] = useState(0);
     const router: Router = useRouter();
     const fadeAnim = useRef(new Animated.Value(1)).current;
+    const { t, isRtl } = useAppTranslation();
+
+    // Use translations if custom text is not provided
+    const localizedNextText = nextText || t('buttons.next');
+    const localizedFinishText = finishText || t('auth.register.finish_button');
 
     const allStepsRaw = children(() => {});
     const allSteps = React.Children.toArray(allStepsRaw);
@@ -111,9 +117,15 @@ const StepProgress = ({ children, onFinish, successRedirectPath, nextText = 'ה�
     }
 
     const renderStepIndicator = () => (
-        <View style={styles.indicatorContainer}>
+        <View style={[
+            styles.indicatorContainer,
+            isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }
+        ]}>
             {allSteps.map((_, i) => (
-                <View key={i} style={styles.stepContainer}>
+                <View key={i} style={[
+                    styles.stepContainer, 
+                    isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }
+                ]}>
                     <Animated.View
                         style={[
                             styles.stepIndicator,
@@ -136,12 +148,20 @@ const StepProgress = ({ children, onFinish, successRedirectPath, nextText = 'ה�
             <HStack className="w-full justify-center">
                 {renderStepIndicator()}
                 <Button
-                    style={styles.backButton}
+                    style={[
+                        styles.backButton,
+                        isRtl 
+                            ? { left: undefined, right: 0 } 
+                            : { right: undefined, left: 0 }
+                    ]}
                     className="w-10 rounded-full"
                     variant="outline"
                     onPress={handlePrevious}
                 >
-                    <ButtonIcon className="w-30 h-auto" as={ArrowRight} />
+                    <ButtonIcon 
+                        className="w-30 h-auto" 
+                        as={isRtl ? ArrowRight : ArrowLeft} 
+                    />
                 </Button>
             </HStack>
 
@@ -151,7 +171,7 @@ const StepProgress = ({ children, onFinish, successRedirectPath, nextText = 'ה�
 
             <View style={styles.buttonContainer}>
                 <Button onPress={handleNext} style={styles.nextButton}>
-                    <ButtonText>{step < totalSteps - 1 ? nextText : finishText}</ButtonText>
+                    <ButtonText>{step < totalSteps - 1 ? localizedNextText : localizedFinishText}</ButtonText>
                 </Button>
             </View>
         </View>
@@ -165,12 +185,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     indicatorContainer: {
-        flexDirection: 'row-reverse',
         justifyContent: 'center',
         marginBottom: 20,
     },
     stepContainer: {
-        flexDirection: 'row-reverse',
         alignItems: 'center',
     },
     stepIndicator: {
@@ -217,7 +235,6 @@ const styles = StyleSheet.create({
     },
     backButton: {
         position: 'absolute',
-        right: 0,
     },
     nextButton: {
         backgroundColor: '#FE385C',
