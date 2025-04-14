@@ -5,7 +5,10 @@
     "target": "es6",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "./src"
+    "baseUrl": ".",
+    "paths": {
+      "@shared/types": ["../packages/types/src"]
+    }
   },
   "include": [
     "src/**/*.ts",

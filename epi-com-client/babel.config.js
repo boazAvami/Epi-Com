@@ -11,7 +11,8 @@ module.exports = function(api) {
 
             alias: {
                 "@": "./",
-                "tailwind.config": "./tailwind.config.js"
+                "tailwind.config": "./tailwind.config.js",
+                '@shared/types': '../packages/types/src'
             }
         }]]
     };
