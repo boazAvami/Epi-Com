@@ -101,23 +101,62 @@ export default function ProfileScreen() {
     }
   }, [isLoading, userId]);
 
-  // Format date for display
+  // Format date for display with error handling
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      // Try to parse the date based on the format in the API response
+      let date;
+      
+      // If it's a timestamp in milliseconds (as a string)
+      if (typeof dateString === 'string' && !isNaN(Number(dateString))) {
+        date = new Date(Number(dateString));
+      } else {
+        // Fallback to regular date parsing
+        date = new Date(dateString);
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.log("Invalid date:", dateString);
+        return "No expiry date";
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return "Invalid date";
+    }
   };
 
-  // Determine if an EpiPen is expiring soon (within 3 days)
   const isExpiringSoon = (dateString: string) => {
-    const expiryDate = new Date(dateString);
-    const now = new Date();
-    const diff = expiryDate.getTime() - now.getTime();
-    const days = diff / (1000 * 60 * 60 * 24);
-    return days <= 3 && days > 0;
+    try {
+      let expiryDate;
+      
+      // If it's a timestamp in milliseconds (as a string)
+      if (typeof dateString === 'string' && !isNaN(Number(dateString))) {
+        expiryDate = new Date(Number(dateString));
+      } else {
+        // Fallback to regular date parsing
+        expiryDate = new Date(dateString);
+      }
+      
+      // Check if date is valid
+      if (isNaN(expiryDate.getTime())) {
+        return false;
+      }
+      
+      const now = new Date();
+      const diff = expiryDate.getTime() - now.getTime();
+      const days = diff / (1000 * 60 * 60 * 24);
+      return days <= 3 && days > 0;
+    } catch (error) {
+      console.error("Error checking if date is expiring soon:", dateString, error);
+      return false;
+    }
   };
 
   // Function to get expiry date style based on condition
@@ -264,14 +303,6 @@ export default function ProfileScreen() {
               ))}
             </VStack>
           )}
-          
-          {/* Add EpiPen button */}
-          <TouchableOpacity 
-            style={styles.addButton}
-            onPress={() => router.push("/(tabs)/create")}
-          >
-            <Text style={styles.addButtonText}>+ Add New EpiPen</Text>
-          </TouchableOpacity>
         </Box>
       </ScrollView>
     </SafeAreaView>
