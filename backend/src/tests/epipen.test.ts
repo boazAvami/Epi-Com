@@ -1,9 +1,9 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import { App } from '../app';
-import { userModel } from '../models/userModel';
-import {  EpiPenModel } from '../models/epipenModel';
-import {IUser} from "@shared/types"; // Assuming you have an epiPen model
+import { IUser, userModel } from '../models/userModel';
+import {  EpiPenKind, EpiPenModel } from '../models/epipenModel'; // Assuming you have an epiPen model
+
 
 let appInstance: App = new App();
 
@@ -60,6 +60,7 @@ describe('EpiPen GraphQL Tests', () => {
           contact: { phone: '1234567890', name: 'John Doe' },
           image: 'https://example.com/epipen.jpg',
           serialNumber: 'ABC123XbYZ',
+          kind: EpiPenKind.ADULT,
         },
       };
   
@@ -89,6 +90,7 @@ describe('EpiPen GraphQL Tests', () => {
           contact: { phone: '1234567890', name: 'John Doe' },
           image: 'https://example.com/epipen.jpg',
           serialNumber: 'ABC123XaYZ',
+          kind: EpiPenKind.ADULT,
         },
       };
   
@@ -140,6 +142,7 @@ describe('EpiPen GraphQL Tests', () => {
           contact: { phone: '1234567890', name: 'John Doe' },
           image: 'https://example.com/epipen.jpg',
           serialNumber: 'ABC123XcYZ',
+          kind: EpiPenKind.ADULT,
         },
       };
   
@@ -193,6 +196,7 @@ describe('EpiPen GraphQL Tests', () => {
           contact: { phone: '1234567890', name: 'John Doe' },
           image: 'https://example.com/epipen.jpg',
           serialNumber: 'DEF456LMcN',
+          kind: EpiPenKind.ADULT,
         },
       };
   
