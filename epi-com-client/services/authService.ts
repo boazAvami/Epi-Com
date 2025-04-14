@@ -5,6 +5,7 @@ import {RegisterData} from "@/shared/types/register-data.type";
 
 export const login = async (email: string, password: string) => {
     return axios.post(`${API_URL}/auth/login`, { email, password }).then(res => {
+        console.log(res.data)
         return res.data;
     }).catch(err => {
         throw (err.response.data || 'Login failed');
@@ -20,7 +21,7 @@ export const logout = async (token: string) => {
     const accessToken: string | null = await getToken();
 
     await axios.post(`${API_URL}/auth/logout`, {refreshToken: token}, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` }
     });
 };
 

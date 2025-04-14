@@ -7,16 +7,17 @@ import {
   Image, 
   Alert,
   KeyboardAvoidingView,
-  Platform,
-  GestureResponderEvent
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Camera, Edit2 } from "lucide-react-native";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { ChevronLeft, Camera, LogOut } from "lucide-react-native";
 import { useAuth } from '@/context/authContext';
 import { useAuth as useAuthStore } from '@/stores/useAuth';
 import { UpdateUser } from '@/services/graphql/graphqlUserService';
+import DateInput from "@/components/DatePicker";
+import { EGender } from '@shared/types';
+import { RegisterData } from '@/shared/types/register-data.type';
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -31,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { InputField } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ButtonText } from "@/components/ui/button";
+import { FormControl } from "@/components/ui/form-control";
 import { Select, SelectTrigger, SelectInput, SelectIcon, SelectPortal, SelectItem, SelectContent } from "@/components/ui/select";
 
 // Types
@@ -41,9 +43,10 @@ interface EmergencyContact {
 
 export default function ProfileSettingsScreen() {
   const router = useRouter();
-  const { getUserInfo } = useAuth();
-  const { user } = useAuthStore();
+  const { getUserInfo, logout } = useAuth(); // Get logout from context
+  const { user, refreshToken } = useAuthStore(); // Get refreshToken from auth store
   const [isLoading, setIsLoading] = useState(!user);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Form state management - these will be initialized once user data is loaded
   const [userName, setUserName] = useState<string>('');
@@ -52,14 +55,11 @@ export default function ProfileSettingsScreen() {
   const [email, setEmail] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [gender, setGender] = useState<string>('');
-  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [allergies, setAllergies] = useState<string>('');
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
-  
-  // Date picker state
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   
   // Fetch user data and initialize form state
   useEffect(() => {
@@ -98,6 +98,8 @@ export default function ProfileSettingsScreen() {
         ? new Date(user.date_of_birth)
         : user.date_of_birth;
       setDateOfBirth(dob);
+    } else {
+      setDateOfBirth(undefined);
     }
     
     // Handle allergies (convert array to comma-separated string)
@@ -111,22 +113,6 @@ export default function ProfileSettingsScreen() {
     } else {
       setEmergencyContacts([]);
     }
-  };
-  
-  // Handle date changes
-  const onDateChange = (event: any, selectedDate?: Date): void => {
-    const currentDate = selectedDate || dateOfBirth || new Date();
-    setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
-    setDateOfBirth(currentDate);
-  };
-  
-  // Format date for display
-  const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
   };
   
   // Add emergency contact
@@ -146,6 +132,27 @@ export default function ProfileSettingsScreen() {
     const updatedContacts = [...emergencyContacts];
     updatedContacts.splice(index, 1);
     setEmergencyContacts(updatedContacts);
+  };
+  
+  // Handle logout
+  const handleLogout = async (): Promise<void> => {
+    if (!refreshToken) {
+      Alert.alert("Error", "No refresh token found.");
+      return;
+    }
+    
+    try {
+      setIsLoggingOut(true);
+      // Call the API logout function
+      await logout();
+      // Navigate to login screen
+      router.replace("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      Alert.alert("Error", "Failed to logout. Please try again.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
   
   // Handle form submission
@@ -178,7 +185,7 @@ export default function ProfileSettingsScreen() {
       email !== user.email ||
       phoneNumber !== (user.phone_number || '') ||
       gender !== (user.gender || '') ||
-      dateOfBirth?.toString() !== user.date_of_birth?.toString() ||
+      (dateOfBirth?.toISOString() !== (user.date_of_birth ? new Date(user.date_of_birth).toISOString() : undefined)) ||
       allergies !== (Array.isArray(user.allergies) ? user.allergies.join(', ') : '') ||
       JSON.stringify(emergencyContacts) !== JSON.stringify(user.emergencyContacts || []);
     
@@ -191,16 +198,16 @@ export default function ProfileSettingsScreen() {
     }
     
     // Prepare data for update
-    const updatedUserData = {
+    const updatedUserData: Partial<RegisterData> = {
       userName,
       firstName: firstName.trim() === '' ? null : firstName,
       lastName: lastName.trim() === '' ? null : lastName,
       email,
       phone_number: phoneNumber.trim() === '' ? null : phoneNumber,
-      gender: gender || undefined,
-      date_of_birth: dateOfBirth,
+      gender: gender as EGender || null,
+      date_of_birth: dateOfBirth || null,
       allergies: allergies.split(",").map(item => item.trim()).filter(item => item),
-      emergencyContacts
+      emergencyContacts: emergencyContacts.length > 0 ? emergencyContacts : null
     };
     
     try {
@@ -242,12 +249,12 @@ export default function ProfileSettingsScreen() {
       >
         {/* Header with back button */}
         <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.push("/(tabs)/profile")}
-        >
-          <Icon as={ChevronLeft} size="lg" color="#333333" />
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => router.push("/(tabs)/profile")}
+          >
+            <Icon as={ChevronLeft} size="lg" color="#333333" />
+          </TouchableOpacity>
           <Heading size="lg">Settings</Heading>
           <View style={styles.placeholder} />
         </View>
@@ -277,6 +284,35 @@ export default function ProfileSettingsScreen() {
           </Center>
           
           <Box style={styles.formContainer}>
+            {/* Logout Button */}
+            <TouchableOpacity 
+            style={styles.logoutButton}
+            onPress={() => {
+                if (isLoggingOut) return; // Prevent multiple triggers
+                Alert.alert(
+                "Logout",
+                "Are you sure you want to logout?",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { 
+                    text: "Yes, Logout", 
+                    onPress: () => {
+                        if (!isLoggingOut) {
+                        handleLogout();
+                        }
+                    }, 
+                    style: "destructive" 
+                    }
+                ]
+                );
+            }}
+            disabled={isLoggingOut}
+            >
+            <Icon as={LogOut} size="md" color="#AF3C3F" />
+            <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+
+            
             <Heading size="md" style={styles.sectionTitle}>Account Information</Heading>
             
             {/* User Info Form */}
@@ -336,34 +372,22 @@ export default function ProfileSettingsScreen() {
                 </SelectTrigger>
                 <SelectPortal>
                   <SelectContent>
-                    <SelectItem label="Male" value="Male" />
-                    <SelectItem label="Female" value="Female" />
-                    <SelectItem label="Other" value="Other" />
-                    <SelectItem label="Prefer not to say" value="" />
+                    <SelectItem label="Male" value={EGender.MALE} />
+                    <SelectItem label="Female" value={EGender.FEMALE} />
+                    <SelectItem label="Other" value={EGender.OTHER} />
+                    <SelectItem label="Prefer not to say" value={EGender.OTHER} />
                   </SelectContent>
                 </SelectPortal>
               </Select>
               
               {/* Date of Birth */}
-              <TouchableOpacity 
-                style={styles.datePickerButton} 
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={styles.datePickerButtonText}>
-                  {dateOfBirth ? formatDate(dateOfBirth) : "Select Date of Birth"}
-                </Text>
-                <Icon as={Edit2} size="xs" color="#666" />
-              </TouchableOpacity>
-              
-              {showDatePicker && (
-                <DateTimePicker
-                  value={dateOfBirth || new Date()}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={onDateChange}
-                  maximumDate={new Date()}
+              <FormControl>
+                <DateInput 
+                  onChange={(date) => setDateOfBirth(date)} 
+                  onBlur={() => {}} 
+                  value={dateOfBirth}
                 />
-              )}
+              </FormControl>
             </VStack>
             
             <Divider style={styles.divider} />
@@ -465,7 +489,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
-    paddingHorizontal: 10, // Added container horizontal padding
+    paddingHorizontal: 10,
   },
   keyboardAvoidView: {
     flex: 1,
@@ -487,8 +511,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 40,
-    paddingTop: 10, // Added top padding
-    paddingHorizontal: 10, // Added horizontal padding to scroll content
+    paddingTop: 10,
+    paddingHorizontal: 10,
   },
   profilePictureSection: {
     marginVertical: 20,
@@ -523,10 +547,22 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   formContainer: {
-    paddingHorizontal: 25, // Increased from 20 to 25
-    maxWidth: 600, // Added max width for better centering on larger screens
-    alignSelf: 'center', // Center the form container
-    width: '100%', // Ensure it still takes full width on small screens
+    paddingHorizontal: 25,
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    padding: 10,
+    marginBottom: 16,
+  },
+  logoutText: {
+    color: '#AF3C3F',
+    marginLeft: 8,
+    fontWeight: '600',
   },
   sectionTitle: {
     marginBottom: 16,
@@ -544,20 +580,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     marginVertical: 24,
-  },
-  datePickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 4,
-    backgroundColor: '#f8f8f8',
-  },
-  datePickerButtonText: {
-    color: '#333',
   },
   allergiesInput: {
     marginTop: 8,
