@@ -2,6 +2,80 @@
     "app": {
       "title": "Where Is Epi"
     },
+    "auth": {
+      "welcome": "Welcome 👋",
+      "login_subtitle": "Sign in to keep yourself and others safe.",
+      "email": "Email address",
+      "password": "Password",
+      "login_button": "Login",
+      "login_with_google": "Sign in with Google",
+      "sign_up_link": "Sign up",
+      "no_account": "Don't have an account?",
+      "loading": {
+        "checking": "Checking your details...",
+        "almost": "Soon you'll see who can help nearby...",
+        "final": "Almost there...",
+        "title": "Saving your details...",
+        "subtitle": "Just a moment ✨"
+      },
+      "register": {
+        "title": "Register",
+        "subtitle": "Sign up now to receive and provide help in emergency situations.",
+        "description": "Where's Epi connects people with life-threatening allergies to EpiPen carriers nearby. Registration is quick and secure — so you can be protected, all the time.",
+        "benefits": {
+          "fast": "⚡ Fast registration",
+          "privacy": "🔒 Your privacy is protected",
+          "help": "❤️ Help in the most critical moments"
+        },
+        "continue": "Continue to registration",
+        "step1": {
+          "title": "Let's get started",
+          "subtitle": "Create your account to use all features",
+          "username": "Username",
+          "confirm_password": "Confirm password"
+        },
+        "step2": {
+          "title": "Tell us about yourself",
+          "subtitle": "We need some personal details to complete your registration",
+          "first_name": "First Name",
+          "last_name": "Last Name",
+          "phone": "Phone Number",
+          "date_of_birth": "Date of Birth",
+          "gender": "Gender"
+        },
+        "step3": {
+          "title": "Do you have any allergies?",
+          "subtitle": "Do you have allergies? Choose from the list below.",
+          "subtitle2": "If you don't have allergies, you can simply continue."
+        },
+        "step4": {
+          "title": "Who can we contact in case of emergency?",
+          "subtitle": "Add a contact who can help you in an emergency. This information will only be used when you need help - and it's secure and protected.",
+          "contact_name": "Contact Name"
+        },
+        "step5": {
+          "title": "We're finishing! Just choose a photo 📸",
+          "subtitle": "It's time to choose a profile picture to accompany you in the app.",
+          "subtitle2": "You can also skip and add it later."
+        },
+        "loading": {
+          "title": "Saving your details...",
+          "subtitle": "Just a moment ✨"
+        },
+        "success": {
+          "title": "Glad you're here – you're now part of us",
+          "subtitle": "From now on, you're never alone with your allergy.\nThe app connects people, injects confidence,\nand provides immediate assistance in emergencies.",
+          "button": "Let's start"
+        },
+        "error": {
+          "title": "Something went wrong 😞",
+          "subtitle": "We couldn't complete the registration.\nPlease check your connection and try again.",
+          "button": "Try again"
+        },
+        "finish_button": "Finish"
+      },
+      "sign_in": "Sign In"
+    },
     "search": {
       "placeholder": "Search for a location...",
       "no_results": "No results found",
@@ -59,7 +133,11 @@
     "buttons": {
       "cancel": "Cancel",
       "save": "Save",
-      "change_language": "Change to Hebrew"
+      "change_language": "Change to Hebrew",
+      "logout": "Logout",
+      "next": "Next",
+      "confirm": "Confirm",
+      "select": "Select"
     },
     "actions": {
       "openWhatsApp": "Open in WhatsApp"
@@ -75,10 +153,38 @@
       "required": "Required",
       "required_fields": "Fields marked with asterisk (*) are required",
       "optional": "Optional",
-      "ok": "OK"
+      "ok": "OK",
+      "register": {
+        "email_required": "Please enter an email address",
+        "email_invalid": "Invalid email address",
+        "username_required": "Please enter a username",
+        "username_min": "Username must be at least 2 characters",
+        "username_max": "Username cannot exceed 30 characters",
+        "password_required": "Please enter a password",
+        "password_min": "Password must be at least 6 characters",
+        "confirm_password_required": "Please confirm your password",
+        "confirm_password_min": "Confirm password must be at least 6 characters",
+        "passwords_match": "Passwords don't match",
+        "first_name_min": "First name must be at least 2 characters",
+        "first_name_max": "First name cannot exceed 50 characters",
+        "last_name_min": "Last name must be at least 2 characters",
+        "last_name_max": "Last name cannot exceed 50 characters",
+        "phone_required": "Please enter a phone number",
+        "phone_invalid": "Invalid phone number",
+        "prefix_invalid": "Invalid prefix",
+        "dob_required": "Please enter your date of birth",
+        "gender_required": "Please select your gender",
+        "emergency_contact_required": "Please add at least one emergency contact",
+        "profile_picture_invalid": "Invalid image URL"
+      }
     },
     "errors": {
-      "location_denied": "Permission to access location was denied",
-      "location_error": "Could not get your location"
+      "location_denied": "Location access denied",
+      "location_error": "Couldn't get your location"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
     }
   }

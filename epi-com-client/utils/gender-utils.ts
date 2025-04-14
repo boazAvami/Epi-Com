@@ -1,18 +1,19 @@
 import {IDropdownItem} from "@/components/Dropdown";
 import {EGender} from "@shared/types";
+import i18n from "@/i18n";
 
 export const genderOptions: IDropdownItem[] = Object.values(EGender).map((gender) => {
-    let label = '';
+    let translationKey = '';
     switch (gender) {
         case EGender.MALE:
-            label = 'זכר';
+            translationKey = 'gender.male';
             break;
         case EGender.FEMALE:
-            label = 'נקבה';
+            translationKey = 'gender.female';
             break;
         case EGender.OTHER:
-            label = 'אחר';
+            translationKey = 'gender.other';
             break;
     }
-    return { label, value: gender };
+    return { label: i18n.t(translationKey), value: gender };
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getValidationMessage } from "@/utils/validation-messages";
 
 export const registerStep5Schema = z.object({
     profile_picture_uri: z
@@ -8,7 +9,7 @@ export const registerStep5Schema = z.object({
             (val) =>
                 !val || val.startsWith("http") || val.startsWith("file://"),
             {
-                message: "כתובת התמונה אינה תקינה",
+                message: getValidationMessage('profile_picture_invalid'),
             }
         ),
 });

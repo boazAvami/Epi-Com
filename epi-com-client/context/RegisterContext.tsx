@@ -26,7 +26,11 @@ export const RegisterProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [formData, setFormDataState] = useState<RegisterData>(defaultRegisterData);
 
     const setFormData = (data: Partial<RegisterData>) => {
-        setFormDataState((prev: any) => ({ ...prev, ...data }));
+        setFormDataState((prev: any) => {
+            const updated = { ...prev, ...data };
+            console.log('Updated form data:', updated);
+            return updated;
+        });
     };
 
     return (
@@ -36,10 +40,13 @@ export const RegisterProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
 };
 
-export const useRegister = () => {
+export const useRegister = (): RegisterContextType => {
     const context = useContext(RegisterContext);
+    
     if (!context) {
         throw new Error('useRegister must be used within a RegisterProvider');
     }
+    
+    console.log('Accessing form data from RegisterContext:', context.formData)
     return context;
 };

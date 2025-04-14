@@ -160,10 +160,10 @@ export const EpipenDetails: React.FC<EpipenDetailsProps> = ({ epipen, onClose })
           )}
           
           {/* Contact Information - Phone */}
-          {epipen.contact?.phoneNumber && (
+          {epipen.contact?.phone && (
             <EpipenInfoCard
               label={t('details.contactPhone')}
-              value={epipen.contact.phoneNumber}
+              value={epipen.contact.phone}
               isPhone={true}
             />
           )}
