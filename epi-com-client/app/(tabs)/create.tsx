@@ -3,6 +3,8 @@ import { Pressable, View, Text, TextInput, Image, Alert, FlatList, SafeAreaView}
 import { Button, ButtonText } from "@/components/ui/button";
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+import { getToken } from '@/utils/tokenStorage';
+import { API_URL } from '@/constants/Env';
 
 const AddEpiPen = () => {
   const [location, setLocation] = useState(null);
@@ -55,7 +57,7 @@ const AddEpiPen = () => {
     let formData = new FormData();
     formData.append('file', { uri, name: 'upload.jpg', type: 'image/jpeg' });
 
-    const response = await fetch('http://localhost:4000/graphql/files', {
+    const response = await fetch(`${API_URL}/graphql/files`, {
       method: 'POST',
       body: formData,
       headers: { 
@@ -112,11 +114,13 @@ const AddEpiPen = () => {
       },
     };
 
-    await fetch('http://localhost:4000/graphql/', {
+    const accessToken: string | null = await getToken();
+
+    await fetch(`${API_URL}/graphql`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2YyYTY5ZTQ0MDc5MmEzNDk2NmY1ZWMiLCJyYW5kb20iOiIwLjgyOTYxMjQyNzQ3MDA3NjciLCJpYXQiOjE3NDM5NTU2MTQsImV4cCI6MTc0NDU2MDQxNH0.f6OytPS2gHqSeK4paR77QA-Q4kT1xzenMAJv_Ml_0KI'}`,
+        Authorization: `Bearer ${accessToken}`,
        },
       
       body: JSON.stringify(graphqlQuery),

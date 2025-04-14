@@ -109,6 +109,27 @@ export const epiPenResolvers = {
       }
       return await EpiPenModel.find({ userId: new mongoose.Types.ObjectId(userId) });
     },
+    allEpiPens: async (_: any, {}) => {
+      
+      // Return all epipens in the database
+      const epipens = await EpiPenModel.find({});
+      
+      // Format the response to match the GraphQL schema
+      return epipens.map(epipen => ({
+        _id: epipen._id,
+        userId: epipen.userId,
+        location: {
+          latitude: epipen.location.coordinates[1],  // MongoDB stores as [longitude, latitude]
+          longitude: epipen.location.coordinates[0]
+        },
+        description: epipen.description,
+        expiryDate: epipen.expiryDate.toISOString(),
+        contact: epipen.contact,
+        image: epipen.image,
+        serialNumber: epipen.serialNumber,
+        kind: epipen.kind
+      }));
+    },
     nearbyEpiPens: async (_: any, { input }: { input: NearbyEpiPenInput }) => {
       const nearbyEpiPens = await EpiPenModel.find({
         location: {

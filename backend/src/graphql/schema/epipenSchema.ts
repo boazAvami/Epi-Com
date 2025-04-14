@@ -87,6 +87,7 @@ export const epiPenTypeDefs = gql`
     epiPenById(_id: ID!): EpiPen
     epiPensByUser(userId: ID!): [EpiPen]
     nearbyEpiPens(input: NearbyEpiPenInput!): [NearbyEpiPen]
+    allEpiPens: [EpiPen]
   }
 
   type Mutation {

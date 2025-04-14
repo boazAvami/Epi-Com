@@ -17,7 +17,8 @@ interface AddEpipenModalProps {
   onSave: (data: EpipenFormData) => void;
   userLocation: Location | null;
   customLocation?: Location | null;
-  onSelectCustomLocation?: () => void;
+  onSelectCustomLocation?: (formData?: Partial<EpipenFormData>) => void;
+  savedFormData?: Partial<EpipenFormData>;
 }
 
 export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
@@ -27,13 +28,25 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
   onSave,
   userLocation,
   customLocation,
-  onSelectCustomLocation
+  onSelectCustomLocation,
+  savedFormData = {}
 }) => {
   const { t } = useAppTranslation();
   const [formData, setFormData] = useState<Partial<EpipenFormData>>({});
   
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['25%', '35%'], []); 
+
+  // Initialize form data with saved data when modal becomes visible or savedFormData changes
+  useEffect(() => {
+    if (visible && Object.keys(savedFormData).length > 0) {
+      console.log('Restoring saved form data:', savedFormData);
+      setFormData(prevData => ({
+        ...prevData,
+        ...savedFormData
+      }));
+    }
+  }, [visible, savedFormData]);
 
   const handleOpenPhotoOptions = useCallback(() => {
     bottomSheetRef.current?.expand();
@@ -44,16 +57,17 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
   }, []);
 
   useEffect(() => {
-    if (formData.image) {
-      console.log("Photo set in formData state:", formData.image);
+    if (formData.photo) {
+      console.log("Photo set in formData state:", formData.photo);
     }
-  }, [formData.image]);
+  }, [formData.photo]);
   
   useEffect(() => {
     if (customLocation) {
+      console.log('AddEpipenModal received custom location:', customLocation);
       setFormData(prevData => ({
         ...prevData,
-        location: customLocation
+        coordinate: customLocation
       }));
     }
   }, [customLocation]);
@@ -102,7 +116,7 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
           console.log("Image selected:", imageUri);
           setFormData(prevData => ({
             ...prevData,
-            image: imageUri
+            photo: imageUri
           }));
         } else {
           console.log("Image selection was canceled by user");
@@ -131,9 +145,9 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
   // Handler for selecting custom location
   const handleSelectCustomLocation = useCallback(() => {
     if (onSelectCustomLocation) {
-      onSelectCustomLocation();
+      onSelectCustomLocation(formData);
     }
-  }, [onSelectCustomLocation]);
+  }, [onSelectCustomLocation, formData]);
 
   return (
     <Modal

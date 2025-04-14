@@ -26,7 +26,6 @@ export const RegisterProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [formData, setFormDataState] = useState<RegisterData>(defaultRegisterData);
 
     const setFormData = (data: Partial<RegisterData>) => {
-        console.log('Setting form data in RegisterContext:', data);
         setFormDataState((prev: any) => {
             const updated = { ...prev, ...data };
             console.log('Updated form data:', updated);
@@ -48,6 +47,6 @@ export const useRegister = (): RegisterContextType => {
         throw new Error('useRegister must be used within a RegisterProvider');
     }
     
-    console.log('Accessing form data from RegisterContext:', context.formData);
+    console.log('Accessing form data from RegisterContext:', context.formData)
     return context;
 };
