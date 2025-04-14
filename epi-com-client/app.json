@@ -23,6 +23,13 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos for your profile picture or epipens pictures.",
+          "cameraPermission": "The app accesses your camera to take profile pictures or epipens pictures."
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",

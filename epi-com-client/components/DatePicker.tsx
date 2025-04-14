@@ -31,7 +31,25 @@ const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => 
             const formatted = value.toLocaleDateString(locale);
             setDate(value);
             setDateDisplay(formatted);
-        } else {
+        } else if (value) {
+            // Try to parse string date
+            try {
+                const timestamp = typeof value === 'string' ? Number(value) : value;
+                const dateObj = new Date(timestamp);
+
+                if (!isNaN(dateObj.getTime())) {
+                    const formatted = dateObj.toLocaleDateString('he-IL');
+                    setDate(dateObj);
+                    setDateDisplay(formatted);
+                  } else {
+                    setDateDisplay("");
+                    }
+            } catch(error) {
+                console.error('Error parsing date:', error);
+              setDateDisplay("");
+            }
+          } else {
+            console.log('No value provided');
             setDateDisplay("");
         }
     }, [value, language]);

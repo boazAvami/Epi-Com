@@ -7,16 +7,24 @@ import {
   Image, 
   Alert,
   KeyboardAvoidingView,
-  Platform,
-  GestureResponderEvent
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Camera, Edit2 } from "lucide-react-native";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { ChevronLeft, Camera, LogOut } from "lucide-react-native";
 import { useAuth } from '@/context/authContext';
 import { useAuth as useAuthStore } from '@/stores/useAuth';
 import { UpdateUser } from '@/services/graphql/graphqlUserService';
+import DateInput from "@/components/DatePicker";
+import { EGender, EAllergy, IEmergencyContact } from '@shared/types';
+import { RegisterData } from '@/shared/types/register-data.type';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import * as ImagePicker from 'expo-image-picker';
+import { Pencil } from 'lucide-react-native';
+import { Pressable } from 'react-native';
+
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -27,41 +35,92 @@ import { HStack } from "@/components/ui/hstack";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { Divider } from "@/components/ui/divider";
-import { Input } from "@/components/ui/input";
-import { InputField } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ButtonText } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectInput, SelectIcon, SelectPortal, SelectItem, SelectContent } from "@/components/ui/select";
+import { Input, InputField } from "@/components/ui/input";
+import { Button, ButtonText } from "@/components/ui/button";
+import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control";
+import { AlertTriangle } from 'lucide-react-native';
+import PhoneNumberInput from "@/components/PhoneNumberInput";
+import DropdownComponent from "@/components/Dropdown";
+import { genderOptions } from "@/utils/gender-utils";
+import Chips from "@/components/Chips";
+import { ChipItem } from "@/components/Chip";
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallbackText,
+  AvatarImage,
+} from '@/components/ui/avatar';
 
-// Types
-interface EmergencyContact {
-  name: string;
-  phone: string;
+// Interface for form emergency contacts that allows optional fields during editing
+interface FormEmergencyContact {
+  name?: string;
+  phone?: string;
 }
+
+// Define validation schema for profile settings
+const profileSettingsSchema = z.object({
+  userName: z.string().min(1, "Username is required"),
+  firstName: z.string().min(2, "first name is required"),
+  lastName: z.string().min(2, "last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone_number: z.string().optional(),
+  gender: z.string().optional(),
+  date_of_birth: z.date().optional(),
+  allergies: z.array(z.string()).optional(),
+  emergencyContacts: z.array(
+    z.object({
+      name: z.string().optional(),
+      phone: z.string().optional(),
+    })
+  ).optional(),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+  profile_picture_uri: z.string().optional(),
+});
+
+// Make sure types match schema
+type ProfileSettingsFormData = z.infer<typeof profileSettingsSchema>;
 
 export default function ProfileSettingsScreen() {
   const router = useRouter();
-  const { getUserInfo } = useAuth();
-  const { user } = useAuthStore();
+  const { getUserInfo, logout } = useAuth();
+  const { user, refreshToken } = useAuthStore();
   const [isLoading, setIsLoading] = useState(!user);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>(
+    Object.values(EAllergy).map((allergy: string) => ({label: allergy, value: allergy}))
+  );
   
-  // Form state management - these will be initialized once user data is loaded
-  const [userName, setUserName] = useState<string>('');
-  const [firstName, setFirstName] = useState<string>('');
-  const [lastName, setLastName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [gender, setGender] = useState<string>('');
-  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [allergies, setAllergies] = useState<string>('');
-  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
+  // Set up form with React Hook Form
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    watch,
+  } = useForm<ProfileSettingsFormData>({
+    resolver: zodResolver(profileSettingsSchema),
+    defaultValues: {
+      userName: user?.userName || '',
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || '',
+      phone_number: user?.phone_number || '',
+      gender: user?.gender,
+      date_of_birth: user?.date_of_birth ? new Date(Number(user.date_of_birth)) : undefined,
+      allergies: user?.allergies || [],
+      // Convert IEmergencyContact[] to FormEmergencyContact[]
+      emergencyContacts: user?.emergencyContacts?.map(contact => ({
+        name: contact.name,
+        phone: contact.phone
+      })) || [{ name: '', phone: '' }],
+      password: '',
+      confirmPassword: '',
+      profile_picture_uri: user?.profile_picture_uri || '',
+    }
+  });
   
-  // Date picker state
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  
-  // Fetch user data and initialize form state
+  // Initialize form with user data once available
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -69,7 +128,35 @@ export default function ProfileSettingsScreen() {
           await getUserInfo();
         } else {
           // Initialize form fields with user data
-          initializeFormFields();
+          setValue('userName', user.userName || '');
+          setValue('firstName', user.firstName || '');
+          setValue('lastName', user.lastName || '');
+          setValue('email', user.email || '');
+          setValue('phone_number', user.phone_number || '');
+          setValue('gender', user.gender);
+          
+          if (user.date_of_birth) {
+            // Convert to number firs
+            const timestamp = Number(user.date_of_birth);
+            const dateObj = new Date(timestamp);
+
+            // Check if the date is valid before setting it
+            if (!isNaN(dateObj.getTime())) {
+              setValue('date_of_birth', dateObj);
+            } else {
+              console.log('Invalid date, not setting in form');
+            }
+          }
+          
+          setValue('allergies', user.allergies || []);
+          
+          // Convert IEmergencyContact[] to FormEmergencyContact[]
+          setValue('emergencyContacts', user.emergencyContacts?.map(contact => ({
+            name: contact.name,
+            phone: contact.phone
+          })) || [{ name: '', phone: '' }]);
+          
+          setValue('profile_picture_uri', user.profile_picture_uri || '');
         }
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -81,138 +168,236 @@ export default function ProfileSettingsScreen() {
     fetchUserData();
   }, [user]);
 
-  // Initialize form fields from user data
-  const initializeFormFields = () => {
-    if (!user) return;
-    
-    setUserName(user.userName || '');
-    setFirstName(user.firstName || '');
-    setLastName(user.lastName || '');
-    setEmail(user.email || '');
-    setPhoneNumber(user.phone_number || '');
-    setGender(user.gender || '');
-    
-    // Handle date of birth (convert string to Date if needed)
-    if (user.date_of_birth) {
-      const dob = typeof user.date_of_birth === 'string' 
-        ? new Date(user.date_of_birth)
-        : user.date_of_birth;
-      setDateOfBirth(dob);
-    }
-    
-    // Handle allergies (convert array to comma-separated string)
-    if (Array.isArray(user.allergies)) {
-      setAllergies(user.allergies.join(', '));
-    }
-    
-    // Handle emergency contacts
-    if (Array.isArray(user.emergencyContacts)) {
-      setEmergencyContacts([...user.emergencyContacts]);
-    } else {
-      setEmergencyContacts([]);
-    }
-  };
-  
-  // Handle date changes
-  const onDateChange = (event: any, selectedDate?: Date): void => {
-    const currentDate = selectedDate || dateOfBirth || new Date();
-    setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
-    setDateOfBirth(currentDate);
-  };
-  
-  // Format date for display
-  const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-  
   // Add emergency contact
-  const addEmergencyContact = (): void => {
-    setEmergencyContacts([...emergencyContacts, { name: "", phone: "" }]);
-  };
-  
-  // Update emergency contact
-  const updateEmergencyContact = (index: number, field: keyof EmergencyContact, value: string): void => {
-    const updatedContacts = [...emergencyContacts];
-    updatedContacts[index][field] = value;
-    setEmergencyContacts(updatedContacts);
+  const addEmergencyContact = () => {
+    const currentContacts = watch('emergencyContacts') || [];
+    setValue('emergencyContacts', [...currentContacts, { name: '', phone: '' }]);
   };
   
   // Remove emergency contact
-  const removeEmergencyContact = (index: number): void => {
-    const updatedContacts = [...emergencyContacts];
-    updatedContacts.splice(index, 1);
-    setEmergencyContacts(updatedContacts);
+  const removeEmergencyContact = (index: number) => {
+    const currentContacts = watch('emergencyContacts') || [];
+    setValue(
+      'emergencyContacts',
+      currentContacts.filter((_, i) => i !== index)
+    );
+  };
+  
+  // Handle logout
+  const handleLogout = async () => {
+    if (!refreshToken) {
+      Alert.alert("Error", "No refresh token found.");
+      return;
+    }
+    
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      router.replace("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      Alert.alert("Error", "Failed to logout. Please try again.");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  // Handle picking an image from the gallery
+  const handlePickImage = async () => {
+    console.log('Image picker triggered');  
+    
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    console.log('Permission status:', status);
+    
+    if (status !== 'granted') {
+      Alert.alert("Permission Required", "You need to grant permission to access your photos.");
+      return;
+    }
+  
+    try {  // Add try/catch to catch any errors
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      console.log('Image picker result:', result);  // Add this line
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        console.log('Setting new image URI:', result.assets[0].uri);  // Add this line
+        setValue('profile_picture_uri', result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert("Error", "Failed to select image. Please try again.");
+    }
+  };
+
+  // Add this function to your component
+const handleProfilePictureOptions = () => {
+  Alert.alert(
+    "Profile Picture",
+    "Select an option",
+    [
+      {
+        text: "Choose from Library",
+        onPress: handlePickImage
+      },
+      {
+        text: "Take Photo",
+        onPress: handleTakePhoto
+      },
+      {
+        text: "Remove Current Picture",
+        onPress: handleRemovePicture,
+        style: "destructive"
+      },
+      {
+        text: "Cancel",
+        style: "cancel"
+      }
+    ]
+  );
+};
+
+// Add these two new handler functions
+const handleTakePhoto = async () => {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert("Permission Required", "You need to grant camera permission to take a photo.");
+    return;
+  }
+
+  try {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setValue('profile_picture_uri', result.assets[0].uri);
+    }
+  } catch (error) {
+    console.error('Error taking photo:', error);
+    Alert.alert("Error", "Failed to take photo. Please try again.");
+  }
+};
+
+const handleRemovePicture = () => {
+  Alert.alert(
+    "Remove Picture",
+    "Are you sure you want to remove your profile picture?",
+    [
+      {
+        text: "Cancel",
+        style: "cancel"
+      },
+      {
+        text: "Remove",
+        onPress: () => {
+          setValue('profile_picture_uri', '')
+          
+          // Log to confirm the value has been removed
+          console.log("Profile picture removed, current value:", watch('profile_picture_uri'));
+        },
+        style: "destructive"
+      }
+    ]
+  );
+};
+  
+  // Convert form emergency contacts to IEmergencyContact[] | null
+  const convertEmergencyContacts = (
+    contacts?: FormEmergencyContact[] | null
+  ): IEmergencyContact[] | null => {
+    if (!contacts || contacts.length === 0) return null;
+    
+    // Filter out invalid contacts (where name or phone is empty)
+    const validContacts = contacts
+      .filter(contact => contact.name && contact.phone) // Only keep contacts with both name and phone
+      .map(contact => ({
+        name: contact.name as string, // We've verified these exist in the filter
+        phone: contact.phone as string
+      }));
+    
+    return validContacts.length > 0 ? validContacts : null;
   };
   
   // Handle form submission
-  const handleSave = async (): Promise<void> => {
-    // Validate form
-    if (!userName || !email) {
-      Alert.alert("Error", "Username and email are required.");
-      return;
-    }
-    
-    if (password !== confirmPassword) {
+  const onSubmit = async (data: ProfileSettingsFormData) => {
+    if (data.password !== data.confirmPassword) {
       Alert.alert("Error", "Passwords do not match.");
-      return;
-    }
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address.");
       return;
     }
     
     // Check if any changes were made
     if (!user) return;
+
+    const formDateStr = data.date_of_birth?.toISOString();
+    const userDateStr = user.date_of_birth ? new Date(Number(user.date_of_birth)).toISOString() : undefined;
+    console.log('Comparing dates:', formDateStr, userDateStr);
     
+    // Explicit check for profile picture change
+    const isPictureChanged = data.profile_picture_uri !== user.profile_picture_uri;
+    console.log("Profile picture changed:", isPictureChanged, 
+      "Old:", user.profile_picture_uri, 
+      "New:", data.profile_picture_uri);
+
     const hasChanges = 
-      userName !== user.userName ||
-      firstName !== (user.firstName || '') ||
-      lastName !== (user.lastName || '') ||
-      email !== user.email ||
-      phoneNumber !== (user.phone_number || '') ||
-      gender !== (user.gender || '') ||
-      dateOfBirth?.toString() !== user.date_of_birth?.toString() ||
-      allergies !== (Array.isArray(user.allergies) ? user.allergies.join(', ') : '') ||
-      JSON.stringify(emergencyContacts) !== JSON.stringify(user.emergencyContacts || []);
+      data.userName !== user.userName ||
+      data.firstName !== (user.firstName || '') ||
+      data.lastName !== (user.lastName || '') ||
+      data.profile_picture_uri !== user.profile_picture_uri ||
+      data.email !== user.email ||
+      data.phone_number !== (user.phone_number || '') ||
+      data.gender !== (user.gender || '') ||
+      formDateStr !== userDateStr ||
+      JSON.stringify(data.allergies) !== JSON.stringify(user.allergies || []) ||
+      JSON.stringify(data.emergencyContacts) !== JSON.stringify(user.emergencyContacts?.map(contact => ({
+        name: contact.name,
+        phone: contact.phone
+      })) || []);
     
     // If no changes, show message and return
-    if (!hasChanges) {
+    if (!hasChanges && !data.password) {
       Alert.alert("Info", "No changes detected.", [
         { text: "OK", onPress: () => router.push("/(tabs)/profile") }
       ]);
       return;
     }
+
+    // Explicitly handle the profile_picture_uri field
+    // If it's an empty string, set it to null for the API
+    const profilePictureValue = data.profile_picture_uri === '' ? null : data.profile_picture_uri;
+    console.log("Profile picture value being sent to API:", profilePictureValue);
     
-    // Prepare data for update
-    const updatedUserData = {
-      userName,
-      firstName: firstName.trim() === '' ? null : firstName,
-      lastName: lastName.trim() === '' ? null : lastName,
-      email,
-      phone_number: phoneNumber.trim() === '' ? null : phoneNumber,
-      gender: gender || undefined,
-      date_of_birth: dateOfBirth,
-      allergies: allergies.split(",").map(item => item.trim()).filter(item => item),
-      emergencyContacts
+    // Prepare data for update with type conversion for emergency contacts
+    const updatedUserData: Partial<RegisterData> = {
+      userName: data.userName,
+      firstName: data.firstName?.trim() === '' ? null : data.firstName,
+      lastName: data.lastName?.trim() === '' ? null : data.lastName,
+      profile_picture_uri: profilePictureValue,
+      email: data.email,
+      phone_number: data.phone_number?.trim() === '' ? undefined : data.phone_number,
+      gender: data.gender as EGender || null,
+      date_of_birth: data.date_of_birth || null,
+      allergies: data.allergies?.length ? data.allergies : [],
+      emergencyContacts: convertEmergencyContacts(data.emergencyContacts)
     };
+    
+    // Add password only if provided
+    if (data.password) {
+      updatedUserData.password = data.password;
+    }
     
     try {
       setIsLoading(true);
-      
-      // Call the UpdateUser function
+      console.log("Sending update with data:", JSON.stringify(updatedUserData));
       await UpdateUser(updatedUserData);
-      
-      // Refresh the user data in the store
       await getUserInfo();
       
-      // Show success message
       Alert.alert("Success", "Your profile has been updated.", [
         { text: "OK", onPress: () => router.push("/(tabs)/profile") }
       ]);
@@ -242,12 +427,12 @@ export default function ProfileSettingsScreen() {
       >
         {/* Header with back button */}
         <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.push("/(tabs)/profile")}
-        >
-          <Icon as={ChevronLeft} size="lg" color="#333333" />
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => router.push("/(tabs)/profile")}
+          >
+            <Icon as={ChevronLeft} size="lg" color="#333333" />
+          </TouchableOpacity>
           <Heading size="lg">Settings</Heading>
           <View style={styles.placeholder} />
         </View>
@@ -255,157 +440,286 @@ export default function ProfileSettingsScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Profile Picture Section */}
           <Center style={styles.profilePictureSection}>
-            <View style={styles.profileImageContainer}>
-              {user?.profile_picture_uri ? (
-                <Image 
-                  source={{ uri: user.profile_picture_uri }} 
-                  style={styles.profileImage} 
-                />
-              ) : (
-                <View style={styles.defaultProfileImage}>
-                  <Text size="xl" bold>
-                    {firstName && lastName 
-                      ? firstName.charAt(0) + lastName.charAt(0)
-                      : userName.charAt(0)}
-                  </Text>
-                </View>
-              )}
-              <TouchableOpacity style={styles.cameraButton}>
-                <Icon as={Camera} size="sm" color="#fff" />
-              </TouchableOpacity>
-            </View>
+            <FormControl isInvalid={!!errors.profile_picture_uri}>
+              <Pressable 
+              onPress={handleProfilePictureOptions}
+              style={({ pressed }) => [
+                { opacity: pressed ? 0.7 : 1 }  // This will show visual feedback when pressed
+              ]}>
+                <Avatar size="2xl">
+                  <AvatarFallbackText>
+                    {watch('firstName') && watch('lastName')
+                      ? `${watch('firstName')} ${watch('lastName')}`
+                      : watch('userName')}
+                  </AvatarFallbackText>
+                  <AvatarImage
+                    source={
+                      watch('profile_picture_uri')
+                        ? { uri: watch('profile_picture_uri') }
+                        : require('@/assets/images/profile_avatar_placeholder.png')
+                    }
+                  />
+                  <AvatarBadge className="justify-center items-center bg-background-400">
+                    <Icon as={Pencil} color="#fff" />
+                  </AvatarBadge>
+                </Avatar>
+              </Pressable>
+              <FormControlError>
+                <FormControlErrorText>{errors.profile_picture_uri?.message}</FormControlErrorText>
+                <FormControlErrorIcon as={AlertTriangle} />
+              </FormControlError>
+            </FormControl>
           </Center>
           
           <Box style={styles.formContainer}>
+            {/* Logout Button */}
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={() => {
+                if (isLoggingOut) return;
+                Alert.alert(
+                  "Logout",
+                  "Are you sure you want to logout?",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { 
+                      text: "Yes, Logout", 
+                      onPress: () => {
+                        if (!isLoggingOut) {
+                          handleLogout();
+                        }
+                      },
+                      style: "destructive" 
+                    }
+                  ]
+                );
+              }}
+              disabled={isLoggingOut}
+            >
+              <Icon as={LogOut} size="md" color="#AF3C3F" />
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
             <Heading size="md" style={styles.sectionTitle}>Account Information</Heading>
             
             {/* User Info Form */}
             <VStack space="md">
-              <Input>
-                <InputField
-                  placeholder="Username"
-                  value={userName}
-                  onChangeText={setUserName}
+              {/* Username */}
+              <FormControl isInvalid={!!errors.userName}>
+                <Controller
+                  name="userName"
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input>
+                      <InputField
+                        placeholder="Username"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                      />
+                    </Input>
+                  )}
                 />
-              </Input>
+                <FormControlError>
+                  <FormControlErrorText>{errors.userName?.message}</FormControlErrorText>
+                  <FormControlErrorIcon as={AlertTriangle} />
+                </FormControlError>
+              </FormControl>
               
+              {/* First Name and Last Name */}
               <HStack space="sm" style={styles.nameFields}>
-                <Input style={styles.halfInput}>
-                  <InputField
-                    placeholder="First Name"
-                    value={firstName}
-                    onChangeText={setFirstName}
+                <FormControl isInvalid={!!errors.firstName} style={styles.halfInput}>
+                  <Controller
+                    name="firstName"
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <Input>
+                        <InputField
+                          placeholder="First Name"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                        />
+                      </Input>
+                    )}
                   />
-                </Input>
-                <Input style={styles.halfInput}>
-                  <InputField
-                    placeholder="Last Name"
-                    value={lastName}
-                    onChangeText={setLastName}
+                </FormControl>
+                
+                <FormControl isInvalid={!!errors.lastName} style={styles.halfInput}>
+                  <Controller
+                    name="lastName"
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <Input>
+                        <InputField
+                          placeholder="Last Name"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                        />
+                      </Input>
+                    )}
                   />
-                </Input>
+                </FormControl>
               </HStack>
               
-              <Input>
-                <InputField
-                  placeholder="Email"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+              {/* Email */}
+              <FormControl isInvalid={!!errors.email}>
+                <Controller
+                  name="email"
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input>
+                      <InputField
+                        placeholder="Email"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </Input>
+                  )}
                 />
-              </Input>
+                <FormControlError>
+                  <FormControlErrorText>{errors.email?.message}</FormControlErrorText>
+                  <FormControlErrorIcon as={AlertTriangle} />
+                </FormControlError>
+              </FormControl>
               
-              <Input>
-                <InputField
-                  placeholder="Phone Number"
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  keyboardType="phone-pad"
+              {/* Phone Number - Using the same PhoneNumberInput component as registration */}
+              <FormControl isInvalid={!!errors.phone_number}>
+                <Controller
+                  name="phone_number"
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <PhoneNumberInput 
+                      onChange={onChange} 
+                      onBlur={onBlur} 
+                      value={value || ''}
+                      isInvalid={!!errors.phone_number}
+                    />
+                  )}
                 />
-              </Input>
+                <FormControlError>
+                  <FormControlErrorText>{errors.phone_number?.message}</FormControlErrorText>
+                  <FormControlErrorIcon as={AlertTriangle} />
+                </FormControlError>
+              </FormControl>
               
-              {/* Gender Selection */}
-              <Select
-                selectedValue={gender}
-                onValueChange={(value: string) => setGender(value)}
-              >
-                <SelectTrigger>
-                  <SelectInput placeholder="Select Gender" />
-                  <SelectIcon />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectContent>
-                    <SelectItem label="Male" value="Male" />
-                    <SelectItem label="Female" value="Female" />
-                    <SelectItem label="Other" value="Other" />
-                    <SelectItem label="Prefer not to say" value="" />
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
-              
-              {/* Date of Birth */}
-              <TouchableOpacity 
-                style={styles.datePickerButton} 
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={styles.datePickerButtonText}>
-                  {dateOfBirth ? formatDate(dateOfBirth) : "Select Date of Birth"}
-                </Text>
-                <Icon as={Edit2} size="xs" color="#666" />
-              </TouchableOpacity>
-              
-              {showDatePicker && (
-                <DateTimePicker
-                  value={dateOfBirth || new Date()}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={onDateChange}
-                  maximumDate={new Date()}
+              {/* Gender - Using the same DropdownComponent as registration */}
+              <FormControl isInvalid={!!errors.gender}>
+                <Controller
+                  name="gender"
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <DropdownComponent 
+                      value={value || ''} 
+                      onChange={onChange} 
+                      items={genderOptions}
+                      isInvalid={!!errors.gender}
+                    />
+                  )}
                 />
-              )}
+                <FormControlError>
+                  <FormControlErrorText>{errors.gender?.message}</FormControlErrorText>
+                  <FormControlErrorIcon as={AlertTriangle} />
+                </FormControlError>
+              </FormControl>
+              
+              {/* Date of Birth - Using the same DateInput component as registration */}
+              <FormControl isInvalid={!!errors.date_of_birth}>
+                <Controller
+                  name="date_of_birth"
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => {
+                    return (
+                      <DateInput 
+                        onChange={onChange} 
+                        onBlur={onBlur} 
+                        value={value}
+                      />
+                    );
+                  }}
+                />
+                <FormControlError>
+                  <FormControlErrorText>{errors.date_of_birth?.message}</FormControlErrorText>
+                  <FormControlErrorIcon as={AlertTriangle} />
+                </FormControlError>
+              </FormControl>
             </VStack>
             
             <Divider style={styles.divider} />
             
             {/* Password section */}
-            <Heading size="md" style={styles.sectionTitle}>Change Password</Heading>
+            {/* <Heading size="md" style={styles.sectionTitle}>Change Password</Heading>
             <VStack space="md">
-              <Input>
-                <InputField
-                  placeholder="New Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
+              <FormControl isInvalid={!!errors.password}>
+                <Controller
+                  name="password"
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input>
+                      <InputField
+                        placeholder="New Password"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        secureTextEntry
+                      />
+                    </Input>
+                  )}
                 />
-              </Input>
-              <Input>
-                <InputField
-                  placeholder="Confirm New Password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
+              </FormControl>
+              
+              <FormControl isInvalid={!!errors.confirmPassword}>
+                <Controller
+                  name="confirmPassword"
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input>
+                      <InputField
+                        placeholder="Confirm New Password"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        secureTextEntry
+                      />
+                    </Input>
+                  )}
                 />
-              </Input>
-            </VStack>
+              </FormControl>
+            </VStack> */}
             
-            <Divider style={styles.divider} />
+            {/* <Divider style={styles.divider} /> */}
             
-            {/* Allergies section */}
+            {/* Allergies section - Using the same Chips component as registration */}
             <Heading size="md" style={styles.sectionTitle}>Medical Information</Heading>
             <Text style={styles.sectionDescription}>List any allergies or medical conditions that emergency responders should know about.</Text>
-            <Input style={styles.allergiesInput}>
-              <InputField
-                placeholder="Allergies (separate with commas)"
-                value={allergies}
-                onChangeText={setAllergies}
-                multiline
+            
+            <FormControl isInvalid={!!errors.allergies}>
+              <Controller
+                name="allergies"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Chips
+                    type="filter"
+                    itemVariant="outlined"
+                    items={allergiesItems}
+                    setItems={setAllergiesItems}
+                    selectedValues={value || []}
+                    setSelectedValues={onChange}
+                  />
+                )}
               />
-            </Input>
+              <FormControlError>
+                <FormControlErrorText>{errors.allergies?.message}</FormControlErrorText>
+                <FormControlErrorIcon as={AlertTriangle} />
+              </FormControlError>
+            </FormControl>
             
             <Divider style={styles.divider} />
             
-            {/* Emergency contacts section */}
+            {/* Emergency contacts section - Using similar structure to registration step-4 */}
             <View style={styles.emergencyContactsHeader}>
               <Heading size="md">Emergency Contacts</Heading>
               <TouchableOpacity 
@@ -419,26 +733,49 @@ export default function ProfileSettingsScreen() {
             <Text style={styles.sectionDescription}>People to contact in case of emergency.</Text>
             
             <VStack space="md" style={styles.emergencyContactsList}>
-              {emergencyContacts.map((contact, index) => (
+              {watch('emergencyContacts')?.map((_, index) => (
                 <View key={index} style={styles.emergencyContactItem}>
-                  <HStack space="sm" style={styles.contactFields}>
-                    <Input style={styles.contactNameInput}>
-                      <InputField
-                        placeholder="Contact Name"
-                        value={contact.name}
-                        onChangeText={(value: string) => updateEmergencyContact(index, 'name', value)}
-                      />
-                    </Input>
-                    <Input style={styles.contactPhoneInput}>
-                      <InputField
-                        placeholder="Phone Number"
-                        value={contact.phone}
-                        onChangeText={(value: string) => updateEmergencyContact(index, 'phone', value)}
-                        keyboardType="phone-pad"
-                      />
-                    </Input>
-                  </HStack>
-                  {emergencyContacts.length > 1 && (
+                  <FormControl isInvalid={!!errors?.emergencyContacts?.[index]?.name}>
+                    <Controller
+                      name={`emergencyContacts.${index}.name`}
+                      control={control}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <Input>
+                          <InputField
+                            placeholder="Contact Name"
+                            value={value || ''}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                          />
+                        </Input>
+                      )}
+                    />
+                    <FormControlError>
+                      <FormControlErrorText>{errors?.emergencyContacts?.[index]?.name?.message}</FormControlErrorText>
+                      <FormControlErrorIcon as={AlertTriangle} />
+                    </FormControlError>
+                  </FormControl>
+                  
+                  <FormControl isInvalid={!!errors?.emergencyContacts?.[index]?.phone} style={{ marginTop: 8 }}>
+                    <Controller
+                      name={`emergencyContacts.${index}.phone`}
+                      control={control}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <PhoneNumberInput 
+                          onChange={onChange} 
+                          onBlur={onBlur} 
+                          value={value || ''}
+                          isInvalid={!!errors?.emergencyContacts?.[index]?.phone}
+                        />
+                      )}
+                    />
+                    <FormControlError>
+                      <FormControlErrorText>{errors?.emergencyContacts?.[index]?.phone?.message}</FormControlErrorText>
+                      <FormControlErrorIcon as={AlertTriangle} />
+                    </FormControlError>
+                  </FormControl>
+                  
+                  {(watch('emergencyContacts') || []).length > 1 && (
                     <TouchableOpacity 
                       style={styles.removeButton}
                       onPress={() => removeEmergencyContact(index)}
@@ -451,8 +788,12 @@ export default function ProfileSettingsScreen() {
             </VStack>
             
             {/* Save Button */}
-            <Button style={styles.saveButton} onPress={handleSave}>
-              <ButtonText>Save Changes</ButtonText>
+            <Button 
+              style={styles.saveButton} 
+              onPress={handleSubmit(onSubmit)}
+              isDisabled={isLoading}
+            >
+              <ButtonText>{isLoading ? 'Saving...' : 'Save Changes'}</ButtonText>
             </Button>
           </Box>
         </ScrollView>
@@ -465,7 +806,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
-    paddingHorizontal: 10, // Added container horizontal padding
+    paddingHorizontal: 10,
   },
   keyboardAvoidView: {
     flex: 1,
@@ -487,8 +828,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 40,
-    paddingTop: 10, // Added top padding
-    paddingHorizontal: 10, // Added horizontal padding to scroll content
+    paddingTop: 10,
+    paddingHorizontal: 10,
   },
   profilePictureSection: {
     marginVertical: 20,
@@ -523,10 +864,22 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   formContainer: {
-    paddingHorizontal: 25, // Increased from 20 to 25
-    maxWidth: 600, // Added max width for better centering on larger screens
-    alignSelf: 'center', // Center the form container
-    width: '100%', // Ensure it still takes full width on small screens
+    paddingHorizontal: 25,
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    padding: 10,
+    marginBottom: 16,
+  },
+  logoutText: {
+    color: '#AF3C3F',
+    marginLeft: 8,
+    fontWeight: '600',
   },
   sectionTitle: {
     marginBottom: 16,
@@ -545,23 +898,6 @@ const styles = StyleSheet.create({
   divider: {
     marginVertical: 24,
   },
-  datePickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 4,
-    backgroundColor: '#f8f8f8',
-  },
-  datePickerButtonText: {
-    color: '#333',
-  },
-  allergiesInput: {
-    marginTop: 8,
-  },
   emergencyContactsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -579,21 +915,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   emergencyContactItem: {
-    marginBottom: 12,
-  },
-  contactFields: {
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  contactNameInput: {
-    flex: 0.55,
-  },
-  contactPhoneInput: {
-    flex: 0.45,
+    marginBottom: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   removeButton: {
     alignSelf: 'flex-end',
-    marginTop: 4,
+    marginTop: 8,
     padding: 4,
   },
   removeButtonText: {

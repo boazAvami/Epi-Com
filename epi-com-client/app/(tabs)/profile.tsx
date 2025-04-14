@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, ScrollView, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/authContext';
 import { Settings } from "lucide-react-native";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth as useAuthStore } from '@/stores/useAuth';
+import { getAllUserEpiPens } from '@/services/graphql/graphqlEpiPenService';
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -15,74 +16,31 @@ import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { Divider } from "@/components/ui/divider";
 
-// Post type definition
-type Location = {
-  address: string;
-  coordinates?: {
+// EpiPen type definition
+type EpiPen = {
+  _id: string;
+  userId: string;
+  location: {
     latitude: number;
     longitude: number;
-  }
-};
-
-type Contact = {
-  phone?: string;
-  email?: string;
-  name?: string;
-};
-
-type Post = {
-  userId: string;
-  location: Location;
+  };
   description: string;
-  expiryDate: Date;
-  contact: Contact;
-  image: string;
+  expiryDate: string;
+  contact: {
+    phone?: string;
+    name?: string;
+  };
+  image?: string;
   serialNumber: string;
 };
-
-// Mock posts data - in a real app, this would be fetched from an API
-const mockPosts: Post[] = [
-  {
-    userId: "user123",
-    location: {
-      address: "123 Main St, New York, NY",
-      coordinates: {
-        latitude: 40.7128,
-        longitude: -74.0060
-      }
-    },
-    description: "Used bicycle in great condition, almost new.",
-    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-    contact: {
-      phone: "+1 (555) 123-4567",
-      email: "sarah.collins@example.com",
-      name: "Sarah"
-    },
-    image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e",
-    serialNumber: "BIKE-001"
-  },
-  {
-    userId: "user123",
-    location: {
-      address: "456 Park Ave, New York, NY"
-    },
-    description: "Gaming console, like new. Comes with two controllers and three games.",
-    expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
-    contact: {
-      phone: "+1 (555) 123-4567",
-      email: "sarah.collins@example.com"
-    },
-    image: "https://images.unsplash.com/photo-1486572788966-cfd3df1f5b42",
-    serialNumber: "GAME-002"
-  }
-];
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { logout, getUserInfo } = useAuth();
-  const { user } = useAuthStore();
+  const { user, userId } = useAuthStore();
   const [isLoading, setIsLoading] = useState(!user);
-  const [posts] = useState(mockPosts); // In a real app, fetch posts based on user ID
+  const [epiPens, setEpiPens] = useState<EpiPen[]>([]);
+  const [isLoadingEpiPens, setIsLoadingEpiPens] = useState(true);
   const insets = useSafeAreaInsets();
 
   // Fetch user data when component mounts if not already loaded
@@ -103,26 +61,107 @@ export default function ProfileScreen() {
     fetchUserData();
   }, []);
 
-  // Format date for display
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  // Fetch user's EpiPens
+  useEffect(() => {
+    const fetchEpiPens = async () => {
+      try {
+        setIsLoadingEpiPens(true);
+        
+        // Get the userId from the store
+        const currentUserId = userId;
+        // console.log("Fetching EpiPens for user ID:", currentUserId);
+        
+        if (!currentUserId) {
+          console.error("No user ID available");
+          setIsLoadingEpiPens(false);
+          return;
+        }
+
+        const response = await getAllUserEpiPens(currentUserId);
+
+        // console.log("Raw API response:", JSON.stringify(response));
+
+        if (response && response.epiPensByUser) {
+          // console.log("Found EpiPens:", response.epiPensByUser.length);
+          setEpiPens(response.epiPensByUser);
+        } else {
+          console.log("No EpiPensByUser property found in response:", response);
+        }
+      } catch (error) {
+        console.error("Failed to fetch EpiPens:", error);
+      } finally {
+        setIsLoadingEpiPens(false);
+      }
+    };
+
+    if (!isLoading && userId) {
+      fetchEpiPens();
+    } else {
+      console.log("Not fetching EpiPens yet. isLoading:", isLoading, "userId:", userId);
+    }
+  }, [isLoading, userId]);
+
+  // Format date for display with error handling
+  const formatDate = (dateString: string) => {
+    try {
+      // Try to parse the date based on the format in the API response
+      let date;
+      
+      // If it's a timestamp in milliseconds (as a string)
+      if (typeof dateString === 'string' && !isNaN(Number(dateString))) {
+        date = new Date(Number(dateString));
+      } else {
+        // Fallback to regular date parsing
+        date = new Date(dateString);
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.log("Invalid date:", dateString);
+        return "No expiry date";
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return "Invalid date";
+    }
   };
 
-  // Determine if a post is expiring soon (within 3 days)
-  const isExpiringSoon = (date: Date) => {
-    const now = new Date();
-    const diff = date.getTime() - now.getTime();
-    const days = diff / (1000 * 60 * 60 * 24);
-    return days <= 3 && days > 0;
+  const isExpiringSoon = (dateString: string) => {
+    try {
+      let expiryDate;
+      
+      // If it's a timestamp in milliseconds (as a string)
+      if (typeof dateString === 'string' && !isNaN(Number(dateString))) {
+        expiryDate = new Date(Number(dateString));
+      } else {
+        // Fallback to regular date parsing
+        expiryDate = new Date(dateString);
+      }
+      
+      // Check if date is valid
+      if (isNaN(expiryDate.getTime())) {
+        return false;
+      }
+      
+      const now = new Date();
+      const diff = expiryDate.getTime() - now.getTime();
+      const days = diff / (1000 * 60 * 60 * 24);
+      return days <= 3 && days > 0;
+    } catch (error) {
+      console.error("Error checking if date is expiring soon:", dateString, error);
+      return false;
+    }
   };
 
   // Function to get expiry date style based on condition
-  const getExpiryDateStyle = (date: Date) => {
-    return isExpiringSoon(date) 
+  const getExpiryDateStyle = (dateString: string) => {
+    return isExpiringSoon(dateString) 
       ? { ...styles.expiryDate, ...styles.expiringSoon }
       : styles.expiryDate;
   };
@@ -141,6 +180,16 @@ export default function ProfileScreen() {
     if (user.userName) return user.userName.charAt(0);
     if (user.email) return user.email.charAt(0);
     return '';
+  };
+
+  // Function to get location address display
+  const getLocationDisplay = (location: { latitude: number; longitude: number }) => {
+    return `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
+  };
+
+  // Function to get contact display
+  const getContactDisplay = (contact: { phone?: string; name?: string }) => {
+    return contact.name || contact.phone || 'No contact info';
   };
 
   if (isLoading) {
@@ -194,45 +243,58 @@ export default function ProfileScreen() {
         
         <Divider style={styles.divider} />
         
-        {/* User posts section */}
+        {/* User EpiPens section */}
         <Box style={styles.postsContainer}>
-          <Heading size="md" style={styles.sectionTitle}>My Posts</Heading>
+          <Heading size="md" style={styles.sectionTitle}>My EpiPens</Heading>
           
-          {posts.length === 0 ? (
-            <Text style={styles.emptyState}>You haven't created any posts yet.</Text>
+          {isLoadingEpiPens ? (
+            <Center style={{ padding: 20 }}>
+              <ActivityIndicator size="large" color="#0000ff" />
+              <Text style={{ marginTop: 8 }}>Loading EpiPens...</Text>
+            </Center>
+          ) : epiPens.length === 0 ? (
+            <Text style={styles.emptyState}>You haven't added any EpiPens yet.</Text>
           ) : (
             <VStack space="md">
-              {posts.map((post, index) => (
+              {epiPens.map((epiPen) => (
                 <TouchableOpacity 
-                  key={post.serialNumber}
+                  key={epiPen._id}
                   style={styles.postCard}
-                  onPress={() => console.log(`View post ${post.serialNumber}`)}
+                  onPress={() => console.log(`View EpiPen ${epiPen._id}`)}
                 >
                   <View style={styles.postContent}>
                     <View style={styles.postImageContainer}>
-                      <Image 
-                        source={{ uri: post.image }} 
-                        style={styles.postImage} 
-                        defaultSource={require('@/assets/images/no_image_icon.png')}
-                      />
+                      {epiPen.image ? (
+                        <Image 
+                          source={{ uri: epiPen.image }} 
+                          style={styles.postImage} 
+                        />
+                      ) : (
+                        <View style={styles.noImageContainer}>
+                          <Text size="xs" style={styles.noImageText}>No Image</Text>
+                        </View>
+                      )}
                     </View>
                     
                     <View style={styles.postDetails}>
                       <Text numberOfLines={2} bold style={styles.postDescription}>
-                        {post.description}
+                        {epiPen.description}
                       </Text>
                       <Text size="sm" style={styles.postLocation}>
-                        {post.location.address}
+                        {getLocationDisplay(epiPen.location)}
+                      </Text>
+                      <Text size="sm" style={styles.contactInfo}>
+                        Contact: {getContactDisplay(epiPen.contact)}
                       </Text>
                       <View style={styles.postFooter}>
                         <Text 
                           size="xs" 
-                          style={getExpiryDateStyle(post.expiryDate)}
+                          style={getExpiryDateStyle(epiPen.expiryDate)}
                         >
-                          Expires: {formatDate(post.expiryDate)}
+                          Expires: {formatDate(epiPen.expiryDate)}
                         </Text>
                         <Text size="xs" style={styles.serialNumber}>
-                          #{post.serialNumber}
+                          #{epiPen.serialNumber}
                         </Text>
                       </View>
                     </View>
@@ -255,12 +317,12 @@ const styles = StyleSheet.create({
   header: {
     position: 'relative',
     padding: 20,
-    paddingTop: 60, // Increased to provide more space from the top
+    paddingTop: 60,
     paddingBottom: 24,
   },
   settingsButton: {
     position: 'absolute',
-    top: 60, // Adjusted to match paddingTop for consistency
+    top: 60,
     right: 20,
     zIndex: 10,
   },
@@ -293,6 +355,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#888',
     marginTop: 20,
+    marginBottom: 20,
   },
   postCard: {
     backgroundColor: '#ffffff',
@@ -319,10 +382,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     resizeMode: 'cover',
   },
+  noImageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 4,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noImageText: {
+    color: '#999',
+  },
   postDetails: {
     flex: 1,
     justifyContent: 'space-between',
-    minWidth: 0, // This ensures text will properly truncate
+    minWidth: 0,
   },
   postDescription: {
     fontSize: 16,
@@ -330,7 +404,11 @@ const styles = StyleSheet.create({
   },
   postLocation: {
     color: '#666',
-    marginBottom: 8,
+    marginBottom: 4,
+  },
+  contactInfo: {
+    color: '#666',
+    marginBottom: 4,
   },
   postFooter: {
     flexDirection: 'row',
@@ -345,5 +423,16 @@ const styles = StyleSheet.create({
   },
   serialNumber: {
     color: '#999',
+  },
+  addButton: {
+    backgroundColor: '#4a90e2',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
