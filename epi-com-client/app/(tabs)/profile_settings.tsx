@@ -50,8 +50,8 @@ interface FormEmergencyContact {
 // Define validation schema for profile settings
 const profileSettingsSchema = z.object({
   userName: z.string().min(1, "Username is required"),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
+  firstName: z.string().min(2, "first name is required"),
+  lastName: z.string().min(2, "last name is required"),
   email: z.string().email("Invalid email address"),
   phone_number: z.string().optional(),
   gender: z.string().optional(),
@@ -456,7 +456,7 @@ export default function ProfileSettingsScreen() {
                     <PhoneNumberInput 
                       onChange={onChange} 
                       onBlur={onBlur} 
-                      value={value}
+                      value={value || ''}
                       isInvalid={!!errors.phone_number}
                     />
                   )}
@@ -474,7 +474,7 @@ export default function ProfileSettingsScreen() {
                   control={control}
                   render={({ field: { onChange, value } }) => (
                     <DropdownComponent 
-                      value={value} 
+                      value={value || ''} 
                       onChange={onChange} 
                       items={genderOptions}
                       isInvalid={!!errors.gender}
@@ -637,7 +637,7 @@ export default function ProfileSettingsScreen() {
                     </FormControlError>
                   </FormControl>
                   
-                  {watch('emergencyContacts')?.length > 1 && (
+                  {(watch('emergencyContacts') || []).length > 1 && (
                     <TouchableOpacity 
                       style={styles.removeButton}
                       onPress={() => removeEmergencyContact(index)}
