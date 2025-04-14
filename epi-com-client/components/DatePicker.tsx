@@ -10,25 +10,21 @@ import {
     ModalFooter,
 } from '@/components/ui/modal';
 import { Button, ButtonText } from '@/components/ui/button';
-import { useAppTranslation } from '@/hooks/useAppTranslation';
 
 type DateInputProps = {
     onChange: (date: Date) => void;
     onBlur?: () => void;
     value?: Date;
-    placeholder?: string;
 };
 
-const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => {
+const DateInput = ({ onChange, onBlur, value }: DateInputProps) => {
     const [date, setDate] = useState<Date>(value || new Date());
     const [show, setShow] = useState(false);
     const [dateDisplay, setDateDisplay] = useState<string>("");
-    const { t, isRtl, language } = useAppTranslation();
 
     useEffect(() => {
         if (value instanceof Date && !isNaN(value.getTime())) {
-            const locale = language === 'he' ? 'he-IL' : 'en-US';
-            const formatted = value.toLocaleDateString(locale);
+            const formatted = value.toLocaleDateString('he-IL');
             setDate(value);
             setDateDisplay(formatted);
         } else if (value) {
@@ -52,7 +48,7 @@ const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => 
             console.log('No value provided');
             setDateDisplay("");
         }
-    }, [value, language]);
+    }, [value]);
 
 
     const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -66,8 +62,7 @@ const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => 
     };
 
     const onConfirm = () => {
-        const locale = language === 'he' ? 'he-IL' : 'en-US';
-        setDateDisplay(date.toLocaleDateString(locale));
+        setDateDisplay(date.toLocaleDateString('he-IL'));
         onChange(date);
         setShow(false);
     };
@@ -77,8 +72,8 @@ const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => 
             <Input>
                 <InputField
                     onPress={openModal}
-                    className={isRtl ? "text-right" : "text-left"}
-                    placeholder={placeholder || t('auth.register.step2.date_of_birth')}
+                    className="text-right"
+                    placeholder="תאריך לידה"
                     value={dateDisplay}
                     onBlur={onBlur}
                     editable={false}
@@ -98,16 +93,16 @@ const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => 
                                 value={date}
                                 mode="date"
                                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                locale={isRtl ? "he-IL" : "en-US"}
+                                locale="he-IL"
                                 onChange={onDateChange}
                             />
                         </ModalBody>
                         <ModalFooter>
                             <Button variant="outline" onPress={() => setShow(false)}>
-                                <ButtonText>{t('buttons.cancel')}</ButtonText>
+                                <ButtonText>ביטול</ButtonText>
                             </Button>
                             <Button onPress={onConfirm}>
-                                <ButtonText>{t('buttons.confirm')}</ButtonText>
+                                <ButtonText>אישור</ButtonText>
                             </Button>
                         </ModalFooter>
                     </ModalContent>

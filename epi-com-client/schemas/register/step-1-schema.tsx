@@ -1,28 +1,27 @@
 import { z } from "zod";
-import { getValidationMessage } from "@/utils/validation-messages";
 
 export const registerStep1Schema = z
     .object({
         email: z
-            .string({ required_error: getValidationMessage('email_required') })
-            .min(1, getValidationMessage('email_required'))
-            .email(getValidationMessage('email_invalid')),
+            .string({ required_error: "יש להזין כתובת מייל" })
+            .min(1, "יש להזין כתובת מייל")
+            .email("כתובת מייל לא תקינה"),
 
         userName: z
-            .string({ required_error: getValidationMessage('username_required') })
-            .min(2, getValidationMessage('username_min'))
-            .max(30, getValidationMessage('username_max')),
+            .string({ required_error: "יש להזין שם משתמש" })
+            .min(2, "שם המשתמש חייב להכיל לפחות 2 תווים")
+            .max(30, "שם המשתמש לא יכול להכיל יותר מ־30 תווים"),
 
         password: z
-            .string({ required_error: getValidationMessage('password_required') })
-            .min(6, getValidationMessage('password_min')),
+            .string({ required_error: "יש להזין סיסמה" })
+            .min(6, "הסיסמה חייבת להכיל לפחות 6 תווים"),
 
         confirmPassword: z
-            .string({ required_error: getValidationMessage('confirm_password_required') })
-            .min(6, getValidationMessage('confirm_password_min')),
+            .string({ required_error: "יש להזין אישור סיסמה" })
+            .min(6, "אישור הסיסמה חייב להכיל לפחות 6 תווים"),
     })
     .refine((data) => data.password === data.confirmPassword, {
-        message: getValidationMessage('passwords_match'),
+        message: "הסיסמה ואישור הסיסמה אינן תואמות",
         path: ["confirmPassword"],
     });
 

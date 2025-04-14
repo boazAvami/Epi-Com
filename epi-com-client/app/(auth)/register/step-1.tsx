@@ -20,8 +20,6 @@ import { Heading } from '@/components/ui/heading';
 import { VStack } from '@/components/ui/vstack';
 import { Center } from '@/components/ui/center';
 import { Text } from '@/components/ui/text';
-import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { RTLText } from '@/components/shared/RTLComponents';
 
 export type StepRef = {
     onNext: () => Promise<void>;
@@ -29,7 +27,6 @@ export type StepRef = {
 
 const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
     const { formData, setFormData } = useRegister();
-    const { t, isRtl } = useAppTranslation();
 
     const {
         control,
@@ -80,12 +77,12 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
             <Center className="h-full">
                 <VStack className="max-w-[440px] w-3/4" space="xl">
-                    <RTLText className="font-semibold text-2xl text-[#333]">
-                        {t('auth.register.step1.title')}
-                    </RTLText>
-                    <RTLText className="text-[#4F4F4F]">
-                        {t('auth.register.step1.subtitle')}
-                    </RTLText>
+                    <Heading className="text-right font-semibold text-[#333]" size="2xl">
+                        בואו נכיר קצת 😊
+                    </Heading>
+                    <Text className="text-right text-[#4F4F4F]">
+                        המידע שתשתפו ישמש אותנו רק כדי לעזור לכם בשעת חירום, והוא מאובטח ומוצפן.
+                    </Text>
 
                     <VStack className="w-full mt-10 gap-8">
                         <VStack space="xl" className="w-full">
@@ -97,8 +94,8 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
                                     render={({ field: { onChange, onBlur, value } }) => (
                                         <Input>
                                             <InputField
-                                                className={isRtl ? "text-right" : "text-left"}
-                                                placeholder={t('auth.email')}
+                                                className="text-right"
+                                                placeholder="כתובת מייל"
                                                 value={value}
                                                 onChangeText={onChange}
                                                 onBlur={onBlur}
@@ -107,18 +104,9 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
                                         </Input>
                                     )}
                                 />
-                                <FormControlError className={isRtl ? "justify-end" : "justify-start"}>
-                                    {isRtl ? (
-                                        <>
-                                            <FormControlErrorText>{errors?.email?.message}</FormControlErrorText>
-                                            <FormControlErrorIcon as={AlertTriangle} />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FormControlErrorIcon as={AlertTriangle} />
-                                            <FormControlErrorText>{errors?.email?.message}</FormControlErrorText>
-                                        </>
-                                    )}
+                                <FormControlError className="justify-end">
+                                    <FormControlErrorText>{errors?.email?.message}</FormControlErrorText>
+                                    <FormControlErrorIcon as={AlertTriangle} />
                                 </FormControlError>
                             </FormControl>
 
@@ -130,8 +118,8 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
                                     render={({ field: { onChange, onBlur, value } }) => (
                                         <Input>
                                             <InputField
-                                                className={isRtl ? "text-right" : "text-left"}
-                                                placeholder={t('auth.register.step1.username')}
+                                                className="text-right"
+                                                placeholder="שם משתמש"
                                                 value={value}
                                                 onChangeText={onChange}
                                                 onBlur={onBlur}
@@ -140,18 +128,9 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
                                         </Input>
                                     )}
                                 />
-                                <FormControlError className={isRtl ? "justify-end" : "justify-start"}>
-                                    {isRtl ? (
-                                        <>
-                                            <FormControlErrorText>{errors?.userName?.message}</FormControlErrorText>
-                                            <FormControlErrorIcon as={AlertTriangle} />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FormControlErrorIcon as={AlertTriangle} />
-                                            <FormControlErrorText>{errors?.userName?.message}</FormControlErrorText>
-                                        </>
-                                    )}
+                                <FormControlError className="justify-end">
+                                    <FormControlErrorText>{errors?.userName?.message}</FormControlErrorText>
+                                    <FormControlErrorIcon as={AlertTriangle} />
                                 </FormControlError>
                             </FormControl>
 
@@ -166,9 +145,9 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
                                                 <InputIcon as={showPassword ? EyeIcon : EyeOffIcon} />
                                             </InputSlot>
                                             <InputField
-                                                className={isRtl ? "text-right" : "text-left"}
+                                                className="text-right"
                                                 type={showPassword ? 'text' : 'password'}
-                                                placeholder={t('auth.password')}
+                                                placeholder="סיסמה"
                                                 value={value}
                                                 onChangeText={onChange}
                                                 onBlur={onBlur}
@@ -177,18 +156,9 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
                                         </Input>
                                     )}
                                 />
-                                <FormControlError className={isRtl ? "justify-end" : "justify-start"}>
-                                    {isRtl ? (
-                                        <>
-                                            <FormControlErrorText>{errors?.password?.message}</FormControlErrorText>
-                                            <FormControlErrorIcon as={AlertTriangle} />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FormControlErrorIcon as={AlertTriangle} />
-                                            <FormControlErrorText>{errors?.password?.message}</FormControlErrorText>
-                                        </>
-                                    )}
+                                <FormControlError className="justify-end">
+                                    <FormControlErrorText>{errors?.password?.message}</FormControlErrorText>
+                                    <FormControlErrorIcon as={AlertTriangle} />
                                 </FormControlError>
                             </FormControl>
 
@@ -203,9 +173,9 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
                                                 <InputIcon as={showConfirmPassword ? EyeIcon : EyeOffIcon} />
                                             </InputSlot>
                                             <InputField
-                                                className={isRtl ? "text-right" : "text-left"}
+                                                className="text-right"
                                                 type={showConfirmPassword ? 'text' : 'password'}
-                                                placeholder={t('auth.register.step1.confirm_password')}
+                                                placeholder="אישור סיסמה"
                                                 value={value}
                                                 onChangeText={onChange}
                                                 onBlur={onBlur}
@@ -214,18 +184,9 @@ const RegisterStep1Screen = forwardRef<StepRef>((_, ref) => {
                                         </Input>
                                     )}
                                 />
-                                <FormControlError className={isRtl ? "justify-end" : "justify-start"}>
-                                    {isRtl ? (
-                                        <>
-                                            <FormControlErrorText>{errors?.confirmPassword?.message}</FormControlErrorText>
-                                            <FormControlErrorIcon as={AlertTriangle} />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FormControlErrorIcon as={AlertTriangle} />
-                                            <FormControlErrorText>{errors?.confirmPassword?.message}</FormControlErrorText>
-                                        </>
-                                    )}
+                                <FormControlError className="justify-end">
+                                    <FormControlErrorText>{errors?.confirmPassword?.message}</FormControlErrorText>
+                                    <FormControlErrorIcon as={AlertTriangle} />
                                 </FormControlError>
                             </FormControl>
                         </VStack>

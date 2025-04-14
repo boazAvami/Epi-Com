@@ -1,14 +1,16 @@
 import React, {
     useImperativeHandle,
-    forwardRef, useState, useEffect,
+    forwardRef, useState,
 } from 'react';
 import {ScrollView} from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRegister } from '@/context/RegisterContext';
 import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText } from '@/components/ui/form-control';
+import { Heading } from '@/components/ui/heading';
 import { VStack } from '@/components/ui/vstack';
 import { Center } from '@/components/ui/center';
+import { Text } from '@/components/ui/text';
 import { AlertTriangle } from 'lucide-react-native';
 import { StepRef } from '@/app/(auth)/register/step-1';
 import { registerStep3Schema, registerStep3Type } from '@/schemas/register/step-3-schema';
@@ -16,29 +18,10 @@ import {EAllergy} from "@shared/types";
 import {ChipItem} from "@/components/Chip";
 import Chips from "@/components/Chips";
 import {RegisterData} from "@/shared/types/register-data.type";
-import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { RTLText } from '@/components/shared/RTLComponents';
-
-// Helper to convert enum value to readable format
-const formatAllergyName = (allergyKey: string): string => {
-    // Convert camelCase to words with spaces
-    return allergyKey.replace(/([a-z])([A-Z])/g, '$1 $2');
-}
 
 const RegisterStep3Screen = forwardRef<StepRef>((_, ref) => {
     const { formData, setFormData } = useRegister();
-    const { t, isRtl, language } = useAppTranslation();
-    const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>([]);
-    
-    useEffect(() => {
-        // Create allergy items based on the current language
-        const allergyItems = Object.entries(EAllergy).map(([key, value]) => ({
-            label: isRtl ? value : formatAllergyName(key),
-            value: value
-        }));
-        setAllergiesItems(allergyItems);
-    }, [isRtl, language]);
-    
+    const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>(Object.values(EAllergy).map((allergy: string) => ({label: allergy, value: allergy})));
     const {
         control,
         handleSubmit,
@@ -74,32 +57,23 @@ const RegisterStep3Screen = forwardRef<StepRef>((_, ref) => {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <Center className="h-full">
                 <VStack className="max-w-[440px] w-3/4" space="xl">
-                    <RTLText className="font-semibold text-2xl text-[#333]">
-                        {t('auth.register.step3.title')}
-                    </RTLText>
+                    <Heading className="text-right font-semibold text-[#333]" size="2xl">
+                        האם יש לך רגישויות מסוימות?
+                    </Heading>
                     <VStack space="xs">
-                        <RTLText className="text-[#4F4F4F]">
-                            {t('auth.register.step3.subtitle')}
-                        </RTLText>
+                        <Text className="text-right text-[#4F4F4F]">
+                            יש לך אלרגיות? בחר מהרשימה שלפניך.
+                        </Text>
 
-                        <RTLText className="text-[#4F4F4F]">
-                            {t('auth.register.step3.subtitle2')}
-                        </RTLText>
+                        <Text className="text-right text-[#4F4F4F]">
+                            לא סובל מאלרגיות? אפשר פשוט להמשיך.
+                        </Text>
                     </VStack>
                     <VStack className="w-full mt-2 gap-8">
                         <FormControl isInvalid={!!errors.allergies}>
-                            <FormControlError className={isRtl ? "justify-end" : "justify-start"}>
-                                {isRtl ? (
-                                    <>
-                                        <FormControlErrorText>{errors.allergies?.message}</FormControlErrorText>
-                                        <FormControlErrorIcon as={AlertTriangle} />
-                                    </>
-                                ) : (
-                                    <>
-                                        <FormControlErrorIcon as={AlertTriangle} />
-                                        <FormControlErrorText>{errors.allergies?.message}</FormControlErrorText>
-                                    </>
-                                )}
+                            <FormControlError className="justify-end">
+                                <FormControlErrorText>{errors.allergies?.message}</FormControlErrorText>
+                                <FormControlErrorIcon as={AlertTriangle} />
                             </FormControlError>
                             <Controller
                                 name="allergies"

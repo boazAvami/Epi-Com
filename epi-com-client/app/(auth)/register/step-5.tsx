@@ -10,8 +10,10 @@ import {
     FormControlErrorIcon,
     FormControlErrorText,
 } from '@/components/ui/form-control';
+import { Heading } from '@/components/ui/heading';
 import { VStack } from '@/components/ui/vstack';
 import { Center } from '@/components/ui/center';
+import { Text } from '@/components/ui/text';
 import { AlertTriangle, Pencil } from 'lucide-react-native';
 import { StepRef } from '@/app/(auth)/register/step-1';
 import { RegisterData } from '@/shared/types/register-data.type';
@@ -26,12 +28,9 @@ import {
     AvatarImage,
 } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
-import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { RTLText } from '@/components/shared/RTLComponents';
 
 const RegisterStep5Screen = forwardRef<StepRef>((_, ref) => {
     const { formData, setFormData } = useRegister();
-    const { t, isRtl } = useAppTranslation();
 
     const {
         control,
@@ -71,12 +70,12 @@ const RegisterStep5Screen = forwardRef<StepRef>((_, ref) => {
     const handlePickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            alert(isRtl ? 'אין הרשאה לגשת לגלריה' : 'No permission to access gallery');
+            alert('אין הרשאה לגשת לגלריה');
             return;
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.8,
@@ -91,32 +90,23 @@ const RegisterStep5Screen = forwardRef<StepRef>((_, ref) => {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <Center className="h-full">
                 <VStack className="max-w-[440px] w-3/4" space="xl">
-                    <RTLText className="font-semibold text-2xl text-[#333]">
-                        {t('auth.register.step5.title')}
-                    </RTLText>
+                    <Heading className="text-right font-semibold text-[#333]" size="2xl">
+                        אנחנו מסיימים! נשאר רק לבחור תמונה 📸
+                    </Heading>
                     <VStack space="sm">
-                        <RTLText className="text-[#4F4F4F]">
-                            {t('auth.register.step5.subtitle')}
-                        </RTLText>
-                        <RTLText className="text-[#4F4F4F]">
-                            {t('auth.register.step5.subtitle2')}
-                        </RTLText>
+                        <Text className="text-right text-[#4F4F4F]">
+                            זה הזמן לבחור תמונת פרופיל שתלווה אותך באפליקציה.
+                        </Text>
+                        <Text className="text-right text-[#4F4F4F]">
+                            אפשר גם לדלג ולהוסיף מאוחר יותר.
+                        </Text>
                     </VStack>
 
                     <Center className="w-full mt-2 gap-4">
                         <FormControl isInvalid={!!errors.profile_picture_uri}>
-                            <FormControlError className={isRtl ? "justify-end" : "justify-start"}>
-                                {isRtl ? (
-                                    <>
-                                        <FormControlErrorText>{errors.profile_picture_uri?.message}</FormControlErrorText>
-                                        <FormControlErrorIcon as={AlertTriangle} />
-                                    </>
-                                ) : (
-                                    <>
-                                        <FormControlErrorIcon as={AlertTriangle} />
-                                        <FormControlErrorText>{errors.profile_picture_uri?.message}</FormControlErrorText>
-                                    </>
-                                )}
+                            <FormControlError className="justify-end">
+                                <FormControlErrorText>{errors.profile_picture_uri?.message}</FormControlErrorText>
+                                <FormControlErrorIcon as={AlertTriangle} />
                             </FormControlError>
 
                             <Controller

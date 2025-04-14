@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { EpipenMarker, Location, Contact } from '../../types';
+import { EpipenMarker, Coordinate, Contact } from '../../types';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { RTLText, RTLRow } from '../shared/RTLComponents';
 import styles from './styles';
@@ -24,7 +24,7 @@ interface EpipenFormProps {
   onCancel: () => void;
   onPhotoPickerOpen: () => void;
   onSelectCustomLocation: () => void;
-  userLocation: Location | null;
+  userLocation: Coordinate | null;
   initialData?: Partial<EpipenFormData>;
 }
 
@@ -42,7 +42,7 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   
   const defaultContact: Contact = {
     name: '',
-    phone: '',
+    phoneNumber: '',
   };
   
   const [formData, setFormData] = useState<Partial<EpipenFormData>>({
@@ -54,22 +54,6 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
     ...initialData
   });
   
-  // Update form data when initialData changes
-  useEffect(() => {
-    console.log("Initial data changed in EpipenForm:", initialData);
-    if (Object.keys(initialData).length > 0) {
-      setFormData(currentFormData => ({
-        ...currentFormData,
-        ...initialData,
-        // Preserve existing form data if not in initialData
-        contact: {
-          ...defaultContact,
-          ...(currentFormData.contact || {}),
-          ...(initialData.contact || {})
-        }
-      }));
-    }
-  }, [initialData]);
 
   useEffect(() => {
     if (initialData.photo) {
@@ -143,14 +127,14 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     
-    // Check location
+    // Check coordinate (location)
     if (!formData.coordinate && !userLocation) {
-      newErrors.location = t('validation.location_required');
+      newErrors.coordinate = t('validation.location_required');
     }
     
     // Check expiration date
     if (!formData.expireDate) {
-      newErrors.expiryDate = t('validation.expiration_required');
+      newErrors.expireDate = t('validation.expiration_required');
     }
     
     // Check contact information
@@ -158,7 +142,7 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
       newErrors.contactName = t('validation.contact_name_required');
     }
     
-    if (!formData.contact?.phone) {
+    if (!formData.contact?.phoneNumber) {
       newErrors.contactPhone = t('validation.contact_phone_required');
     }
     
@@ -179,29 +163,27 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   };
   
   const handleSave = () => {
-    // Use the custom location if it exists, otherwise use current location
+
     const coordinate = formData.coordinate || 
       (userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : undefined);
     
     if (coordinate) {
-      // Create a new object instead of modifying the existing one
       const updatedFormData = {
         ...formData,
         coordinate
       };
       
+
       if (validateForm()) {
+  
         const epipenData: EpipenFormData = {
           type: updatedFormData.type || 'adult',
           expireDate: updatedFormData.expireDate!,
-          coordinate: updatedFormData.coordinate,
+          coordinate,
           contact: updatedFormData.contact!,
           photo: updatedFormData.photo,
           description: updatedFormData.description || `${updatedFormData.type} Injector`
         };
-        
-        // Log the coordinate that will be sent
-        console.log('Saving EpiPen with coordinate:', epipenData.coordinate);
         
         onSave(epipenData);
       } else {
@@ -211,7 +193,7 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
       // No location available
       setErrors({
         ...errors,
-        location: t('validation.location_required')
+        coordinate: t('validation.location_required')
       });
       showValidationErrors();
     }
@@ -254,10 +236,10 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
       });
       
       // Clear any expiration date error
-      if (errors.expiryDate) {
+      if (errors.expireDate) {
         setErrors({
           ...errors,
-          expiryDate: ''
+          expireDate: ''
         });
       }
     }
@@ -321,10 +303,10 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
               styles.dateInput,
               isRtl && styles.inputRtl,
               isRtl && styles.dateInputRtl,
-              errors.expiryDate ? styles.inputError : null
+              errors.expireDate ? styles.inputError : null
             ]}
             placeholder={`${t('add.expire_date')} (MM/YYYY) *`}
-            placeholderTextColor={errors.expiryDate ? colors.error : "#999"}
+            placeholderTextColor={errors.expireDate ? colors.error : "#999"}
             value={formData.expireDate || t('add.expire_date')}
             editable={false} 
             pointerEvents="none"
@@ -376,8 +358,8 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
           ]}
           placeholder={`${t('add.phone')} *`}
           placeholderTextColor={errors.contactPhone ? colors.error : "#999"}
-          value={formData.contact?.phone}
-          onChangeText={(text) => updateContact('phone', text)}
+          value={formData.contact?.phoneNumber}
+          onChangeText={(text) => updateContact('phoneNumber', text)}
           keyboardType="phone-pad"
           textAlign={isRtl ? 'right' : 'left'}
         />
@@ -432,7 +414,7 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
         {/* Location Type Selector */}
         <RTLText style={styles.sectionTitle}>
           {t('add.location')} *
-          {errors.location && <RTLText style={styles.errorText}> ({t('validation.required')})</RTLText>}
+          {errors.coordinate && <RTLText style={styles.errorText}> ({t('validation.required')})</RTLText>}
         </RTLText>
         
         <RTLRow style={styles.locationSelector}>
@@ -443,10 +425,10 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
             ]}
             onPress={() => {
               setFormData({...formData, coordinate: undefined});
-              if (errors.location) {
+              if (errors.coordinate) {
                 setErrors({
                   ...errors,
-                  location: ''
+                  coordinate: ''
                 });
               }
             }}
@@ -463,10 +445,10 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
             ]}
             onPress={() => {
               onSelectCustomLocation();
-              if (errors.location) {
+              if (errors.coordinate) {
                 setErrors({
                   ...errors,
-                  location: ''
+                  coordinate: ''
                 });
               }
             }}

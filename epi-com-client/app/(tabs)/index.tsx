@@ -3,7 +3,7 @@ import { View, StatusBar } from 'react-native';
 import { useAuth } from '@/context/authContext';
 import { useLocation } from '../../hooks/useLocation';
 import { useEpipens } from '../../hooks/useEpipens';
-import { EpipenMarker, Coordinate } from '../../types';
+import { Coordinate, EpipenMarker } from '../../types';
 import { Header } from '../../components/shared/Header';
 import { EpipenMap, EpipenMapRef } from '../../components/map/EpipenMap';
 import { EpipenList } from '../../components/epipenList/EpipenList';
@@ -25,7 +25,6 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectingLocation, setSelectingLocation] = useState(false);
   const [customLocation, setCustomLocation] = useState<Coordinate | null>(null);
-  const [savedFormData, setSavedFormData] = useState<Partial<EpipenFormData>>({});
   
   // Handle marker selection
   const handleMarkerSelect = useCallback((marker: EpipenMarker) => {
@@ -35,10 +34,7 @@ export default function HomeScreen() {
     selectEpipen(markerWithDistance);
     setViewMode('details');
 
-    // Use the coordinate property instead of location
-    if (marker.coordinate) {
-      mapRef.current?.navigateToMarker(marker.coordinate);
-    }
+    mapRef.current?.navigateToMarker(marker.coordinate);
   }, [selectEpipen, sortedMarkers]);
   
   // Handle closing details
@@ -49,53 +45,25 @@ export default function HomeScreen() {
   
   // Handle adding a new marker
   const handleAddMarker = useCallback((data: EpipenFormData) => {
-    console.log('Adding marker with location:', data.coordinate);
-    
-    // Make sure we're using the custom location from the form data
-    const markerToAdd = {
-      ...data,
-      // Ensure we're using the coordinate from the form data, not replacing it
-      coordinate: data.coordinate
-    };
-    
-    addMarker(markerToAdd);
+    addMarker(data);
     setModalVisible(false);
     setSelectingLocation(false);
     setCustomLocation(null);
-    setSavedFormData({});
   }, [addMarker]);
   
   // Handle adding location from map
-  const handleAddLocation = useCallback((location: Coordinate | null) => {
-    console.log('Setting custom location:', location);
-    if (location) {
-      setCustomLocation(location);
-      // Update the saved form data with the new coordinate
-      setSavedFormData(prev => ({
-        ...prev,
-        coordinate: location
-      }));
+  const handleAddLocation = useCallback((coordinate: Coordinate | null) => {
+    if (coordinate) {
+      setCustomLocation(coordinate);
     }
-    setSelectingLocation(false);
-    setModalVisible(true);
+      setSelectingLocation(false);
+      setModalVisible(true);
   }, []);
   
   // Handle selecting location on map
-  const handleSelectLocation = useCallback((formData?: Partial<EpipenFormData>) => {
-    // Save current form data before hiding the modal
-    if (formData) {
-      setSavedFormData(formData);
-    }
+  const handleSelectLocation = useCallback(() => {
     setModalVisible(false);
     setSelectingLocation(true);
-  }, []);
-
-  // Handle cancelling the modal
-  const handleCancelModal = useCallback(() => {
-    setModalVisible(false);
-    setSelectingLocation(false);
-    setCustomLocation(null);
-    setSavedFormData({});
   }, []);
 
   return (
@@ -135,12 +103,15 @@ export default function HomeScreen() {
       <AddEpipenModal
         visible={modalVisible}
         selectingLocation={selectingLocation}
-        onCancel={handleCancelModal}
+        onCancel={() => {
+          setModalVisible(false);
+          setSelectingLocation(false);
+          setCustomLocation(null);
+        }}
         onSave={handleAddMarker}
         userLocation={location?.coords || null}
         customLocation={customLocation}
         onSelectCustomLocation={handleSelectLocation}
-        savedFormData={savedFormData}
       />
     </View>
   );

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { getValidationMessage } from '@/utils/validation-messages';
 
 export const registerStep3Schema = z.object({
     allergies: z

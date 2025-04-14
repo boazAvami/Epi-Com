@@ -12,7 +12,6 @@ import Chip, {ChipItem, ChipItemVariant, ChipsType} from "./Chip";
 import {Icon} from "@/components/ui/icon";
 import {CircleX} from "lucide-react-native";
 import {useFocusEffect} from "expo-router";
-import { useAppTranslation } from "@/hooks/useAppTranslation";
 
 interface ChipsProps {
     containerStyle?: StyleProp<ViewStyle>;
@@ -39,8 +38,6 @@ const Chips: React.FC<ChipsProps> = (props) => {
         type = "default",
         itemVariant,
     } = props;
-    
-    const { isRtl } = useAppTranslation();
 
     const onSelectItem = (value: string) => {
         if (type === "filter") {
@@ -65,11 +62,7 @@ const Chips: React.FC<ChipsProps> = (props) => {
     };
 
     return (
-        <View style={[
-            styles.container, 
-            containerStyle, 
-            { justifyContent: isRtl ? "flex-end" : "flex-start" }
-        ]}>
+        <View style={[styles.container, containerStyle]}>
             {items.map((item, index) => {
                 const isSelected = selectedValues?.includes(item.value);
 
@@ -111,6 +104,7 @@ const styles = StyleSheet.create({
         flexWrap: "wrap",
         gap: 8,
         alignItems: "center",
+        justifyContent: "flex-end",
     },
     selectedChip: {
         backgroundColor: "#FE385C",

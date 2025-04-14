@@ -22,21 +22,10 @@ export default StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
   },
-  headerButtons: {
+  languageButton: {
     position: 'absolute',
     right: 15,
     top: StatusBar.currentHeight || 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoutButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: colors.backgroundMedium,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  languageButton: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     backgroundColor: colors.backgroundMedium,

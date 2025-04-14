@@ -5,7 +5,7 @@ export interface Coordinate {
   
   export interface Contact {
     name: string;
-    phone: string;
+    phoneNumber: string;
   }
   
   export interface EpipenMarker {
@@ -17,7 +17,6 @@ export interface Coordinate {
     contact?: Contact;
     photo?: string | null;
     distance?: number;
-    serialNumber?: string;
   }
   
   export interface Region {
@@ -71,9 +70,4 @@ export interface Coordinate {
   export interface Translations {
     en: TranslationStrings;
     he: TranslationStrings;
-  }
-  
-  export interface Location {
-    latitude: number;
-    longitude: number;
   }

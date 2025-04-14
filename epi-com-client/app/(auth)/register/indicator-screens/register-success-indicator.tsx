@@ -2,16 +2,15 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { Center } from '@/components/ui/center';
 import { VStack } from '@/components/ui/vstack';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import LottieView from 'lottie-react-native';
 import { useRouter } from 'expo-router';
-import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { RTLText } from '@/components/shared/RTLComponents';
 
 const RegisterSuccessScreen = () => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const router = useRouter();
-    const { t } = useAppTranslation();
 
     useEffect(() => {
         Animated.timing(fadeAnim, {
@@ -35,14 +34,16 @@ const RegisterSuccessScreen = () => {
                         loop={false}
                         style={{ width: 160, height: 160 }}
                     />
-                    <RTLText className="font-semibold text-2xl text-center">
-                        {t('auth.register.success.title')}
-                    </RTLText>
-                    <RTLText className="text-center text-[#333]">
-                        {t('auth.register.success.subtitle')}
-                    </RTLText>
+                    <Heading className="text-center font-semibold" size="2xl">
+                        כיף שבאת – עכשיו אתה חלק מאיתנו
+                    </Heading>
+                    <Text className="text-center text-[#333]">
+                        מעכשיו, אתה אף פעם לא לבד עם האלרגיה שלך.
+                        {'\n'}האפליקציה מחברת בין אנשים, מזריקה ביטחון
+                        {'\n'}ונותנת מענה מיידי ברגעי חירום.
+                    </Text>
                     <Button onPress={handleGoToApp} className="mt-4 w-48" style={styles.startButton}>
-                        <ButtonText>{t('auth.register.success.button')}</ButtonText>
+                        <ButtonText>בוא נתחיל</ButtonText>
                     </Button>
                 </VStack>
             </Center>

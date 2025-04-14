@@ -1,44 +1,37 @@
 import {Router, useRouter} from 'expo-router';
 import {View} from 'react-native';
 import {Center} from "@/components/ui/center";
+import {Heading} from "@/components/ui/heading";
 import {VStack} from "@/components/ui/vstack";
 import {Button, ButtonText} from "@/components/ui/button";
+import {Text} from "@/components/ui/text";
 import {BackButton} from "@/components/BackButton";
-import {useAppTranslation} from '@/hooks/useAppTranslation';
-import {RTLText, RTLView} from '@/components/shared/RTLComponents';
-import LanguageToggle from '@/components/shared/LanguageToggle';
 
 export default function RegisterIntroScreen() {
     const router: Router = useRouter();
-    const {t, isRtl} = useAppTranslation();
     const proceedToRegister = () => router.push("/register/register-stepper");
 
     const RegisterIntro = () => {
         return (
-            <VStack space="4xl" className="w-3/4">
+                <VStack space="4xl" className=" w-3/4">
                     <VStack space="2xl">
-                    <RTLText className="text-2xl font-semibold">
-                        {t('auth.register.title')}
-                    </RTLText>
+                        <Heading size="3xl" className="text-right font-semibold">
+                            הצטרפו לקהילה שומרת חיים
+                        </Heading>
 
-                    <RTLText className="text-base text-[#4F4F4F]">
-                        {t('auth.register.subtitle')}
-                    </RTLText>
+                        <Text size="md" className="text-right color-[#4F4F4F]">
+                            הרשמו עכשיו כדי לקבל ולעזור בשעת חירום.
+                        </Text>
 
-                    <RTLText className="text-sm text-[#4F4F4F]">
-                        {t('auth.register.description')}
-                    </RTLText>
+                        <Text size="sm" className="text-right color-[#4F4F4F]">
+                            איפה אפי מחברת בין אנשים עם אלרגיות מסכנות חיים לבין מחזיקי אפיפן בקרבת מקום.
+                            ההרשמה מהירה ובטוחה — כדי שתוכלו להיות מוגנים, כל הזמן.
+                        </Text>
 
-                    <VStack space="sm" className="mt-4">
-                        <RTLView className={`flex-row w-full ${isRtl ? "justify-end" : "justify-start"}`}>
-                            <RTLText className="text-sm text-[#4F4F4F]">{t('auth.register.benefits.fast')}</RTLText>
-                        </RTLView>
-                        <RTLView className={`flex-row w-full ${isRtl ? "justify-end" : "justify-start"}`}>
-                            <RTLText className="text-sm text-[#4F4F4F]">{t('auth.register.benefits.privacy')}</RTLText>
-                        </RTLView>
-                        <RTLView className={`flex-row w-full ${isRtl ? "justify-end" : "justify-start"}`}>
-                            <RTLText className="text-sm text-[#4F4F4F]">{t('auth.register.benefits.help')}</RTLText>
-                        </RTLView>
+                        <VStack space="sm" className="mt-4 color-[#4F4F4F]">
+                            <Text size="sm" className="text-right">⚡ הרשמה מהירה</Text>
+                            <Text size="sm" className="text-right">🔒 פרטיותכם מוגנת</Text>
+                            <Text size="sm" className="text-right">❤️ עזרה ברגעים הכי חשובים</Text>
                         </VStack>
                     </VStack>
 
@@ -48,7 +41,7 @@ export default function RegisterIntroScreen() {
                             size="lg"
                             onPress={proceedToRegister}>
                             <ButtonText>
-                            {t('auth.register.continue')}
+                                המשך להרשמה
                             </ButtonText>
                         </Button>
                     </Center>
@@ -58,24 +51,7 @@ export default function RegisterIntroScreen() {
 
     return (
         <View className="p-16" style={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
-            <View style={{ 
-                position: 'absolute', 
-                top: 50, 
-                [isRtl ? 'left' : 'right']: 20, 
-                zIndex: 100 
-            }}>
-                <LanguageToggle />
-            </View>
-
-            <View style={{ 
-                position: 'absolute', 
-                top: 50, 
-                [isRtl ? 'right' : 'left']: 20, 
-                zIndex: 100 
-            }}>
-                <BackButton />
-            </View>
-            
+            <BackButton></BackButton>
             <Center>
                 <RegisterIntro/>
             </Center>

@@ -5,19 +5,17 @@ import { useAppTranslation } from '../../hooks/useAppTranslation';
 interface RTLTextProps extends TextProps {
   children: ReactNode;
   style?: TextStyle | TextStyle[];
-  className?: string;
 }
 
-export const RTLText: React.FC<RTLTextProps> = ({ children, style, className, ...props }) => {
+export const RTLText: React.FC<RTLTextProps> = ({ children, style, ...props }) => {
   const { isRtl } = useAppTranslation();
   
   return (
     <Text
       style={[
-        isRtl ? styles.rtlText : styles.ltrText,
+        isRtl ? styles.rtlText : null,
         Array.isArray(style) ? style : style ? [style] : null
       ]}
-      className={className}
       {...props}
     >
       {children}
@@ -29,10 +27,9 @@ export const RTLText: React.FC<RTLTextProps> = ({ children, style, className, ..
 interface RTLRowProps extends ViewProps {
   children: ReactNode;
   style?: ViewStyle | ViewStyle[];
-  className?: string;
 }
 
-export const RTLRow: React.FC<RTLRowProps> = ({ children, style, className, ...props }) => {
+export const RTLRow: React.FC<RTLRowProps> = ({ children, style, ...props }) => {
   const { isRtl } = useAppTranslation();
   
   return (
@@ -42,7 +39,6 @@ export const RTLRow: React.FC<RTLRowProps> = ({ children, style, className, ...p
         isRtl ? styles.rtlRow : null,
         Array.isArray(style) ? style : style ? [style] : null
       ]}
-      className={className}
       {...props}
     >
       {children}
@@ -54,19 +50,17 @@ export const RTLRow: React.FC<RTLRowProps> = ({ children, style, className, ...p
 interface RTLViewProps extends ViewProps {
   children: ReactNode;
   style?: ViewStyle | ViewStyle[];
-  className?: string;
 }
 
-export const RTLView: React.FC<RTLViewProps> = ({ children, style, className, ...props }) => {
+export const RTLView: React.FC<RTLViewProps> = ({ children, style, ...props }) => {
   const { isRtl } = useAppTranslation();
   
   return (
     <View
       style={[
-        isRtl ? styles.rtlContainer : styles.ltrContainer,
+        isRtl ? styles.rtlContainer : null,
         Array.isArray(style) ? style : style ? [style] : null
       ]}
-      className={className}
       {...props}
     >
       {children}
@@ -85,13 +79,7 @@ const styles = StyleSheet.create({
   rtlText: {
     textAlign: 'right',
   },
-  ltrText: {
-    textAlign: 'left',
-  },
   rtlContainer: {
     alignItems: 'flex-end',
-  },
-  ltrContainer: {
-    alignItems: 'flex-start',
   }
 });
