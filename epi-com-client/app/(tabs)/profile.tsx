@@ -69,7 +69,7 @@ export default function ProfileScreen() {
         
         // Get the userId from the store
         const currentUserId = userId;
-        console.log("Fetching EpiPens for user ID:", currentUserId);
+        // console.log("Fetching EpiPens for user ID:", currentUserId);
         
         if (!currentUserId) {
           console.error("No user ID available");
@@ -79,10 +79,10 @@ export default function ProfileScreen() {
 
         const response = await getAllUserEpiPens(currentUserId);
 
-        console.log("Raw API response:", JSON.stringify(response));
+        // console.log("Raw API response:", JSON.stringify(response));
 
         if (response && response.epiPensByUser) {
-          console.log("Found EpiPens:", response.epiPensByUser.length);
+          // console.log("Found EpiPens:", response.epiPensByUser.length);
           setEpiPens(response.epiPensByUser);
         } else {
           console.log("No EpiPensByUser property found in response:", response);

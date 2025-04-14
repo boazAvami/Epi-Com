@@ -204,10 +204,10 @@ export default function ProfileSettingsScreen() {
 
   // Handle picking an image from the gallery
   const handlePickImage = async () => {
-    console.log('Image picker triggered');  // Add this line
+    console.log('Image picker triggered');  
     
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    console.log('Permission status:', status);  // Add this line
+    console.log('Permission status:', status);
     
     if (status !== 'granted') {
       Alert.alert("Permission Required", "You need to grant permission to access your photos.");
@@ -233,6 +233,80 @@ export default function ProfileSettingsScreen() {
       Alert.alert("Error", "Failed to select image. Please try again.");
     }
   };
+
+  // Add this function to your component
+const handleProfilePictureOptions = () => {
+  Alert.alert(
+    "Profile Picture",
+    "Select an option",
+    [
+      {
+        text: "Choose from Library",
+        onPress: handlePickImage
+      },
+      {
+        text: "Take Photo",
+        onPress: handleTakePhoto
+      },
+      {
+        text: "Remove Current Picture",
+        onPress: handleRemovePicture,
+        style: "destructive"
+      },
+      {
+        text: "Cancel",
+        style: "cancel"
+      }
+    ]
+  );
+};
+
+// Add these two new handler functions
+const handleTakePhoto = async () => {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert("Permission Required", "You need to grant camera permission to take a photo.");
+    return;
+  }
+
+  try {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setValue('profile_picture_uri', result.assets[0].uri);
+    }
+  } catch (error) {
+    console.error('Error taking photo:', error);
+    Alert.alert("Error", "Failed to take photo. Please try again.");
+  }
+};
+
+const handleRemovePicture = () => {
+  Alert.alert(
+    "Remove Picture",
+    "Are you sure you want to remove your profile picture?",
+    [
+      {
+        text: "Cancel",
+        style: "cancel"
+      },
+      {
+        text: "Remove",
+        onPress: () => {
+          setValue('profile_picture_uri', '')
+          
+          // Log to confirm the value has been removed
+          console.log("Profile picture removed, current value:", watch('profile_picture_uri'));
+        },
+        style: "destructive"
+      }
+    ]
+  );
+};
   
   // Convert form emergency contacts to IEmergencyContact[] | null
   const convertEmergencyContacts = (
@@ -265,6 +339,12 @@ export default function ProfileSettingsScreen() {
     const userDateStr = user.date_of_birth ? new Date(Number(user.date_of_birth)).toISOString() : undefined;
     console.log('Comparing dates:', formDateStr, userDateStr);
     
+    // Explicit check for profile picture change
+    const isPictureChanged = data.profile_picture_uri !== user.profile_picture_uri;
+    console.log("Profile picture changed:", isPictureChanged, 
+      "Old:", user.profile_picture_uri, 
+      "New:", data.profile_picture_uri);
+
     const hasChanges = 
       data.userName !== user.userName ||
       data.firstName !== (user.firstName || '') ||
@@ -287,13 +367,18 @@ export default function ProfileSettingsScreen() {
       ]);
       return;
     }
+
+    // Explicitly handle the profile_picture_uri field
+    // If it's an empty string, set it to null for the API
+    const profilePictureValue = data.profile_picture_uri === '' ? null : data.profile_picture_uri;
+    console.log("Profile picture value being sent to API:", profilePictureValue);
     
     // Prepare data for update with type conversion for emergency contacts
     const updatedUserData: Partial<RegisterData> = {
       userName: data.userName,
       firstName: data.firstName?.trim() === '' ? null : data.firstName,
       lastName: data.lastName?.trim() === '' ? null : data.lastName,
-      profile_picture_uri: data.profile_picture_uri || null,
+      profile_picture_uri: profilePictureValue,
       email: data.email,
       phone_number: data.phone_number?.trim() === '' ? undefined : data.phone_number,
       gender: data.gender as EGender || null,
@@ -309,6 +394,7 @@ export default function ProfileSettingsScreen() {
     
     try {
       setIsLoading(true);
+      console.log("Sending update with data:", JSON.stringify(updatedUserData));
       await UpdateUser(updatedUserData);
       await getUserInfo();
       
@@ -356,7 +442,7 @@ export default function ProfileSettingsScreen() {
           <Center style={styles.profilePictureSection}>
             <FormControl isInvalid={!!errors.profile_picture_uri}>
               <Pressable 
-              onPress={handlePickImage}
+              onPress={handleProfilePictureOptions}
               style={({ pressed }) => [
                 { opacity: pressed ? 0.7 : 1 }  // This will show visual feedback when pressed
               ]}>
@@ -546,7 +632,6 @@ export default function ProfileSettingsScreen() {
                   name="date_of_birth"
                   control={control}
                   render={({ field: { onChange, onBlur, value } }) => {
-                    console.log('date_of_birth value in Controller:', value);
                     return (
                       <DateInput 
                         onChange={onChange} 
@@ -566,7 +651,7 @@ export default function ProfileSettingsScreen() {
             <Divider style={styles.divider} />
             
             {/* Password section */}
-            <Heading size="md" style={styles.sectionTitle}>Change Password</Heading>
+            {/* <Heading size="md" style={styles.sectionTitle}>Change Password</Heading>
             <VStack space="md">
               <FormControl isInvalid={!!errors.password}>
                 <Controller
@@ -603,9 +688,9 @@ export default function ProfileSettingsScreen() {
                   )}
                 />
               </FormControl>
-            </VStack>
+            </VStack> */}
             
-            <Divider style={styles.divider} />
+            {/* <Divider style={styles.divider} /> */}
             
             {/* Allergies section - Using the same Chips component as registration */}
             <Heading size="md" style={styles.sectionTitle}>Medical Information</Heading>

@@ -27,14 +27,14 @@ export const getAllUserEpiPens = async (userId: string) => {
           }
         }`;
 
-    console.log("Sending getAllUserEpiPens query to GraphQL with userId:", userId);
+    // console.log("Sending getAllUserEpiPens query to GraphQL with userId:", userId);
     try {
         const response = await graphqlRequest<{ epiPensByUser: IEpiPen[] }>(
             query, 
             { userId }
         );
-        console.log("getAllUserEpiPens response received:", 
-                   response ? "Has data" : "No data");
+        // console.log("getAllUserEpiPens response received:", 
+        //            response ? "Has data" : "No data");
         return response;
     } catch (error) {
         console.error("Error in getAllUserEpiPens:", error);
