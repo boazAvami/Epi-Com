@@ -107,7 +107,22 @@ export const epiPenResolvers = {
       if (!userId) {
         throw new Error('User ID is required.');
       }
-      return await EpiPenModel.find({ userId: new mongoose.Types.ObjectId(userId) });
+      
+      const epipens = await EpiPenModel.find({ userId: new mongoose.Types.ObjectId(userId) });
+      return epipens.map(epipen => ({
+        _id: epipen._id,
+        userId: epipen.userId,
+        location: {
+          latitude: epipen.location.coordinates[1],  // MongoDB stores as [longitude, latitude]
+          longitude: epipen.location.coordinates[0]
+        },
+        description: epipen.description,
+        expiryDate: epipen.expiryDate.toISOString(),
+        contact: epipen.contact,
+        image: epipen.image,
+        serialNumber: epipen.serialNumber,
+        kind: epipen.kind
+      }));
     },
     allEpiPens: async (_: any, {}) => {
       
