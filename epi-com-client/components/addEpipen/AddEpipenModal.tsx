@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Modal, View, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
+import { Modal, View, KeyboardAvoidingView, Platform, Alert, TouchableOpacity, Text, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
-import { Coordinate } from '../../types';
+import { Location } from '../../types';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { EpipenForm, EpipenFormData } from './EpipenForm';
 import { RTLText } from '../shared/RTLComponents';
@@ -15,8 +15,8 @@ interface AddEpipenModalProps {
   selectingLocation: boolean;
   onCancel: () => void;
   onSave: (data: EpipenFormData) => void;
-  userLocation: Coordinate | null;
-  customLocation?: Coordinate | null;
+  userLocation: Location | null;
+  customLocation?: Location | null;
   onSelectCustomLocation?: () => void;
 }
 
@@ -44,16 +44,16 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
   }, []);
 
   useEffect(() => {
-    if (formData.photo) {
-      console.log("Photo set in formData state:", formData.photo);
+    if (formData.image) {
+      console.log("Photo set in formData state:", formData.image);
     }
-  }, [formData.photo]);
+  }, [formData.image]);
   
   useEffect(() => {
     if (customLocation) {
       setFormData(prevData => ({
         ...prevData,
-        coordinate: customLocation
+        location: customLocation
       }));
     }
   }, [customLocation]);
@@ -102,7 +102,7 @@ export const AddEpipenModal: React.FC<AddEpipenModalProps> = ({
           console.log("Image selected:", imageUri);
           setFormData(prevData => ({
             ...prevData,
-            photo: imageUri
+            image: imageUri
           }));
         } else {
           console.log("Image selection was canceled by user");

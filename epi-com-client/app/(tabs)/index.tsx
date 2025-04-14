@@ -3,7 +3,7 @@ import { View, StatusBar } from 'react-native';
 import { useAuth } from '@/context/authContext';
 import { useLocation } from '../../hooks/useLocation';
 import { useEpipens } from '../../hooks/useEpipens';
-import { Coordinate, EpipenMarker } from '../../types';
+import { EpipenMarker, Coordinate } from '../../types';
 import { Header } from '../../components/shared/Header';
 import { EpipenMap, EpipenMapRef } from '../../components/map/EpipenMap';
 import { EpipenList } from '../../components/epipenList/EpipenList';
@@ -34,7 +34,10 @@ export default function HomeScreen() {
     selectEpipen(markerWithDistance);
     setViewMode('details');
 
-    mapRef.current?.navigateToMarker(marker.coordinate);
+    // Use the coordinate property instead of location
+    if (marker.coordinate) {
+      mapRef.current?.navigateToMarker(marker.coordinate);
+    }
   }, [selectEpipen, sortedMarkers]);
   
   // Handle closing details
@@ -52,9 +55,9 @@ export default function HomeScreen() {
   }, [addMarker]);
   
   // Handle adding location from map
-  const handleAddLocation = useCallback((coordinate: Coordinate | null) => {
-    if (coordinate) {
-      setCustomLocation(coordinate);
+  const handleAddLocation = useCallback((location: Coordinate | null) => {
+    if (location) {
+      setCustomLocation(location);
     }
       setSelectingLocation(false);
       setModalVisible(true);

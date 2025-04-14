@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { EpipenMarker, Coordinate, Contact } from '../../types';
+import { EpipenMarker, Location, Contact } from '../../types';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { RTLText, RTLRow } from '../shared/RTLComponents';
 import styles from './styles';
@@ -24,7 +24,7 @@ interface EpipenFormProps {
   onCancel: () => void;
   onPhotoPickerOpen: () => void;
   onSelectCustomLocation: () => void;
-  userLocation: Coordinate | null;
+  userLocation: Location | null;
   initialData?: Partial<EpipenFormData>;
 }
 
@@ -42,29 +42,29 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   
   const defaultContact: Contact = {
     name: '',
-    phoneNumber: '',
+    phone: '',
   };
   
   const [formData, setFormData] = useState<Partial<EpipenFormData>>({
     type: 'adult',
-    expireDate: initialData.expireDate || '',
+    expiryDate: initialData.expiryDate || '',
     contact: defaultContact,
-    photo: null,
+    image: null,
     description: '',
     ...initialData
   });
   
 
   useEffect(() => {
-    if (initialData.photo) {
-      console.log("Photo prop received/changed in EpipenForm:", initialData.photo);
+    if (initialData.image) {
+      console.log("Image prop received/changed in EpipenForm:", initialData.image);
 
       setFormData(currentFormData => ({
         ...currentFormData,
-        photo: initialData.photo
+        image: initialData.image
       }));
     }
-  }, [initialData.photo]);
+  }, [initialData.image]);
   
   // Format date to MM/YYYY
   const formatDateToMonthYear = (dateString: string): string => {
@@ -101,16 +101,16 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   
   // Helper to get or create expiration date
   const getExpireDate = (): Date => {
-    if (formData.expireDate) {
+    if (formData.expiryDate) {
       try {
         // Check if the date is in MM/YYYY format
-        if (/^\d{2}\/\d{4}$/.test(formData.expireDate)) {
-          const [month, year] = formData.expireDate.split('/').map(Number);
+        if (/^\d{2}\/\d{4}$/.test(formData.expiryDate)) {
+          const [month, year] = formData.expiryDate.split('/').map(Number);
           return new Date(year, month - 1, 1); // Set day to 1
         }
         
         // Otherwise try to parse as a regular date
-        const date = new Date(formData.expireDate);
+        const date = new Date(formData.expiryDate);
         if (!isNaN(date.getTime())) {
           return date;
         }
@@ -127,14 +127,14 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     
-    // Check coordinate (location)
-    if (!formData.coordinate && !userLocation) {
-      newErrors.coordinate = t('validation.location_required');
+    // Check location
+    if (!formData.location && !userLocation) {
+      newErrors.location = t('validation.location_required');
     }
     
     // Check expiration date
-    if (!formData.expireDate) {
-      newErrors.expireDate = t('validation.expiration_required');
+    if (!formData.expiryDate) {
+      newErrors.expiryDate = t('validation.expiration_required');
     }
     
     // Check contact information
@@ -142,7 +142,7 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
       newErrors.contactName = t('validation.contact_name_required');
     }
     
-    if (!formData.contact?.phoneNumber) {
+    if (!formData.contact?.phone) {
       newErrors.contactPhone = t('validation.contact_phone_required');
     }
     
@@ -164,13 +164,13 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   
   const handleSave = () => {
 
-    const coordinate = formData.coordinate || 
+    const location = formData.location || 
       (userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : undefined);
     
-    if (coordinate) {
+    if (location) {
       const updatedFormData = {
         ...formData,
-        coordinate
+        location
       };
       
 
@@ -178,10 +178,10 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   
         const epipenData: EpipenFormData = {
           type: updatedFormData.type || 'adult',
-          expireDate: updatedFormData.expireDate!,
-          coordinate,
+          expiryDate: updatedFormData.expiryDate!,
+          location,
           contact: updatedFormData.contact!,
-          photo: updatedFormData.photo,
+          image: updatedFormData.image,
           description: updatedFormData.description || `${updatedFormData.type} Injector`
         };
         
@@ -193,7 +193,7 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
       // No location available
       setErrors({
         ...errors,
-        coordinate: t('validation.location_required')
+        location: t('validation.location_required')
       });
       showValidationErrors();
     }
@@ -219,7 +219,7 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
   const handleRemovePhoto = () => {
     setFormData({
       ...formData,
-      photo: null
+      image: null
     });
   };
   
@@ -232,14 +232,14 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
       
       setFormData({
         ...formData,
-        expireDate: `${month}/${year}`
+        expiryDate: `${month}/${year}`
       });
       
       // Clear any expiration date error
-      if (errors.expireDate) {
+      if (errors.expiryDate) {
         setErrors({
           ...errors,
-          expireDate: ''
+          expiryDate: ''
         });
       }
     }
@@ -303,11 +303,11 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
               styles.dateInput,
               isRtl && styles.inputRtl,
               isRtl && styles.dateInputRtl,
-              errors.expireDate ? styles.inputError : null
+              errors.expiryDate ? styles.inputError : null
             ]}
             placeholder={`${t('add.expire_date')} (MM/YYYY) *`}
-            placeholderTextColor={errors.expireDate ? colors.error : "#999"}
-            value={formData.expireDate || t('add.expire_date')}
+            placeholderTextColor={errors.expiryDate ? colors.error : "#999"}
+            value={formData.expiryDate || t('add.expire_date')}
             editable={false} 
             pointerEvents="none"
             textAlign={isRtl ? 'right' : 'left'}
@@ -358,25 +358,25 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
           ]}
           placeholder={`${t('add.phone')} *`}
           placeholderTextColor={errors.contactPhone ? colors.error : "#999"}
-          value={formData.contact?.phoneNumber}
-          onChangeText={(text) => updateContact('phoneNumber', text)}
+          value={formData.contact?.phone}
+          onChangeText={(text) => updateContact('phone', text)}
           keyboardType="phone-pad"
           textAlign={isRtl ? 'right' : 'left'}
         />
         
         {/* Photo */}
         <TouchableOpacity 
-          style={[styles.photoButton, formData.photo ? styles.photoButtonWithImage : null]}
+          style={[styles.photoButton, formData.image ? styles.photoButtonWithImage : null]}
           activeOpacity={0.7}
           onPress={() => {
             console.log("Photo button pressed, opening picker");
             onPhotoPickerOpen();
           }}
         >
-          {formData.photo ? (
+          {formData.image ? (
             <View style={styles.photoContainer}>
               <Image 
-                source={{ uri: formData.photo }} 
+                source={{ uri: formData.image }} 
                 style={styles.photoPreview}
                 resizeMode="cover"
                 onLoadStart={() => console.log("Image loading started")}
@@ -414,26 +414,26 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
         {/* Location Type Selector */}
         <RTLText style={styles.sectionTitle}>
           {t('add.location')} *
-          {errors.coordinate && <RTLText style={styles.errorText}> ({t('validation.required')})</RTLText>}
+          {errors.location && <RTLText style={styles.errorText}> ({t('validation.required')})</RTLText>}
         </RTLText>
         
         <RTLRow style={styles.locationSelector}>
           <TouchableOpacity 
             style={[
               styles.locationOption,
-              !formData.coordinate && styles.selectedLocation
+              !formData.location && styles.selectedLocation
             ]}
             onPress={() => {
-              setFormData({...formData, coordinate: undefined});
-              if (errors.coordinate) {
+              setFormData({...formData, location: undefined});
+              if (errors.location) {
                 setErrors({
                   ...errors,
-                  coordinate: ''
+                  location: ''
                 });
               }
             }}
           >
-            <RTLText style={getLocationOptionTextStyle(!formData.coordinate)}>
+            <RTLText style={getLocationOptionTextStyle(!formData.location)}>
               {t('add.use_current')}
             </RTLText>
           </TouchableOpacity>
@@ -441,19 +441,19 @@ export const EpipenForm: React.FC<EpipenFormProps> = ({
           <TouchableOpacity 
             style={[
               styles.locationOption,
-              formData.coordinate && styles.selectedLocation
+              formData.location && styles.selectedLocation
             ]}
             onPress={() => {
               onSelectCustomLocation();
-              if (errors.coordinate) {
+              if (errors.location) {
                 setErrors({
                   ...errors,
-                  coordinate: ''
+                  location: ''
                 });
               }
             }}
           >
-            <RTLText style={getLocationOptionTextStyle(!!formData.coordinate)}>
+            <RTLText style={getLocationOptionTextStyle(!!formData.location)}>
               {t('add.select_custom')}
             </RTLText>
           </TouchableOpacity>

@@ -2,14 +2,15 @@ import React from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { Center } from '@/components/ui/center';
 import { VStack } from '@/components/ui/vstack';
-import { Heading } from '@/components/ui/heading';
-import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import LottieView from 'lottie-react-native';
 import { useRouter } from 'expo-router';
+import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { RTLText } from '@/components/shared/RTLComponents';
 
 const RegisterErrorScreen = () => {
     const router = useRouter();
+    const { t } = useAppTranslation();
 
     const handleRetry = () => {
         router.replace('/(auth)/register/register-stepper');
@@ -25,15 +26,14 @@ const RegisterErrorScreen = () => {
                         loop={false}
                         style={{ width: 140, height: 140 }}
                     />
-                    <Heading className="text-center font-semibold" size="2xl">
-                        משהו השתבש 😞
-                    </Heading>
-                    <Text className="text-center text-[#4F4F4F]">
-                        לא הצלחנו להשלים את ההרשמה.
-                        {'\n'}אנא בדוק את החיבור שלך ונסה שוב.
-                    </Text>
+                    <RTLText className="font-semibold text-2xl text-center">
+                        {t('auth.register.error.title')}
+                    </RTLText>
+                    <RTLText className="text-center text-[#4F4F4F]">
+                        {t('auth.register.error.subtitle')}
+                    </RTLText>
                     <Button onPress={handleRetry} className="mt-4 w-48" style={styles.retryButton}>
-                        <ButtonText>נסה שוב</ButtonText>
+                        <ButtonText>{t('auth.register.error.button')}</ButtonText>
                     </Button>
                 </VStack>
             </Center>
