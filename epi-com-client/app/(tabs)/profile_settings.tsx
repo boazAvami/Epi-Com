@@ -21,6 +21,10 @@ import { RegisterData } from '@/shared/types/register-data.type';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import * as ImagePicker from 'expo-image-picker';
+import { Pencil } from 'lucide-react-native';
+import { Pressable } from 'react-native';
+
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -40,6 +44,12 @@ import DropdownComponent from "@/components/Dropdown";
 import { genderOptions } from "@/utils/gender-utils";
 import Chips from "@/components/Chips";
 import { ChipItem } from "@/components/Chip";
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallbackText,
+  AvatarImage,
+} from '@/components/ui/avatar';
 
 // Interface for form emergency contacts that allows optional fields during editing
 interface FormEmergencyContact {
@@ -191,6 +201,38 @@ export default function ProfileSettingsScreen() {
       setIsLoggingOut(false);
     }
   };
+
+  // Handle picking an image from the gallery
+  const handlePickImage = async () => {
+    console.log('Image picker triggered');  // Add this line
+    
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    console.log('Permission status:', status);  // Add this line
+    
+    if (status !== 'granted') {
+      Alert.alert("Permission Required", "You need to grant permission to access your photos.");
+      return;
+    }
+  
+    try {  // Add try/catch to catch any errors
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      console.log('Image picker result:', result);  // Add this line
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        console.log('Setting new image URI:', result.assets[0].uri);  // Add this line
+        setValue('profile_picture_uri', result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert("Error", "Failed to select image. Please try again.");
+    }
+  };
   
   // Convert form emergency contacts to IEmergencyContact[] | null
   const convertEmergencyContacts = (
@@ -227,6 +269,7 @@ export default function ProfileSettingsScreen() {
       data.userName !== user.userName ||
       data.firstName !== (user.firstName || '') ||
       data.lastName !== (user.lastName || '') ||
+      data.profile_picture_uri !== user.profile_picture_uri ||
       data.email !== user.email ||
       data.phone_number !== (user.phone_number || '') ||
       data.gender !== (user.gender || '') ||
@@ -250,6 +293,7 @@ export default function ProfileSettingsScreen() {
       userName: data.userName,
       firstName: data.firstName?.trim() === '' ? null : data.firstName,
       lastName: data.lastName?.trim() === '' ? null : data.lastName,
+      profile_picture_uri: data.profile_picture_uri || null,
       email: data.email,
       phone_number: data.phone_number?.trim() === '' ? undefined : data.phone_number,
       gender: data.gender as EGender || null,
@@ -310,25 +354,35 @@ export default function ProfileSettingsScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Profile Picture Section */}
           <Center style={styles.profilePictureSection}>
-            <View style={styles.profileImageContainer}>
-              {watch('profile_picture_uri') ? (
-                <Image 
-                  source={{ uri: watch('profile_picture_uri') }} 
-                  style={styles.profileImage} 
-                />
-              ) : (
-                <View style={styles.defaultProfileImage}>
-                  <Text size="xl" bold>
-                    {watch('firstName') && watch('lastName') 
-                      ? watch('firstName').charAt(0) + watch('lastName').charAt(0)
-                      : watch('userName').charAt(0)}
-                  </Text>
-                </View>
-              )}
-              <TouchableOpacity style={styles.cameraButton}>
-                <Icon as={Camera} size="sm" color="#fff" />
-              </TouchableOpacity>
-            </View>
+            <FormControl isInvalid={!!errors.profile_picture_uri}>
+              <Pressable 
+              onPress={handlePickImage}
+              style={({ pressed }) => [
+                { opacity: pressed ? 0.7 : 1 }  // This will show visual feedback when pressed
+              ]}>
+                <Avatar size="2xl">
+                  <AvatarFallbackText>
+                    {watch('firstName') && watch('lastName')
+                      ? `${watch('firstName')} ${watch('lastName')}`
+                      : watch('userName')}
+                  </AvatarFallbackText>
+                  <AvatarImage
+                    source={
+                      watch('profile_picture_uri')
+                        ? { uri: watch('profile_picture_uri') }
+                        : require('@/assets/images/profile_avatar_placeholder.png')
+                    }
+                  />
+                  <AvatarBadge className="justify-center items-center bg-background-400">
+                    <Icon as={Pencil} color="#fff" />
+                  </AvatarBadge>
+                </Avatar>
+              </Pressable>
+              <FormControlError>
+                <FormControlErrorText>{errors.profile_picture_uri?.message}</FormControlErrorText>
+                <FormControlErrorIcon as={AlertTriangle} />
+              </FormControlError>
+            </FormControl>
           </Center>
           
           <Box style={styles.formContainer}>
@@ -359,7 +413,6 @@ export default function ProfileSettingsScreen() {
               <Icon as={LogOut} size="md" color="#AF3C3F" />
               <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
-
             <Heading size="md" style={styles.sectionTitle}>Account Information</Heading>
             
             {/* User Info Form */}
