@@ -26,11 +26,8 @@ export function useEpipens(userLocation: Coordinate | null): UseEpipensResult {
     const fetchMarkers = async () => {
       setIsLoading(true);
       try {
-      console.log('fetching markers');
         const response = await getAllEpiPens();
         const epiPens = response.allEpiPens;
-
-        console.log('epiPens', epiPens);
         
         // Transform the server response to match our local EpipenMarker format
         const transformedEpiPens: EpipenMarker[] = epiPens.map(epiPen => ({
