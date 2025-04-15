@@ -1,15 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Pressable, View, Text, TextInput, Image, Alert, FlatList, SafeAreaView} from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Pressable, View, Text, TextInput, Image, Alert, FlatList, SafeAreaView, TouchableOpacity} from 'react-native';
 import { Button, ButtonText } from "@/components/ui/button";
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from 'react-native-modal-datetime-picker';
-import { getToken } from '@/utils/tokenStorage';
 import { API_URL } from '@/constants/Env';
+import { useEpipens } from '@/hooks/useEpipens';
+import { Contact, Coordinate, EpipenMarker } from '@/types';
+import { ScrollView } from 'react-native-gesture-handler';
+
+export type EpipenFormData = Omit<EpipenMarker, 'id'>;
+
+  const defaultContact: Contact = {
+    name: '',
+    phone: '',
+  };
 
 const AddEpiPen = () => {
-  const [location, setLocation] = useState(null);
+  
+  const { addMarker} = useEpipens(null);
+  const [formData, setFormData] = useState<Partial<EpipenFormData>>({
+    type: 'adult',
+    expireDate: '',
+    contact: defaultContact,
+    photo: null,
+    description: '',
+  });
+
   const [locationQuery, setLocationQuery] = useState('');
   const [locationResults, setLocationResults] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState<Coordinate>();
   const [description, setDescription] = useState('');
   const [expiryDate, setExpiryDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -22,16 +41,55 @@ const AddEpiPen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [missingFields, setMissingFields] = useState([]);
 
-  useEffect(() => {
-    if (!locationQuery) return setLocationResults([]);
-    const delayDebounce = setTimeout(() => {
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery)}&accept-language=he`)
-        .then(res => res.json())
-        .then(data => setLocationResults(data))
-        .catch(err => console.error('Location search failed:', err));
-    }, 500);
-    return () => clearTimeout(delayDebounce);
-  }, [locationQuery]);
+  const searchTimerRef = useRef(null);
+
+  const handleSearchChange = (text) => {
+    setLocationQuery(text);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      searchPlaces(text);
+    }, 300);
+  };
+
+  const searchPlaces = useCallback(async (query) => {
+    if (!query || query.trim().length < 3) {
+      setLocationResults([]);
+      return;
+    }
+
+    try {
+      const encodedQuery = encodeURIComponent(query);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodedQuery}&format=json&addressdetails=1&limit=7&accept-language=he`,
+        {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'EpipenApp',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setLocationResults(data);
+      } else {
+        console.error('Error searching places:', response.statusText);
+        setLocationResults([]);
+      }
+    } catch (error) {
+      console.error('Error searching places:', error);
+      setLocationResults([]);
+    }
+  }, []);
+
+  const handleLocationSelect = (item) => {
+    setSelectedLocation({
+      latitude: parseFloat(item.lat),
+      longitude: parseFloat(item.lon),
+    });
+    setLocationQuery(item.display_name);
+    setLocationResults([]);
+  };
 
   const pickImage = async (fromCamera) => {
     const permission = fromCamera
@@ -78,7 +136,7 @@ const AddEpiPen = () => {
   const handleSubmit = async () => {
     const missing = [];
     const now = new Date();
-    if (!location) missing.push('location');
+    if (!selectedLocation) missing.push('location');
     if (!expiryDate || expiryDate <= now) missing.push('expiryDate');
     if (!contactName) missing.push('contactName');
     if (!contactPhone || !isValidPhoneNumber(contactPhone)) missing.push('contactPhone');
@@ -95,196 +153,188 @@ const AddEpiPen = () => {
     setMissingFields([]);
     setErrorMessage('');
 
-    const graphqlQuery = {
-      query: `
-        mutation AddEpiPen($input: AddEpiPenInput!) {
-          addEpiPen(input: $input) { _id, message }
-        }
-      `,
-      variables: {
-        input: {
-          location: location,
-          description,
-          expiryDate: expiryDate.toISOString().split('T')[0],
+    const requestVar: EpipenFormData = {
+      coordinate: {latitude: selectedLocation?.latitude, longitude: selectedLocation?.longitude},
+          description: description,
+          type: kind?.toLowerCase(),
+          expireDate:  expiryDate.toISOString().split('T')[0],
           contact: { name: contactName, phone: contactPhone },
-          image: imageUrl,
-          serialNumber,
-          kind
-        },
-      },
-    };
+          photo: imageUrl,
+          serialNumber: serialNumber
+    }
 
-    const accessToken: string | null = await getToken();
-
-    await fetch(`${API_URL}/graphql`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-       },
-      
-      body: JSON.stringify(graphqlQuery),
-    });
+    await addMarker(requestVar)
   };
 
-  const renderField = (label, value, onChange, name, isRequired:boolean, keyboardType = 'default') => (
-    <View className="mb-4 flex-row items-center w-full justify-between">
-      <Text className="w-1/3 text-base mr-2 text-black">
-        {label}{ isRequired ? <Text className="text-red-500">*</Text> : null}
-        </Text>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        keyboardType={keyboardType}
-        className={`w-2/3 border-b border-gray-300 pb-1 ${missingFields.includes(name) ? 'border-b border-red-500' : ''}`}
-      />
-    </View>
-  );
-
   return (
-    <SafeAreaView className="flex-1 bg-white">
-        
-        <View className="bg-white py-6 px-4 border-b border-gray-200" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%' }}>
-            <Text className="text-xl text-black text-center">Add Your Epipen</Text>
-        </View>
+<SafeAreaView className="flex-1 bg-white">
+  {/* Header */}
+  <View className="py-6 px-4 border-b border-gray-200">
+    <Text className="text-xl text-black text-center font-bold" style={{ color: '#FF385C' }}>
+      Add Your Epipen
+    </Text>
+  </View>
 
-          <View className="px-4 mt-6 w-full">
-          <View className="mb-4 flex-row items-center w-full justify-between">
-                <Text className="text-base mb-1 text-black">
-                    Location <Text className="text-red-500">*</Text>
-                </Text>
-                <TextInput
-                    value={locationQuery}
-                    onChangeText={setLocationQuery}
-                    className={`w-2/3 border-b border-gray-300 pb-1 ${missingFields.includes('location') ? 'border-b border-red-500' : ''}`}
-                />
-            </View>
+  {/* Content */}
+  <ScrollView contentContainerStyle={{ padding: 16 }}>
+    {/* Location Input */}
+    
+      <TextInput
+        value={locationQuery}
+        onChangeText={handleSearchChange}
+        placeholder="Search for a location"
+        placeholderTextColor="#999"
+        className={`w-full border rounded-xl px-4 py-3 text-black bg-white mb-5 ${
+          missingFields.includes('location') ? 'border-red-500' : 'border-gray-300'
+        }`}
+      />
 
-            <FlatList
-                data={locationResults}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item }) => (
-                    <Pressable
-                        className="bg-white p-2 border-b border-gray-200"
-                        onPress={() => {
-                            setLocation({
-                                latitude: parseFloat(item.lat),
-                                longitude: parseFloat(item.lon)
-                            });
-                            setLocationQuery(item.display_name);
-                            setLocationResults([]);
-                        }}
-                    >
-                        <Text>{item.display_name}</Text>
-                    </Pressable>
-                )}
-            />
-
-            <View className="mb-4 flex-row items-center w-full justify-between">
-                <Text className="w-1/3 text-base mr-2 text-black">
-                 Expiry Date <Text className="text-red-500">*</Text>
-                </Text>
-              <Pressable
-                onPress={() => setShowDatePicker(true)}
-                className={`w-2/3 border-b border-gray-300 pb-1 ${missingFields.includes('expiryDate') ? 'border-b border-red-500' : ''}`}
+      {locationResults.length > 0 && (
+        <View className="border border-gray-300 rounded-xl mb-5 max-h-40">
+          <FlatList
+            data={locationResults}
+            keyExtractor={(item) => item.place_id.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => handleLocationSelect(item)}
+                className="p-3 border-b border-gray-200"
               >
-                <Text>{expiryDate ? expiryDate.toDateString(): ""}</Text>
-              </Pressable>
-            </View>
-
-            <DateTimePicker
-              isVisible={showDatePicker}
-              mode="date"
-              onConfirm={(date) => {
-                setShowDatePicker(false);
-                setExpiryDate(date);
-              }}
-              onCancel={() => setShowDatePicker(false)}
-              minimumDate={new Date()}
-            />
-
-            {renderField('Contact Name', contactName, setContactName, 'contactName', true)}
-            {renderField('Contact Phone', contactPhone, setContactPhone, 'contactPhone', true, 'phone-pad')}
-            {renderField('Serial Number', serialNumber, setSerialNumber, 'serialNumber', true)}
-
-         <View className="mb-4 flex-row items-center">
-            <Text className="w-1/3 text-base mr-2 text-black">
-                Kind <Text className="text-red-500">*</Text>
-            </Text>
-            <View className="flex-row space-x-4 flex-1 justify-between">
-                {['Junior', 'Adult'].map((option) => (
-                <Pressable
-                key={option}
-                onPress={() => setKind(option.toUpperCase())}
-                className={`flex-row items-center px-7 py-2 rounded-lg border ${
-                    missingFields.includes('kind')
-                      ? 'border-red-500'
-                      : kind === option.toUpperCase()
-                      ? 'border-black-600'
-                      : 'border-gray-400'
-                  }`}
-            >
-                    <View className={`w-4 h-4 rounded-full mr-3SW ${
-                     kind === option.toUpperCase() ? 'bg-gray-600' : 'border border-gray-400'}`}
-                    />
-                    <Text className="text-black capitalize">{option}</Text>
-                </Pressable>
-             ))}
-            </View>
+                <Text className="text-sm text-gray-800">{item.display_name}</Text>
+              </TouchableOpacity>
+            )}
+          />
         </View>
+      )}
 
-        {renderField('Description', description, setDescription, 'description', false)}
+    {/* Expiry Date */}
+    <Pressable
+      onPress={() => setShowDatePicker(true)}
+      className={`w-full border rounded-xl px-4 py-3 mb-4 ${
+        missingFields.includes('expiryDate') ? 'border-red-500' : 'border-gray-300'
+      }`}
+    >
+      <Text className={`text-black ${!expiryDate ? 'text-gray-400' : ''}`}>
+        {expiryDate ? expiryDate.toDateString() : 'Expiration date'}
+      </Text>
+    </Pressable>
 
-        <View className="flex-row items-center mb-4">
-        {!image ? (
+    <DateTimePicker
+      isVisible={showDatePicker}
+      mode="date"
+      onConfirm={(date) => {
+        setShowDatePicker(false);
+        setExpiryDate(date);
+      }}
+      onCancel={() => setShowDatePicker(false)}
+      minimumDate={new Date()}
+    />
+
+    {/* Contact Name */}
+    <TextInput
+      value={contactName}
+      onChangeText={setContactName}
+      placeholder="Contact name"
+      placeholderTextColor="#999"
+      className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
+        missingFields.includes('contactName') ? 'border-red-500' : ''
+      }`}
+    />
+
+    {/* Contact Phone */}
+    <TextInput
+      value={contactPhone}
+      onChangeText={setContactPhone}
+      placeholder="Contact phone"
+      placeholderTextColor="#999"
+      keyboardType="phone-pad"
+      className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
+        missingFields.includes('contactPhone') ? 'border-red-500' : ''
+      }`}
+    />
+
+    {/* Serial Number */}
+    <TextInput
+      value={serialNumber}
+      onChangeText={setSerialNumber}
+      placeholder="Serial number"
+      placeholderTextColor="#999"
+      className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
+        missingFields.includes('serialNumber') ? 'border-red-500' : ''
+      }`}
+    />
+
+    {/* Kind Selection */}
+    <View className="flex-row justify-between mb-4">
+      {['Junior', 'Adult'].map((option) => (
         <Pressable
-            onPress={() => {
-            Alert.alert(
-            'Select Image',
-            'Choose an option to upload an image.',
-            [
-            {
-              text: 'Gallery',
-              onPress: () => pickImage(false), // From Gallery
-            },
-            {
-              text: 'Camera',
-              onPress: () => pickImage(true), // From Camera
-            },
-            { text: 'Cancel', style: 'cancel' },
-          ],
-          { cancelable: true }
-            );
-        }}
-            className="p-3 bg-blue-500 rounded-lg"
+          key={option}
+          onPress={() => setKind(option.toUpperCase())}
+          className={`flex-1 mx-1 items-center py-3 rounded-xl border ${
+            missingFields.includes('kind')
+              ? 'border-red-500'
+              : kind === option.toUpperCase()
+              ? 'border-[#FF385C]'
+              : 'border-gray-300'
+          }`}
         >
-        <Text className="text-white">+ Add Image</Text>
+          <Text className="text-black">{option}</Text>
         </Pressable>
-     ) : (
-        <View className="flex-row items-center">
-        <Image source={{ uri: image }} className="w-24 h-24 rounded-lg mr-3" />
+      ))}
+    </View>
+
+    {/* Description */}
+    <TextInput
+      value={description}
+      onChangeText={setDescription}
+      placeholder="Description"
+      placeholderTextColor="#999"
+      multiline
+      className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4`}
+    />
+
+    {/* Image Picker */}
+    <View className="mb-6">
+      {!image ? (
         <Pressable
+          onPress={() => {
+            Alert.alert('Select Image', 'Choose an option to upload an image.', [
+              { text: 'Gallery', onPress: () => pickImage(false) },
+              { text: 'Camera', onPress: () => pickImage(true) },
+              { text: 'Cancel', style: 'cancel' },
+            ]);
+          }}
+          className="p-3 bg-[#FF385C] rounded-xl"
+        >
+          <Text className="text-white text-center">+ Add Image</Text>
+        </Pressable>
+      ) : (
+        <View className="flex-row items-center">
+          <Image source={{ uri: image }} className="w-24 h-24 rounded-lg mr-3" />
+          <Pressable
             onPress={() => {
-            setImage(null);
-            setImageUrl(null);
+              setImage(null);
+              setImageUrl(null);
             }}
             className="p-2 bg-red-500 rounded-full"
-            >
-             <Text className="text-white text-lg">X</Text>
-        </Pressable>
+          >
+            <Text className="text-white text-lg">X</Text>
+          </Pressable>
         </View>
-        )}
+      )}
     </View>
-            {errorMessage ? <Text className="text-red-500 text-center mb-4">{errorMessage}</Text> : null}
 
-            <View className="w-full">
-              <Button onPress={handleSubmit} className="bg-red-600 px-6 rounded-lg shadow w-full">
-                <ButtonText className="text-white font-bold text-center text-base">Submit</ButtonText>
-              </Button>
-            </View>
-          </View>
-      
-    </SafeAreaView>
+    {/* Error */}
+    {errorMessage ? <Text className="text-red-500 text-center mb-4">{errorMessage}</Text> : null}
+
+    {/* Submit */}
+    <Button
+      onPress={handleSubmit}
+      className="px-6 py-3 bg-[#FF385C] rounded-xl shadow w-full"
+    >
+      <ButtonText className="text-white font-bold text-center text-base">Submit</ButtonText>
+    </Button>
+  </ScrollView>
+</SafeAreaView>
   );
 };
 
