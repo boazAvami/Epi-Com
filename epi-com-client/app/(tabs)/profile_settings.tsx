@@ -75,7 +75,7 @@ const profileSettingsSchema = z.object({
   ).optional(),
   password: z.string().optional(),
   confirmPassword: z.string().optional(),
-  profile_picture_uri: z.string().optional(),
+  profile_picture_uri: z.string().nullable().optional(),
 });
 
 // Make sure types match schema
@@ -296,11 +296,8 @@ const handleRemovePicture = () => {
       },
       {
         text: "Remove",
-        onPress: () => {
-          setValue('profile_picture_uri', '')
-          
-          // Log to confirm the value has been removed
-          console.log("Profile picture removed, current value:", watch('profile_picture_uri'));
+        onPress: () => {          
+          setValue('profile_picture_uri', null);        
         },
         style: "destructive"
       }
@@ -337,13 +334,9 @@ const handleRemovePicture = () => {
 
     const formDateStr = data.date_of_birth?.toISOString();
     const userDateStr = user.date_of_birth ? new Date(Number(user.date_of_birth)).toISOString() : undefined;
-    console.log('Comparing dates:', formDateStr, userDateStr);
     
     // Explicit check for profile picture change
     const isPictureChanged = data.profile_picture_uri !== user.profile_picture_uri;
-    console.log("Profile picture changed:", isPictureChanged, 
-      "Old:", user.profile_picture_uri, 
-      "New:", data.profile_picture_uri);
 
     const hasChanges = 
       data.userName !== user.userName ||
@@ -368,11 +361,9 @@ const handleRemovePicture = () => {
       return;
     }
 
-    // Explicitly handle the profile_picture_uri field
     // If it's an empty string, set it to null for the API
-    const profilePictureValue = data.profile_picture_uri === '' ? null : data.profile_picture_uri;
-    console.log("Profile picture value being sent to API:", profilePictureValue);
-    
+    const profilePictureValue = data.profile_picture_uri // === '' ? null : data.profile_picture_uri;
+
     // Prepare data for update with type conversion for emergency contacts
     const updatedUserData: Partial<RegisterData> = {
       userName: data.userName,
@@ -394,7 +385,6 @@ const handleRemovePicture = () => {
     
     try {
       setIsLoading(true);
-      console.log("Sending update with data:", JSON.stringify(updatedUserData));
       await UpdateUser(updatedUserData);
       await getUserInfo();
       

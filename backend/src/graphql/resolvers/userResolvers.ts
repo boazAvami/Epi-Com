@@ -41,12 +41,15 @@ export const userResolvers = {
       if (firstName) userToUpdate.firstName = firstName;
       if (lastName) userToUpdate.lastName = lastName;
       if (date_of_birth) userToUpdate.date_of_birth = date_of_birth;
-      if (profile_picture_uri) userToUpdate.profile_picture_uri = profile_picture_uri;
       if (gender) userToUpdate.gender = gender;
+      if (profile_picture_uri !== undefined) {
+        // Set the value, which could be null to remove the picture
+        userToUpdate.profile_picture_uri = profile_picture_uri;
+      }
 
       await userToUpdate.save();
 
       return userToUpdate;
-    },
+    }, 
   },
 };
