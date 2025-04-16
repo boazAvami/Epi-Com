@@ -11,7 +11,7 @@ export interface Coordinate {
   export interface EpipenMarker {
     id: string;
     coordinate: Coordinate;
-    description: string;
+    description?: string;
     type: 'adult' | 'junior';
     expireDate: string;
     contact?: Contact;

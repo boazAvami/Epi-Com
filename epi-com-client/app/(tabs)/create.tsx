@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Pressable, View, Text, TextInput, Image, Alert, FlatList, SafeAreaView, TouchableOpacity} from 'react-native';
 import { Button, ButtonText } from "@/components/ui/button";
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import { useEpipens } from '@/hooks/useEpipens';
-import { Contact, Coordinate, EpipenMarker } from '@/types';
+import { Contact, EpipenMarker } from '@/types';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { RTLText } from '@/components/shared/RTLComponents';
@@ -39,66 +39,45 @@ export type EpipenFormData = Omit<EpipenMarker, 'id'>;
   };
 
 const AddEpiPen = () => {
-  
-  const { addMarker} = useEpipens(null);
+  const { addMarker } = useEpipens(null);
   const [formData, setFormData] = useState<Partial<EpipenFormData>>({
     type: 'adult',
     expireDate: '',
     contact: defaultContact,
     photo: null,
-    description: '',
+    description: undefined,
+    serialNumber: '',
+    coordinate: undefined,
   });
 
-  const [locationQuery, setLocationQuery] = useState<String>();
+  const [locationQuery, setLocationQuery] = useState('');
   const [locationResults, setLocationResults] = useState<SearchResult[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<Coordinate>();
-  const [description, setDescription] = useState('');
-  const [expiryDate, setExpiryDate] = useState(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [contactName, setContactName] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [serialNumber, setSerialNumber] = useState('');
-  const [kind, setKind] = useState(null); // 'JUNOIR' or 'ADULT'
-  const [image, setImage] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [missingFields, setMissingFields] = useState<String[]>([]);
 
-  const searchTimerRef = useRef(null);
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleSearchChange = (text: String) => {
+  const handleSearchChange = (text: string) => {
     setLocationQuery(text);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
-      searchPlaces(text);
-    }, 300);
+    searchTimerRef.current = setTimeout(() => searchPlaces(text), 300);
   };
 
-  const searchPlaces = useCallback(async (query: String) => {
+  const searchPlaces = useCallback(async (query: string) => {
     if (!query || query.trim().length < 3) {
       setLocationResults([]);
       return;
     }
 
     try {
-      const encodedQuery = encodeURIComponent(query);
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodedQuery}&format=json&addressdetails=1&limit=7&accept-language=he`,
-        {
-          headers: {
-            Accept: 'application/json',
-            'User-Agent': 'EpipenApp',
-          },
-        }
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=7&accept-language=he`,
+        { headers: { Accept: 'application/json', 'User-Agent': 'EpipenApp' } }
       );
-
-      if (response.ok) {
-        const data = await response.json();
-        setLocationResults(data);
-      } else {
-        console.error('Error searching places:', response.statusText);
-        setLocationResults([]);
-      }
+      const data = await response.json();
+      setLocationResults(data);
     } catch (error) {
       console.error('Error searching places:', error);
       setLocationResults([]);
@@ -106,241 +85,202 @@ const AddEpiPen = () => {
   }, []);
 
   const handleLocationSelect = (item: SearchResult) => {
-    setSelectedLocation({
-      latitude: parseFloat(item.lat),
-      longitude: parseFloat(item.lon),
-    });
+    setFormData(prev => ({
+      ...prev,
+      coordinate: { latitude: parseFloat(item.lat), longitude: parseFloat(item.lon) }
+    }));
     setLocationQuery(item.display_name);
     setLocationResults([]);
   };
 
-    const pickImage = async (sourceType: 'camera' | 'gallery') => {
-      console.log(`Starting image picker for: ${sourceType}`);
-      
-      try {
-        let permissionResult;
-        if (sourceType === 'camera') {
-          permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-          if (permissionResult.status !== 'granted') {
-           // Alert.alert(t('errors.permission_denied'), t('errors.camera_permission_required'));
-            return;
-          }
-        } else {
-          permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (permissionResult.status !== 'granted') {
-            //Alert.alert(t('errors.permission_denied'), t('errors.media_permission_required'));
-            return;
-          }
-        }
-        
-        console.log('Permission granted, launching picker');
-        const options: ImagePicker.ImagePickerOptions = {
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [4, 3],
-          quality: 0.8,
-        };
-        
-        let result;
-        try {
-          if (sourceType === 'camera') {
-            console.log('Launching camera...');
-            result = await ImagePicker.launchCameraAsync(options);
-          } else {
-            console.log('Launching image library...');
-            result = await ImagePicker.launchImageLibraryAsync(options);
-          }
-          
-          console.log('Picker result status:', result.canceled ? 'canceled' : 'success');
-          if (!result.canceled && result.assets && result.assets.length > 0) {
-            const imageUri = result.assets[0].uri;
-            console.log("Image selected:", imageUri);
-            // setFormData(prevData => ({
-            //   ...prevData,
-            //   photo: imageUri
-            // }));
-            console.log("uri:" + imageUri)
-            setImage(imageUri)
-            setImageUrl(imageUri)
-          } else {
-            console.log("Image selection was canceled by user");
-          }
-        } catch (pickerError) {
-          console.error('Error during image picking:', pickerError);
-         // Alert.alert(t('errors.error'), t('errors.image_picker_error'));
-        }
-      } catch (error) {
-        console.error('Error in pickImage function (permissions?):', error);
-        //Alert.alert(t('errors.error'), t('errors.image_picker_error'));
+  const pickImage = async (sourceType: 'camera' | 'gallery') => {
+    try {
+      let permission;
+      if (sourceType === 'camera') {
+        permission = await ImagePicker.requestCameraPermissionsAsync();
+      } else {
+        permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       }
-    };
+      if (permission.status !== 'granted') return;
 
-  const isValidPhoneNumber = (phone) => {
-    const regex = /^\+?[0-9]{7,15}$/;
-    return regex.test(phone);
+      const options = {
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      };
+
+      const result = sourceType === 'camera'
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+
+      if (!result.canceled && result.assets?.length > 0) {
+        const imageUri = result.assets[0].uri;
+        setFormData(prev => ({ ...prev, photo: imageUri }));
+      }
+    } catch (e) {
+      console.error('Image picker error:', e);
+    }
   };
 
+  const isValidPhoneNumber = (phone: string): boolean => /^\+?[0-9]{7,15}$/.test(phone);
+
   const handleSubmit = async () => {
-    const missing = [];
-    const now = new Date();
-    if (!selectedLocation) missing.push('location');
-    if (!expiryDate || expiryDate <= now) missing.push('expiryDate');
-    if (!contactName) missing.push('contactName');
-    if (!contactPhone || !isValidPhoneNumber(contactPhone)) missing.push('contactPhone');
-    if (!serialNumber) missing.push('serialNumber');
-    if (!kind) missing.push('kind');
+    try {
+      const missing = [];
+  
+      if (!formData.coordinate) missing.push('location');
+      if (!formData.expireDate || new Date(formData.expireDate) <= new Date()) missing.push('expiryDate');
+      if (!formData.contact?.name) missing.push('contactName');
+      if (!formData.contact?.phone || !isValidPhoneNumber(formData.contact.phone)) missing.push('contactPhone');
+      if (!formData.serialNumber) missing.push('serialNumber');
+      if (!formData.type) missing.push('kind');
+  
+      if (missing.length) {
+        setErrorMessage('Please fill all required fields correctly.');
+        return;
+      }
+  
+      setErrorMessage('');
+      const data: EpipenFormData = {
+        coordinate: formData.coordinate!,
+        expireDate: new Date(formData.expireDate!).toISOString().split('T')[0],
+        contact: {
+          name: formData.contact!.name,
+          phone: formData.contact!.phone,
+        },
+        description: formData.description,
+        type: formData.type!,
+        photo: formData.photo,
+        serialNumber: formData.serialNumber!,
+      }
+  
+      await addMarker(data);
 
-
-    if (missing.length) {
-      setMissingFields(missing);
-      setErrorMessage('Please fill all required fields correctly.');
-      return;
+      setSuccessMessage('הפעולה בוצעה בהצלחה!');
+      setFormData({});
+      setLocationQuery("");
+      setTimeout(() => setSuccessMessage(null), 3000);
+     
+    } catch (error) {
+      setErrorMessage('אירעה שגיאה בלתי צפויה. אנא נסה שוב.');
     }
-
-    setMissingFields([]);
-    setErrorMessage('');
-
-    const requestVar: EpipenFormData = {
-      coordinate: {latitude: selectedLocation?.latitude, longitude: selectedLocation?.longitude},
-      description: description,
-      type: kind?.toLowerCase(),
-      expireDate:  expiryDate.toISOString().split('T')[0],
-      contact: { name: contactName, phone: contactPhone },
-      photo: imageUrl,
-      serialNumber: serialNumber
-    }
-
-    await addMarker(requestVar)
   };
 
   return (
-<SafeAreaView className="flex-1 bg-white">
-  {/* Header */}
-  <View className="py-6 px-4 border-b border-gray-200">
-    <Text className="text-xl text-black text-center font-bold" style={{ color: '#FF385C' }}>
-      Add Your Epipen
-    </Text>
-  </View>
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="py-6 px-4 border-b border-gray-200">
+        <Text className="text-xl text-black text-center font-bold" style={{ color: '#FF385C' }}>
+          Add Your Epipen
+        </Text>
+      </View>
 
-  {/* Content */}
-  <ScrollView contentContainerStyle={{ padding: 16 }}>
-    {/* Location Input */}
-    
-      <TextInput
-        value={locationQuery}
-        onChangeText={handleSearchChange}
-        placeholder="Search for a location"
-        placeholderTextColor="#999"
-        className={`w-full border rounded-xl px-4 py-3 text-black bg-white mb-5 ${
-          missingFields.includes('location') ? 'border-red-500' : 'border-gray-300'
-        }`}
-      />
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        {/* Location */}
+        <TextInput
+          value={locationQuery}
+          onChangeText={handleSearchChange}
+          placeholder="Search for a location"
+          className={`w-full border rounded-xl px-4 py-3 text-black bg-white mb-5 ${
+            missingFields.includes('location') ? 'border-red-500' : 'border-gray-300'
+          }`}
+        />
+        {locationResults.length > 0 && (
+          <View className="border border-gray-300 rounded-xl mb-5 max-h-40">
+            <FlatList
+              data={locationResults}
+              keyExtractor={(item) => item.place_id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleLocationSelect(item)} className="p-3 border-b border-gray-200">
+                  <Text className="text-sm text-gray-800">{item.display_name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
 
-      {locationResults.length > 0 && (
-        <View className="border border-gray-300 rounded-xl mb-5 max-h-40">
-          <FlatList
-            data={locationResults}
-            keyExtractor={(item) => item.place_id.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => handleLocationSelect(item)}
-                className="p-3 border-b border-gray-200"
-              >
-                <Text className="text-sm text-gray-800">{item.display_name}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
-
-    {/* Expiry Date */}
-    <Pressable
-      onPress={() => setShowDatePicker(true)}
-      className={`w-full border rounded-xl px-4 py-3 mb-4 ${
-        missingFields.includes('expiryDate') ? 'border-red-500' : 'border-gray-300'
-      }`}
-    >
-      <Text className={`text-black ${!expiryDate ? 'text-gray-400' : ''}`}>
-        {expiryDate ? expiryDate.toDateString() : 'Expiration date'}
-      </Text>
-    </Pressable>
-
-    <DateTimePicker
-      isVisible={showDatePicker}
-      mode="date"
-      onConfirm={(date) => {
-        setShowDatePicker(false);
-        setExpiryDate(date);
-      }}
-      onCancel={() => setShowDatePicker(false)}
-      minimumDate={new Date()}
-    />
-
-    {/* Contact Name */}
-    <TextInput
-      value={contactName}
-      onChangeText={setContactName}
-      placeholder="Contact name"
-      placeholderTextColor="#999"
-      className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
-        missingFields.includes('contactName') ? 'border-red-500' : ''
-      }`}
-    />
-
-    {/* Contact Phone */}
-    <TextInput
-      value={contactPhone}
-      onChangeText={setContactPhone}
-      placeholder="Contact phone"
-      placeholderTextColor="#999"
-      keyboardType="phone-pad"
-      className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
-        missingFields.includes('contactPhone') ? 'border-red-500' : ''
-      }`}
-    />
-
-    {/* Serial Number */}
-    <TextInput
-      value={serialNumber}
-      onChangeText={setSerialNumber}
-      placeholder="Serial number"
-      placeholderTextColor="#999"
-      className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
-        missingFields.includes('serialNumber') ? 'border-red-500' : ''
-      }`}
-    />
-
-    {/* Kind Selection */}
-    <View className="flex-row justify-between mb-4">
-      {['Junior', 'Adult'].map((option) => (
+        {/* Expiry Date */}
         <Pressable
-          key={option}
-          onPress={() => setKind(option.toUpperCase())}
-          className={`flex-1 mx-1 items-center py-3 rounded-xl border ${
-            missingFields.includes('kind')
-              ? 'border-red-500'
-              : kind === option.toUpperCase()
-              ? 'border-[#FF385C]'
-              : 'border-gray-300'
+          onPress={() => setShowDatePicker(true)}
+          className={`w-full border rounded-xl px-4 py-3 mb-4 ${
+            missingFields.includes('expiryDate') ? 'border-red-500' : 'border-gray-300'
           }`}
         >
-          <Text className="text-black">{option}</Text>
+          <Text className={`text-black ${!formData.expireDate ? 'text-gray-400' : ''}`}>
+            {formData.expireDate ? new Date(formData.expireDate).toDateString() : 'Expiration date'}
+          </Text>
         </Pressable>
-      ))}
-    </View>
+        <DateTimePicker
+          isVisible={showDatePicker}
+          mode="date"
+          onConfirm={(date) => {
+            setShowDatePicker(false);
+            setFormData(prev => ({ ...prev, expireDate: date.toISOString() }));
+          }}
+          onCancel={() => setShowDatePicker(false)}
+          minimumDate={new Date()}
+        />
 
-    {/* Description */}
-    <TextInput
-      value={description}
-      onChangeText={setDescription}
-      placeholder="Description"
-      placeholderTextColor="#999"
-      multiline
-      className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4`}
-    />
+        {/* Contact name */}
+        <TextInput
+          value={formData.contact?.name || ''}
+          onChangeText={(text) => setFormData(prev => ({ ...prev, contact: { ...prev.contact! , name: text } }))}
+          placeholder="Contact name"
+          className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
+            missingFields.includes('contactName') ? 'border-red-500' : ''
+          }`}
+        />
 
-    {/* Photo */}
-    <TouchableOpacity 
+        {/* Contact phone */}
+        <TextInput
+          value={formData.contact?.phone || ''}
+          onChangeText={(text) => setFormData(prev => ({ ...prev, contact: { ...prev.contact!, phone: text } }))}
+          placeholder="Contact phone"
+          keyboardType="phone-pad"
+          className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
+            missingFields.includes('contactPhone') ? 'border-red-500' : ''
+          }`}
+        />
+
+        {/* Serial number */}
+        <TextInput
+          value={formData.serialNumber || ''}
+          onChangeText={(text) => setFormData(prev => ({ ...prev, serialNumber: text }))}
+          placeholder="Serial number"
+          className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4 ${
+            missingFields.includes('serialNumber') ? 'border-red-500' : ''
+          }`}
+        />
+
+        {/* Type */}
+        <View className="flex-row justify-between mb-4">
+          {['Junior', 'Adult'].map((option) => (
+            <Pressable
+              key={option}
+              onPress={() => setFormData(prev => ({ ...prev, type: option === "Adult" ? "adult" : "junior" }))}
+              className={`flex-1 mx-1 items-center py-3 rounded-xl border ${
+                missingFields.includes('kind')
+                  ? 'border-red-500'
+                  : formData.type === option.toLowerCase()
+                  ? 'border-[#FF385C]'
+                  : 'border-gray-300'
+              }`}
+            >
+              <Text className="text-black">{option}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Description */}
+        <TextInput
+          value={formData.description || ''}
+          onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+          placeholder="Description"
+          multiline
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4"
+        />
+
+        {/* Photo */}
+        <TouchableOpacity
           style={[styles.photoButton, formData.photo ? styles.photoButtonWithImage : null]}
           activeOpacity={0.8}
           onPress={() => {
@@ -351,25 +291,18 @@ const AddEpiPen = () => {
             ]);
           }}
         >
-          {image ? (
+          {formData.photo ? (
             <View style={styles.photoContainer}>
-              <Image 
-                source={{ uri: image }} 
+              <Image
+                source={{ uri: formData.photo }}
                 style={styles.photoPreview}
                 resizeMode="cover"
-                onLoadStart={() => console.log("Image loading started")}
-                onLoad={() => console.log("Image loaded successfully")}
-                onError={(error) => {
-                  console.error("Image loading error:", error.nativeEvent.error);
-                }} 
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.removePhotoButton}
                 onPress={(e) => {
                   e.stopPropagation();
-                  console.log("Remove photo button pressed");
-                  setImage(null);
-                  setImageUrl(null);
+                  setFormData(prev => ({ ...prev, photo: null }));
                 }}
                 hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
               >
@@ -379,25 +312,26 @@ const AddEpiPen = () => {
           ) : (
             <View style={styles.addPhotoPlaceholder}>
               <Ionicons name="camera-outline" size={30} color="#999" />
-              <RTLText style={styles.addPhotoText}>
-                add photo - optional
-              </RTLText>
+              <RTLText style={styles.addPhotoText}>add photo - optional</RTLText>
             </View>
           )}
         </TouchableOpacity>
 
-    {/* Error */}
-    {errorMessage ? <Text className="text-red-500 text-center mb-4">{errorMessage}</Text> : null}
+        {/* Error */}
+        {errorMessage ? <Text className="text-red-500 text-center mb-4">{errorMessage}</Text> : null}
 
-    {/* Submit */}
-    <Button
-      onPress={handleSubmit}
-      className="px-6 py-3 bg-[#FF385C] rounded-xl shadow w-full"
-    >
-      <ButtonText className="text-white font-bold text-center text-base">Submit</ButtonText>
-    </Button>
-  </ScrollView>
-</SafeAreaView>
+        {/* Success */}
+        {successMessage ? <Text className="text-red-500 text-center mb-4">{successMessage}</Text> : null}
+
+        {/* Submit */}
+        <Button
+          onPress={handleSubmit}
+          className="px-6 py-2 bg-[#FF385C] rounded-xl shadow w-full"
+        >
+          <ButtonText className="text-white font-bold text-center text-base">Submit</ButtonText>
+        </Button>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
