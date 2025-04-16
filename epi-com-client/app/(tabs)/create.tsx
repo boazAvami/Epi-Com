@@ -3,10 +3,33 @@ import { Pressable, View, Text, TextInput, Image, Alert, FlatList, SafeAreaView,
 import { Button, ButtonText } from "@/components/ui/button";
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from 'react-native-modal-datetime-picker';
-import { API_URL } from '@/constants/Env';
 import { useEpipens } from '@/hooks/useEpipens';
 import { Contact, Coordinate, EpipenMarker } from '@/types';
 import { ScrollView } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
+import { RTLText } from '@/components/shared/RTLComponents';
+import styles from './styles';
+
+// Interface for search results from Nominatim
+interface SearchResult {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: {
+    road?: string;
+    neighbourhood?: string;
+    suburb?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    county?: string;
+    state?: string;
+    country?: string;
+    postcode?: string;
+  };
+  name?: string;
+}
 
 export type EpipenFormData = Omit<EpipenMarker, 'id'>;
 
@@ -26,8 +49,8 @@ const AddEpiPen = () => {
     description: '',
   });
 
-  const [locationQuery, setLocationQuery] = useState('');
-  const [locationResults, setLocationResults] = useState([]);
+  const [locationQuery, setLocationQuery] = useState<String>();
+  const [locationResults, setLocationResults] = useState<SearchResult[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Coordinate>();
   const [description, setDescription] = useState('');
   const [expiryDate, setExpiryDate] = useState(null);
@@ -39,11 +62,11 @@ const AddEpiPen = () => {
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [missingFields, setMissingFields] = useState([]);
+  const [missingFields, setMissingFields] = useState<String[]>([]);
 
   const searchTimerRef = useRef(null);
 
-  const handleSearchChange = (text) => {
+  const handleSearchChange = (text: String) => {
     setLocationQuery(text);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
@@ -51,7 +74,7 @@ const AddEpiPen = () => {
     }, 300);
   };
 
-  const searchPlaces = useCallback(async (query) => {
+  const searchPlaces = useCallback(async (query: String) => {
     if (!query || query.trim().length < 3) {
       setLocationResults([]);
       return;
@@ -82,7 +105,7 @@ const AddEpiPen = () => {
     }
   }, []);
 
-  const handleLocationSelect = (item) => {
+  const handleLocationSelect = (item: SearchResult) => {
     setSelectedLocation({
       latitude: parseFloat(item.lat),
       longitude: parseFloat(item.lon),
@@ -91,42 +114,66 @@ const AddEpiPen = () => {
     setLocationResults([]);
   };
 
-  const pickImage = async (fromCamera) => {
-    const permission = fromCamera
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (permission.status !== 'granted') {
-      Alert.alert('Permission required', 'Permission is needed to access this feature.');
-      return;
-    }
-
-    let result = fromCamera
-      ? await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 1 })
-      : await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 1 });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-      uploadImage(result.assets[0].uri);
-    }
-  };
-
-  const uploadImage = async (uri) => {
-    let formData = new FormData();
-    formData.append('file', { uri, name: 'upload.jpg', type: 'image/jpeg' });
-
-    const response = await fetch(`${API_URL}/graphql/files`, {
-      method: 'POST',
-      body: formData,
-      headers: { 
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2YyYTY5ZTQ0MDc5MmEzNDk2NmY1ZWMiLCJyYW5kb20iOiIwLjgyOTYxMjQyNzQ3MDA3NjciLCJpYXQiOjE3NDM5NTU2MTQsImV4cCI6MTc0NDU2MDQxNH0.f6OytPS2gHqSeK4paR77QA-Q4kT1xzenMAJv_Ml_0KI'}`,
-       },
-    });
-
-    const result = await response.json();
-    setImageUrl(result.url);
-  };
+    const pickImage = async (sourceType: 'camera' | 'gallery') => {
+      console.log(`Starting image picker for: ${sourceType}`);
+      
+      try {
+        let permissionResult;
+        if (sourceType === 'camera') {
+          permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+          if (permissionResult.status !== 'granted') {
+           // Alert.alert(t('errors.permission_denied'), t('errors.camera_permission_required'));
+            return;
+          }
+        } else {
+          permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (permissionResult.status !== 'granted') {
+            //Alert.alert(t('errors.permission_denied'), t('errors.media_permission_required'));
+            return;
+          }
+        }
+        
+        console.log('Permission granted, launching picker');
+        const options: ImagePicker.ImagePickerOptions = {
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        };
+        
+        let result;
+        try {
+          if (sourceType === 'camera') {
+            console.log('Launching camera...');
+            result = await ImagePicker.launchCameraAsync(options);
+          } else {
+            console.log('Launching image library...');
+            result = await ImagePicker.launchImageLibraryAsync(options);
+          }
+          
+          console.log('Picker result status:', result.canceled ? 'canceled' : 'success');
+          if (!result.canceled && result.assets && result.assets.length > 0) {
+            const imageUri = result.assets[0].uri;
+            console.log("Image selected:", imageUri);
+            // setFormData(prevData => ({
+            //   ...prevData,
+            //   photo: imageUri
+            // }));
+            console.log("uri:" + imageUri)
+            setImage(imageUri)
+            setImageUrl(imageUri)
+          } else {
+            console.log("Image selection was canceled by user");
+          }
+        } catch (pickerError) {
+          console.error('Error during image picking:', pickerError);
+         // Alert.alert(t('errors.error'), t('errors.image_picker_error'));
+        }
+      } catch (error) {
+        console.error('Error in pickImage function (permissions?):', error);
+        //Alert.alert(t('errors.error'), t('errors.image_picker_error'));
+      }
+    };
 
   const isValidPhoneNumber = (phone) => {
     const regex = /^\+?[0-9]{7,15}$/;
@@ -155,12 +202,12 @@ const AddEpiPen = () => {
 
     const requestVar: EpipenFormData = {
       coordinate: {latitude: selectedLocation?.latitude, longitude: selectedLocation?.longitude},
-          description: description,
-          type: kind?.toLowerCase(),
-          expireDate:  expiryDate.toISOString().split('T')[0],
-          contact: { name: contactName, phone: contactPhone },
-          photo: imageUrl,
-          serialNumber: serialNumber
+      description: description,
+      type: kind?.toLowerCase(),
+      expireDate:  expiryDate.toISOString().split('T')[0],
+      contact: { name: contactName, phone: contactPhone },
+      photo: imageUrl,
+      serialNumber: serialNumber
     }
 
     await addMarker(requestVar)
@@ -292,36 +339,52 @@ const AddEpiPen = () => {
       className={`w-full border border-gray-300 rounded-xl px-4 py-3 text-black bg-white mb-4`}
     />
 
-    {/* Image Picker */}
-    <View className="mb-6">
-      {!image ? (
-        <Pressable
+    {/* Photo */}
+    <TouchableOpacity 
+          style={[styles.photoButton, formData.photo ? styles.photoButtonWithImage : null]}
+          activeOpacity={0.8}
           onPress={() => {
             Alert.alert('Select Image', 'Choose an option to upload an image.', [
-              { text: 'Gallery', onPress: () => pickImage(false) },
-              { text: 'Camera', onPress: () => pickImage(true) },
+              { text: 'Gallery', onPress: () => pickImage('gallery') },
+              { text: 'Camera', onPress: () => pickImage('camera') },
               { text: 'Cancel', style: 'cancel' },
             ]);
           }}
-          className="p-3 bg-[#FF385C] rounded-xl"
         >
-          <Text className="text-white text-center">+ Add Image</Text>
-        </Pressable>
-      ) : (
-        <View className="flex-row items-center">
-          <Image source={{ uri: image }} className="w-24 h-24 rounded-lg mr-3" />
-          <Pressable
-            onPress={() => {
-              setImage(null);
-              setImageUrl(null);
-            }}
-            className="p-2 bg-red-500 rounded-full"
-          >
-            <Text className="text-white text-lg">X</Text>
-          </Pressable>
-        </View>
-      )}
-    </View>
+          {image ? (
+            <View style={styles.photoContainer}>
+              <Image 
+                source={{ uri: image }} 
+                style={styles.photoPreview}
+                resizeMode="cover"
+                onLoadStart={() => console.log("Image loading started")}
+                onLoad={() => console.log("Image loaded successfully")}
+                onError={(error) => {
+                  console.error("Image loading error:", error.nativeEvent.error);
+                }} 
+              />
+              <TouchableOpacity 
+                style={styles.removePhotoButton}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  console.log("Remove photo button pressed");
+                  setImage(null);
+                  setImageUrl(null);
+                }}
+                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+              >
+                <Ionicons name="close-circle" size={24} color="#FF385C" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.addPhotoPlaceholder}>
+              <Ionicons name="camera-outline" size={30} color="#999" />
+              <RTLText style={styles.addPhotoText}>
+                add photo - optional
+              </RTLText>
+            </View>
+          )}
+        </TouchableOpacity>
 
     {/* Error */}
     {errorMessage ? <Text className="text-red-500 text-center mb-4">{errorMessage}</Text> : null}
