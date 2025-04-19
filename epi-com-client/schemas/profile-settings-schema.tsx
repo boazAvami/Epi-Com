@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ValidationRules, EmergencyContactSchemas } from "./validation-utils";
+import { ValidationRules, EmergencyContactSchemas } from "../utils/validation-utils";
 
 /**
  * Profile settings form validation schema

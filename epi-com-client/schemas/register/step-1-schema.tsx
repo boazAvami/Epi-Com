@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ValidationRules } from "@/schemas/validation-utils";
+import { ValidationRules } from "@/utils/validation-utils"
 
 export const registerStep1Schema = z
     .object({

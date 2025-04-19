@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EmergencyContactSchemas } from "@/schemas/validation-utils";
+import { EmergencyContactSchemas } from "@/utils/validation-utils";
 import { getValidationMessage } from "@/utils/validation-messages";
 
 export const registerStep4Schema = z.object({

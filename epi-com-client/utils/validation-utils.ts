@@ -91,6 +91,8 @@ export const ValidationRules = {
     return z.date().optional();
   },
 
+  allergies: () => z.array(z.string()).optional(),
+
   // Profile picture
   profilePicture: () => z
     .string()
