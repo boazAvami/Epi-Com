@@ -139,10 +139,37 @@
       "logout": "התנתק",
       "next": "המשך",
       "confirm": "אישור",
-      "select": "בחר"
+      "select": "בחר",
+      "ok": "אישור"
     },
     "actions": {
       "openWhatsApp": "פתח בווטסאפ"
+    },
+    "profile": {
+      "settings": "הגדרות",
+      "account_info": "פרטי חשבון",
+      "medical_info": "מידע רפואי",
+      "allergies_description": "רשום אלרגיות או מצבים רפואיים שגורמי חירום צריכים לדעת עליהם.",
+      "emergency_contacts": "אנשי קשר לחירום",
+      "emergency_contacts_description": "אנשים שיש ליצור איתם קשר במקרה חירום.",
+      "add": "הוסף",
+      "remove": "הסר",
+      "saving": "שומר...",
+      "save_changes": "שמור שינויים",
+      "loading": "טוען את הגדרות הפרופיל שלך...",
+      "profile_picture": "תמונת פרופיל",
+      "select_option": "בחר אפשרות",
+      "confirm_remove_picture": "האם אתה בטוח שברצונך להסיר את תמונת הפרופיל שלך?",
+      "passwords_dont_match": "הסיסמאות אינן תואמות.",
+      "info": "מידע",
+      "no_changes": "לא זוהו שינויים.",
+      "success": "הצלחה",
+      "profile_updated": "הפרופיל שלך עודכן בהצלחה.",
+      "update_failed": "עדכון הפרופיל נכשל. נסה שוב.",
+      "no_refresh_token": "לא נמצא טוקן רענון.",
+      "logout_failed": "ההתנתקות נכשלה. נסה שוב.",
+      "confirm_logout": "האם אתה בטוח שברצונך להתנתק?",
+      "yes_logout": "כן, התנתק"
     },
     "validation": {
       "error_title": "שדות חובה חסרים",
@@ -183,8 +210,13 @@
       }
     },
     "errors": {
+      "error": "שגיאה",
       "location_denied": "הגישה למיקום נדחתה",
-      "location_error": "לא ניתן לקבל את המיקום שלך"
+      "location_error": "לא ניתן לקבל את המיקום שלך",
+      "permission_denied": "נדרשת הרשאה",
+      "media_permission_required": "עליך להעניק הרשאה לגשת לתמונות שלך.",
+      "camera_permission_required": "עליך להעניק הרשאת מצלמה כדי לצלם תמונה.",
+      "image_picker_error": "בחירת התמונה נכשלה. אנא נסה שוב."
     },
     "gender": {
       "male": "זכר",
