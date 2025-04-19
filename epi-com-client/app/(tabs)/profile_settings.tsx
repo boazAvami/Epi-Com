@@ -684,9 +684,11 @@ export default function ProfileSettingsScreen() {
             <Text style={styles.sectionDescription}>People to contact in case of emergency.</Text>
             
             <VStack space="md" style={styles.emergencyContactsList}>
-              {watch('emergencyContacts')?.map((_, index: number) => (
+              {watch('emergencyContacts')?.map((_: any, index: number) => (
                 <View key={index} style={styles.emergencyContactItem}>
-                  <FormControl isInvalid={!!errors?.emergencyContacts && Array.isArray(errors.emergencyContacts) && !!errors.emergencyContacts[index]?.name}>
+                  <FormControl isInvalid={!!errors?.emergencyContacts 
+                     && Array.isArray(errors.emergencyContacts)
+                     && !!errors.emergencyContacts[index]?.name}>
                     <Controller
                       name={`emergencyContacts.${index}.name`}
                       control={control}
