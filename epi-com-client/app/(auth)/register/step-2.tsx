@@ -11,11 +11,11 @@ import { Text } from "@/components/ui/text";
 import { useRegister } from '@/context/RegisterContext';
 import { registerStep2Schema, registerStep2Type } from '@/schemas/register/step-2-schema';
 import DropdownComponent from "@/components/Dropdown";
-import {genderOptions} from "@/utils/gender-utils";
+import { getGenderOptions } from "@/utils/gender-utils";
 import DateInput from "@/components/DatePicker";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
 import {RegisterData} from "@/shared/types/register-data.type";
-import {forwardRef, useImperativeHandle} from "react";
+import {forwardRef, useImperativeHandle, useState, useEffect} from "react";
 import {StepRef} from "@/app/(auth)/register/step-1";
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { RTLText } from '@/components/shared/RTLComponents';
@@ -23,8 +23,14 @@ import React from 'react';
 
 const RegisterStep2Screen = forwardRef<StepRef>((_, ref) => {
     const { formData, setFormData } = useRegister();
-    const { t, isRtl } = useAppTranslation();
-
+    const { t, isRtl, language } = useAppTranslation();
+    const [genderOptions, setGenderOptions] = useState(getGenderOptions());
+    
+    // Update gender options when language changes
+    useEffect(() => {
+        setGenderOptions(getGenderOptions());
+    }, [language]);
+    
     const {
         control,
         handleSubmit,
@@ -221,7 +227,6 @@ const RegisterStep2Screen = forwardRef<StepRef>((_, ref) => {
                                             onChange={onChange} 
                                             items={genderOptions} 
                                             isInvalid={!!errors.gender} 
-                                            placeholder={t('auth.register.step2.gender')} 
                                         />
                                     )}
                                 />

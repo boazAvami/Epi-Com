@@ -137,10 +137,37 @@
       "logout": "Logout",
       "next": "Next",
       "confirm": "Confirm",
-      "select": "Select"
+      "select": "Select",
+      "ok": "OK"
     },
     "actions": {
       "openWhatsApp": "Open in WhatsApp"
+    },
+    "profile": {
+      "settings": "Settings",
+      "account_info": "Account Information",
+      "medical_info": "Medical Information",
+      "allergies_description": "List any allergies or medical conditions that emergency responders should know about.",
+      "emergency_contacts": "Emergency Contacts",
+      "emergency_contacts_description": "People to contact in case of emergency.",
+      "add": "Add",
+      "remove": "Remove",
+      "saving": "Saving...",
+      "save_changes": "Save Changes",
+      "loading": "Loading your profile settings...",
+      "profile_picture": "Profile Picture",
+      "select_option": "Select an option",
+      "confirm_remove_picture": "Are you sure you want to remove your profile picture?",
+      "passwords_dont_match": "Passwords do not match.",
+      "info": "Info",
+      "no_changes": "No changes detected.",
+      "success": "Success",
+      "profile_updated": "Your profile has been updated.",
+      "update_failed": "Failed to update profile. Please try again.",
+      "no_refresh_token": "No refresh token found.",
+      "logout_failed": "Failed to logout. Please try again.",
+      "confirm_logout": "Are you sure you want to logout?",
+      "yes_logout": "Yes, Logout"
     },
     "validation": {
       "error_title": "Missing Required Fields",
@@ -179,8 +206,13 @@
       }
     },
     "errors": {
+      "error": "Error",
       "location_denied": "Location access denied",
-      "location_error": "Couldn't get your location"
+      "location_error": "Couldn't get your location",
+      "permission_denied": "Permission Required",
+      "media_permission_required": "You need to grant permission to access your photos.",
+      "camera_permission_required": "You need to grant camera permission to take a photo.",
+      "image_picker_error": "Failed to select image. Please try again."
     },
     "gender": {
       "male": "Male",
