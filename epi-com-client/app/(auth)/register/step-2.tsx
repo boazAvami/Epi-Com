@@ -1,13 +1,11 @@
 import {ScrollView} from 'react-native';
 import { Center } from "@/components/ui/center";
-import { Heading } from "@/components/ui/heading";
 import { VStack } from "@/components/ui/vstack";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
 import {AlertTriangle} from "lucide-react-native";
-import { Text } from "@/components/ui/text";
 import { useRegister } from '@/context/RegisterContext';
 import { registerStep2Schema, registerStep2Type } from '@/schemas/register/step-2-schema';
 import DropdownComponent from "@/components/Dropdown";

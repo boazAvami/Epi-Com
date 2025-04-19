@@ -27,6 +27,7 @@ import { Pressable } from 'react-native';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { RTLText, RTLView, RTLRow } from '@/components/shared/RTLComponents';
 import { getValidationMessage } from '@/utils/validation-messages';
+import { colors } from '@/constants/Colors';
 
 
 // Import UI components
@@ -540,7 +541,7 @@ const handleRemovePicture = () => {
                 }}
                 disabled={isLoggingOut}
               >
-                <Icon as={LogOut} size="md" color="#AF3C3F" />
+                <Icon as={LogOut} size="md" color={colors.primary} />
                 <RTLText style={styles.logoutText}>{t('buttons.logout')}</RTLText>
               </TouchableOpacity>
             </RTLRow>
@@ -878,7 +879,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#AF3C3F',
+    backgroundColor: colors.primary,
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -899,7 +900,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#AF3C3F',
+    borderColor: colors.primary,
     borderRadius: 4,
     paddingHorizontal: 12,
     justifyContent: 'center',
@@ -908,7 +909,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
   },
   logoutText: {
-    color: '#AF3C3F',
+    color: colors.primary,
     marginLeft: 8,
     fontWeight: '600',
   },
@@ -945,7 +946,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   addButtonText: {
-    color: '#AF3C3F',
+    color: colors.primary,
     fontWeight: '600',
   },
   emergencyContactsList: {
@@ -971,7 +972,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 32,
-    backgroundColor: '#AF3C3F',
+    backgroundColor: colors.primary,
   },
   actionButtonsRow: {
     flexDirection: 'row',
@@ -983,7 +984,7 @@ const styles = StyleSheet.create({
     height: 40,
     minWidth: 80,
     borderWidth: 1,
-    borderColor: '#AF3C3F',
+    borderColor: colors.primary,
     borderRadius: 4,
     flexDirection: 'row',
     alignItems: 'center',
@@ -994,7 +995,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
   },
   languageButtonText: {
-    color: '#AF3C3F',
+    color: colors.primary,
     fontWeight: '600',
   },
 });
