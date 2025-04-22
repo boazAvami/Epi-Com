@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/context/authContext';
 import { useAuth as useAuthStore } from '@/stores/useAuth';
 import { SafeAreaView as SafeAreaContext, useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import UI components
 import { Box } from '@/components/ui/box';
@@ -27,8 +28,33 @@ import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
-import { Send, RefreshCw, AlertTriangle } from 'lucide-react-native';
+import { Send, RefreshCw, AlertTriangle, Globe } from 'lucide-react-native';
 import { colors } from '../../constants/Colors';
+
+// Translation type
+type Language = 'en' | 'he';
+
+// Translations
+const translations = {
+  en: {
+    appTitle: 'EpiPen Assistant',
+    resetSession: 'Reset',
+    disclaimer: 'For informational purposes only. Not a substitute for medical advice. Call emergency services in case of emergency.',
+    limitWarning: 'You have reached the session limit of 10 messages. Please reset the session to continue.',
+    messagePlaceholder: 'Type your message here...',
+    messagesRemaining: 'messages remaining',
+    switchToHebrew: 'עברית'
+  },
+  he: {
+    appTitle: 'מסייע אפיפן',
+    resetSession: 'איפוס',
+    disclaimer: 'למטרות מידע בלבד. לא תחליף לייעוץ רפואי. במקרה חירום, התקשר לשירותי חירום.',
+    limitWarning: 'הגעת למגבלת ההודעות. אנא אפס את השיחה כדי להמשיך.',
+    messagePlaceholder: 'הקלד את ההודעה שלך כאן...',
+    messagesRemaining: 'הודעות נותרו',
+    switchToEnglish: 'English'
+  }
+};
 
 // Define message type
 type Message = {
@@ -45,6 +71,37 @@ const ChatScreen = () => {
   const [inputText, setInputText] = useState('');
   const scrollViewRef = useRef(null);
   const [showLimitWarning, setShowLimitWarning] = useState(false);
+  
+  // Add language state
+  const [language, setLanguage] = useState<Language>('en');
+  const t = translations[language]; // Current translations
+  
+  // Load saved language preference on component mount
+  useEffect(() => {
+    const loadLanguagePreference = async () => {
+      try {
+        const savedLanguage = await AsyncStorage.getItem('language');
+        if (savedLanguage === 'en' || savedLanguage === 'he') {
+          setLanguage(savedLanguage as Language);
+        }
+      } catch (error) {
+        console.error('Failed to load language preference:', error);
+      }
+    };
+    
+    loadLanguagePreference();
+  }, []);
+  
+  // Toggle language function
+  const toggleLanguage = () => {
+    const newLanguage = language === 'en' ? 'he' : 'en';
+    setLanguage(newLanguage);
+    
+    // Save language preference
+    AsyncStorage.setItem('language', newLanguage).catch(error => {
+      console.error('Failed to save language preference:', error);
+    });
+  };
   
   // Fetch user data when component mounts if not already loaded
   useEffect(() => {
@@ -176,21 +233,31 @@ const ChatScreen = () => {
     <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Header - Modified to keep title centered and reset button on the right */}
+      {/* Header - Modified to keep title centered and add language toggle */}
       <Box style={styles.header}>
         <View style={styles.headerLeft}>
-          {/* Empty view for layout balance */}
-          <View style={{ width: 80 }} />
+          {/* Language toggle button */}
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={toggleLanguage}
+          >
+            <Globe size={18} color={colors.primary} style={styles.languageIcon} />
+            <Text style={styles.languageText}>
+              {language === 'en' ? t.switchToHebrew : t.switchToEnglish}
+            </Text>
+          </TouchableOpacity>
         </View>
         
-        <Heading size="lg" style={styles.headerTitle}>
-          EpiPen Assistant
-        </Heading>
+        <View style={styles.headerTitleContainer}>
+          <Heading size="lg" style={styles.headerTitle}>
+            {t.appTitle}
+          </Heading>
+        </View>
         
         <View style={styles.headerRight}>
           <Button onPress={resetSession} variant="solid" size="sm" action="primary" style={styles.resetButton}>
             <ButtonIcon as={RefreshCw} />
-            <ButtonText>Reset</ButtonText>
+            <ButtonText>{t.resetSession}</ButtonText>
           </Button>
         </View>
       </Box>
@@ -199,9 +266,8 @@ const ChatScreen = () => {
       <Alert action="warning" variant="outline" style={styles.disclaimer}>
         <AlertIcon as={AlertTriangle} size="sm" />
         <View style={{ flex: 1 }}>
-          <AlertText style={{ flexShrink: 1 }}>
-          This chat isn't a substitute for professional medical advice. 
-          In case of emergency, please consult a healthcare provider.
+          <AlertText style={[{ flexShrink: 1 }, language === 'he' && styles.rtlText]}>
+            {t.disclaimer}
           </AlertText>
         </View>
       </Alert>
@@ -210,8 +276,8 @@ const ChatScreen = () => {
       {showLimitWarning && (
         <Alert action="error" style={styles.limitWarning}>
           <View style={{ flex: 1 }}>
-            <AlertText style={{ flexShrink: 1 }}>
-              You have reached the session limit of 10 messages. Please reset the session to continue.
+            <AlertText style={[{ flexShrink: 1 }, language === 'he' && styles.rtlText]}>
+              {t.limitWarning}
             </AlertText>
           </View>
         </Alert>
@@ -220,7 +286,7 @@ const ChatScreen = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 1 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 65 : 20}
       >
         {/* Messages */}
         <ScrollView 
@@ -249,8 +315,8 @@ const ChatScreen = () => {
                   message.sender === 'user' ? styles.userMessage : styles.assistantMessage
                 ]}
               >
-                <Text>{message.text}</Text>
-                <Text size="xs" style={styles.timestamp}>
+                <Text style={language === 'he' && styles.rtlText}>{message.text}</Text>
+                <Text size="xs" style={[styles.timestamp, language === 'he' && styles.rtlText]}>
                   {formatTime(message.timestamp)}
                 </Text>
               </Card>
@@ -276,14 +342,15 @@ const ChatScreen = () => {
         <View>
           <View style={styles.inputContainer}>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, language === 'he' && styles.rtlInput]}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Type your message here..."
+              placeholder={t.messagePlaceholder}
               placeholderTextColor="#999"
               multiline={false}
               maxLength={500}
               editable={!isLimitReached}
+              textAlign={language === 'he' ? 'right' : 'left'}
             />
             <TouchableOpacity 
               style={[styles.sendButton, isLimitReached && styles.disabledButton]} 
@@ -297,18 +364,13 @@ const ChatScreen = () => {
           {/* Message counter below input field - visible while typing */}
           <View style={styles.inputCounterContainer}>
             <Badge action="info" size="sm">
-              <BadgeText>{10 - sentMessages.length} messages remaining</BadgeText>
+              <BadgeText style={language === 'he' && styles.rtlText}>
+                {10 - sentMessages.length} {t.messagesRemaining}
+              </BadgeText>
             </Badge>
           </View>
         </View>
       </KeyboardAvoidingView>
-      
-      {/* Session Info - Now hidden as it's redundant */}
-      {/* <Box style={styles.sessionInfo}>
-        <Badge action="info" size="sm">
-          <BadgeText>{10 - sentMessages.length} messages remaining</BadgeText>
-        </Badge>
-      </Box> */}
     </SafeAreaView>
   );
 };
@@ -331,10 +393,14 @@ const styles = StyleSheet.create({
   headerLeft: {
     width: 80,
   },
+  headerTitleContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   headerTitle: {
     color: colors.primary,
     textAlign: 'center',
-    flex: 1,
   },
   headerRight: {
     width: 80,
@@ -342,6 +408,33 @@ const styles = StyleSheet.create({
   },
   resetButton: {
     paddingHorizontal: 8,
+  },
+  // Language toggle styles
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.backgroundLight,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  languageIcon: {
+    marginRight: 4,
+  },
+  languageText: {
+    fontSize: 12,
+    color: colors.primary,
+  },
+  // RTL support styles
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  rtlInput: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   disclaimer: {
     margin: 8,
@@ -435,14 +528,6 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#e1e4e8',
-  },
-  sessionInfo: {
-    padding: 8,
-    paddingBottom: 24,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
   },
 });
 
