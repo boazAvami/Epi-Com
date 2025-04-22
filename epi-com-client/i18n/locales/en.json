@@ -175,6 +175,8 @@
         "dob_required": "Please enter your date of birth",
         "gender_required": "Please select your gender",
         "emergency_contact_required": "Please add at least one emergency contact",
+        "contact_name_min": "Contact name must be at least 2 characters",
+        "contact_name_max": "Contact name cannot exceed 30 characters",
         "profile_picture_invalid": "Invalid image URL"
       }
     },

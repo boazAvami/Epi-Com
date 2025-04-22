@@ -18,13 +18,11 @@ import { UpdateUser } from '@/services/graphql/graphqlUserService';
 import DateInput from "@/components/DatePicker";
 import { EGender, EAllergy, IEmergencyContact } from '@shared/types';
 import { RegisterData } from '@/shared/types/register-data.type';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, FieldError, FieldErrorsImpl, Merge } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import * as ImagePicker from 'expo-image-picker';
 import { Pencil } from 'lucide-react-native';
 import { Pressable } from 'react-native';
-
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -51,35 +49,14 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar';
 
+// Import the external validation schema
+import { profileSettingsSchema, ProfileSettingsFormData } from '@/schemas/profile-settings-schema';
+
 // Interface for form emergency contacts that allows optional fields during editing
 interface FormEmergencyContact {
   name?: string;
   phone?: string;
 }
-
-// Define validation schema for profile settings
-const profileSettingsSchema = z.object({
-  userName: z.string().min(1, "Username is required"),
-  firstName: z.string().min(2, "first name is required"),
-  lastName: z.string().min(2, "last name is required"),
-  email: z.string().email("Invalid email address"),
-  phone_number: z.string().optional(),
-  gender: z.string().optional(),
-  date_of_birth: z.date().optional(),
-  allergies: z.array(z.string()).optional(),
-  emergencyContacts: z.array(
-    z.object({
-      name: z.string().optional(),
-      phone: z.string().optional(),
-    })
-  ).optional(),
-  password: z.string().optional(),
-  confirmPassword: z.string().optional(),
-  profile_picture_uri: z.string().nullable().optional(),
-});
-
-// Make sure types match schema
-type ProfileSettingsFormData = z.infer<typeof profileSettingsSchema>;
 
 export default function ProfileSettingsScreen() {
   const router = useRouter();
@@ -90,6 +67,14 @@ export default function ProfileSettingsScreen() {
   const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>(
     Object.values(EAllergy).map((allergy: string) => ({label: allergy, value: allergy}))
   );
+  
+  // Helper function to safely convert error messages to strings
+  const getErrorMessage = (error: any): string => {
+    if (!error) return '';
+    if (typeof error === 'string') return error;
+    if (typeof error.message === 'string') return error.message;
+    return 'Invalid input';
+  };
   
   // Set up form with React Hook Form
   const {
@@ -136,7 +121,7 @@ export default function ProfileSettingsScreen() {
           setValue('gender', user.gender);
           
           if (user.date_of_birth) {
-            // Convert to number firs
+            // Convert to number first
             const timestamp = Number(user.date_of_birth);
             const dateObj = new Date(timestamp);
 
@@ -174,12 +159,12 @@ export default function ProfileSettingsScreen() {
     setValue('emergencyContacts', [...currentContacts, { name: '', phone: '' }]);
   };
   
-  // Remove emergency contact
+  // Remove emergency contact with proper TypeScript typing
   const removeEmergencyContact = (index: number) => {
     const currentContacts = watch('emergencyContacts') || [];
     setValue(
       'emergencyContacts',
-      currentContacts.filter((_, i) => i !== index)
+      currentContacts.filter((_contact: FormEmergencyContact, i: number) => i !== index)
     );
   };
   
@@ -214,7 +199,7 @@ export default function ProfileSettingsScreen() {
       return;
     }
   
-    try {  // Add try/catch to catch any errors
+    try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -222,10 +207,10 @@ export default function ProfileSettingsScreen() {
         quality: 0.8,
       });
       
-      console.log('Image picker result:', result);  // Add this line
+      console.log('Image picker result:', result);
       
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        console.log('Setting new image URI:', result.assets[0].uri);  // Add this line
+        console.log('Setting new image URI:', result.assets[0].uri);
         setValue('profile_picture_uri', result.assets[0].uri);
       }
     } catch (error) {
@@ -234,78 +219,79 @@ export default function ProfileSettingsScreen() {
     }
   };
 
-  // Add this function to your component
-const handleProfilePictureOptions = () => {
-  Alert.alert(
-    "Profile Picture",
-    "Select an option",
-    [
-      {
-        text: "Choose from Library",
-        onPress: handlePickImage
-      },
-      {
-        text: "Take Photo",
-        onPress: handleTakePhoto
-      },
-      {
-        text: "Remove Current Picture",
-        onPress: handleRemovePicture,
-        style: "destructive"
-      },
-      {
-        text: "Cancel",
-        style: "cancel"
-      }
-    ]
-  );
-};
-
-// Add these two new handler functions
-const handleTakePhoto = async () => {
-  const { status } = await ImagePicker.requestCameraPermissionsAsync();
-  if (status !== 'granted') {
-    Alert.alert("Permission Required", "You need to grant camera permission to take a photo.");
-    return;
-  }
-
-  try {
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setValue('profile_picture_uri', result.assets[0].uri);
-    }
-  } catch (error) {
-    console.error('Error taking photo:', error);
-    Alert.alert("Error", "Failed to take photo. Please try again.");
-  }
-};
-
-const handleRemovePicture = () => {
-  Alert.alert(
-    "Remove Picture",
-    "Are you sure you want to remove your profile picture?",
-    [
-      {
-        text: "Cancel",
-        style: "cancel"
-      },
-      {
-        text: "Remove",
-        onPress: () => {          
-          setValue('profile_picture_uri', null);        
+  // Handle profile picture options
+  const handleProfilePictureOptions = () => {
+    Alert.alert(
+      "Profile Picture",
+      "Select an option",
+      [
+        {
+          text: "Choose from Library",
+          onPress: handlePickImage
         },
-        style: "destructive"
+        {
+          text: "Take Photo",
+          onPress: handleTakePhoto
+        },
+        {
+          text: "Remove Current Picture",
+          onPress: handleRemovePicture,
+          style: "destructive"
+        },
+        {
+          text: "Cancel",
+          style: "cancel"
+        }
+      ]
+    );
+  };
+
+  // Take photo handler
+  const handleTakePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("Permission Required", "You need to grant camera permission to take a photo.");
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setValue('profile_picture_uri', result.assets[0].uri);
       }
-    ]
-  );
-};
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert("Error", "Failed to take photo. Please try again.");
+    }
+  };
+
+  // Remove profile picture handler
+  const handleRemovePicture = () => {
+    Alert.alert(
+      "Remove Picture",
+      "Are you sure you want to remove your profile picture?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Remove",
+          onPress: () => {          
+            setValue('profile_picture_uri', null);        
+          },
+          style: "destructive"
+        }
+      ]
+    );
+  };
   
-  // Convert form emergency contacts to IEmergencyContact[] | null
+  // Convert form emergency contacts to IEmergencyContact[] | null with proper TypeScript typing
   const convertEmergencyContacts = (
     contacts?: FormEmergencyContact[] | null
   ): IEmergencyContact[] | null => {
@@ -313,8 +299,8 @@ const handleRemovePicture = () => {
     
     // Filter out invalid contacts (where name or phone is empty)
     const validContacts = contacts
-      .filter(contact => contact.name && contact.phone) // Only keep contacts with both name and phone
-      .map(contact => ({
+      .filter((contact: FormEmergencyContact) => contact.name && contact.phone) // Only keep contacts with both name and phone
+      .map((contact: FormEmergencyContact) => ({
         name: contact.name as string, // We've verified these exist in the filter
         phone: contact.phone as string
       }));
@@ -322,22 +308,14 @@ const handleRemovePicture = () => {
     return validContacts.length > 0 ? validContacts : null;
   };
   
-  // Handle form submission
+  // Handle form submission with improved error handling
   const onSubmit = async (data: ProfileSettingsFormData) => {
-    if (data.password !== data.confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
-      return;
-    }
-    
     // Check if any changes were made
     if (!user) return;
 
     const formDateStr = data.date_of_birth?.toISOString();
     const userDateStr = user.date_of_birth ? new Date(Number(user.date_of_birth)).toISOString() : undefined;
     
-    // Explicit check for profile picture change
-    const isPictureChanged = data.profile_picture_uri !== user.profile_picture_uri;
-
     const hasChanges = 
       data.userName !== user.userName ||
       data.firstName !== (user.firstName || '') ||
@@ -361,8 +339,7 @@ const handleRemovePicture = () => {
       return;
     }
 
-    // If it's an empty string, set it to null for the API
-    const profilePictureValue = data.profile_picture_uri // === '' ? null : data.profile_picture_uri;
+    const profilePictureValue = data.profile_picture_uri;
 
     // Prepare data for update with type conversion for emergency contacts
     const updatedUserData: Partial<RegisterData> = {
@@ -393,7 +370,25 @@ const handleRemovePicture = () => {
       ]);
     } catch (error) {
       console.error("Failed to update profile:", error);
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+      
+      // Improved error handling for specific error cases
+      let errorMessage = "Failed to update profile. Please try again.";
+      
+      // Check for duplicate email error
+      if (error instanceof Error) {
+        const errorStr = error.toString();
+        
+        if (errorStr.includes("duplicate key error") && errorStr.includes("email")) {
+          errorMessage = "This email address is already in use. Please use a different email.";
+        } else if (errorStr.includes("NOBRIDGE")) {
+          // This catches the specific error format you mentioned
+          if (errorStr.includes("duplicate key error") && errorStr.includes("email")) {
+            errorMessage = "This email address is already in use. Please use a different email.";
+          }
+        }
+      }
+      
+      Alert.alert("Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -455,7 +450,7 @@ const handleRemovePicture = () => {
                 </Avatar>
               </Pressable>
               <FormControlError>
-                <FormControlErrorText>{errors.profile_picture_uri?.message}</FormControlErrorText>
+                <FormControlErrorText>{getErrorMessage(errors.profile_picture_uri?.message)}</FormControlErrorText>
                 <FormControlErrorIcon as={AlertTriangle} />
               </FormControlError>
             </FormControl>
@@ -510,7 +505,7 @@ const handleRemovePicture = () => {
                   )}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.userName?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.userName?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
@@ -532,6 +527,10 @@ const handleRemovePicture = () => {
                       </Input>
                     )}
                   />
+                  <FormControlError>
+                    <FormControlErrorText>{getErrorMessage(errors.firstName?.message)}</FormControlErrorText>
+                    <FormControlErrorIcon as={AlertTriangle} />
+                  </FormControlError>
                 </FormControl>
                 
                 <FormControl isInvalid={!!errors.lastName} style={styles.halfInput}>
@@ -549,6 +548,10 @@ const handleRemovePicture = () => {
                       </Input>
                     )}
                   />
+                  <FormControlError>
+                    <FormControlErrorText>{getErrorMessage(errors.lastName?.message)}</FormControlErrorText>
+                    <FormControlErrorIcon as={AlertTriangle} />
+                  </FormControlError>
                 </FormControl>
               </HStack>
               
@@ -571,7 +574,7 @@ const handleRemovePicture = () => {
                   )}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.email?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.email?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
@@ -591,7 +594,7 @@ const handleRemovePicture = () => {
                   )}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.phone_number?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.phone_number?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
@@ -611,7 +614,7 @@ const handleRemovePicture = () => {
                   )}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.gender?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.gender?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
@@ -632,55 +635,13 @@ const handleRemovePicture = () => {
                   }}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.date_of_birth?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.date_of_birth?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
             </VStack>
             
             <Divider style={styles.divider} />
-            
-            {/* Password section */}
-            {/* <Heading size="md" style={styles.sectionTitle}>Change Password</Heading>
-            <VStack space="md">
-              <FormControl isInvalid={!!errors.password}>
-                <Controller
-                  name="password"
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <Input>
-                      <InputField
-                        placeholder="New Password"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        secureTextEntry
-                      />
-                    </Input>
-                  )}
-                />
-              </FormControl>
-              
-              <FormControl isInvalid={!!errors.confirmPassword}>
-                <Controller
-                  name="confirmPassword"
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <Input>
-                      <InputField
-                        placeholder="Confirm New Password"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        secureTextEntry
-                      />
-                    </Input>
-                  )}
-                />
-              </FormControl>
-            </VStack> */}
-            
-            {/* <Divider style={styles.divider} /> */}
             
             {/* Allergies section - Using the same Chips component as registration */}
             <Heading size="md" style={styles.sectionTitle}>Medical Information</Heading>
@@ -702,7 +663,7 @@ const handleRemovePicture = () => {
                 )}
               />
               <FormControlError>
-                <FormControlErrorText>{errors.allergies?.message}</FormControlErrorText>
+                <FormControlErrorText>{getErrorMessage(errors.allergies?.message)}</FormControlErrorText>
                 <FormControlErrorIcon as={AlertTriangle} />
               </FormControlError>
             </FormControl>
@@ -723,9 +684,11 @@ const handleRemovePicture = () => {
             <Text style={styles.sectionDescription}>People to contact in case of emergency.</Text>
             
             <VStack space="md" style={styles.emergencyContactsList}>
-              {watch('emergencyContacts')?.map((_, index) => (
+              {watch('emergencyContacts')?.map((_: any, index: number) => (
                 <View key={index} style={styles.emergencyContactItem}>
-                  <FormControl isInvalid={!!errors?.emergencyContacts?.[index]?.name}>
+                  <FormControl isInvalid={!!errors?.emergencyContacts 
+                     && Array.isArray(errors.emergencyContacts)
+                     && !!errors.emergencyContacts[index]?.name}>
                     <Controller
                       name={`emergencyContacts.${index}.name`}
                       control={control}
@@ -741,12 +704,17 @@ const handleRemovePicture = () => {
                       )}
                     />
                     <FormControlError>
-                      <FormControlErrorText>{errors?.emergencyContacts?.[index]?.name?.message}</FormControlErrorText>
+                      <FormControlErrorText>
+                        {errors?.emergencyContacts && 
+                         Array.isArray(errors.emergencyContacts) && 
+                         errors.emergencyContacts[index]?.name ? 
+                         getErrorMessage(errors.emergencyContacts[index].name?.message) : ''}
+                      </FormControlErrorText>
                       <FormControlErrorIcon as={AlertTriangle} />
                     </FormControlError>
                   </FormControl>
                   
-                  <FormControl isInvalid={!!errors?.emergencyContacts?.[index]?.phone} style={{ marginTop: 8 }}>
+                  <FormControl isInvalid={!!errors?.emergencyContacts && Array.isArray(errors.emergencyContacts) && !!errors.emergencyContacts[index]?.phone} style={{ marginTop: 8 }}>
                     <Controller
                       name={`emergencyContacts.${index}.phone`}
                       control={control}
@@ -755,12 +723,17 @@ const handleRemovePicture = () => {
                           onChange={onChange} 
                           onBlur={onBlur} 
                           value={value || ''}
-                          isInvalid={!!errors?.emergencyContacts?.[index]?.phone}
+                          isInvalid={!!errors?.emergencyContacts && Array.isArray(errors.emergencyContacts) && !!errors.emergencyContacts[index]?.phone}
                         />
                       )}
                     />
                     <FormControlError>
-                      <FormControlErrorText>{errors?.emergencyContacts?.[index]?.phone?.message}</FormControlErrorText>
+                      <FormControlErrorText>
+                        {errors?.emergencyContacts && 
+                         Array.isArray(errors.emergencyContacts) && 
+                         errors.emergencyContacts[index]?.phone ? 
+                         getErrorMessage(errors.emergencyContacts[index].phone?.message) : ''}
+                      </FormControlErrorText>
                       <FormControlErrorIcon as={AlertTriangle} />
                     </FormControlError>
                   </FormControl>
