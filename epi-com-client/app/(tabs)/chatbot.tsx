@@ -7,54 +7,26 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  FlatList,
-  SafeAreaView,
   StatusBar,
-  Image
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/authContext';
 import { useAuth as useAuthStore } from '@/stores/useAuth';
-import { SafeAreaView as SafeAreaContext, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import UI components
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
-import { Heading } from '@/components/ui/heading';
-import { Divider } from '@/components/ui/divider';
 import { Alert, AlertText, AlertIcon } from '@/components/ui/alert';
 import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
-import { Send, RefreshCw, AlertTriangle, Globe } from 'lucide-react-native';
+import { Send, RefreshCw, AlertTriangle } from 'lucide-react-native';
 import { colors } from '../../constants/Colors';
-
-// Translation type
-type Language = 'en' | 'he';
-
-// Translations
-const translations = {
-  en: {
-    appTitle: 'EpiPen Assistant',
-    resetSession: 'Reset',
-    disclaimer: 'For informational purposes only. Not a substitute for medical advice. Call emergency services in case of emergency.',
-    limitWarning: 'You have reached the session limit of 10 messages. Please reset the session to continue.',
-    messagePlaceholder: 'Type your message here...',
-    messagesRemaining: 'messages remaining',
-    switchToHebrew: 'עברית'
-  },
-  he: {
-    appTitle: 'מסייע אפיפן',
-    resetSession: 'איפוס',
-    disclaimer: 'למטרות מידע בלבד. לא תחליף לייעוץ רפואי. במקרה חירום, התקשר לשירותי חירום.',
-    limitWarning: 'הגעת למגבלת ההודעות. אנא אפס את השיחה כדי להמשיך.',
-    messagePlaceholder: 'הקלד את ההודעה שלך כאן...',
-    messagesRemaining: 'הודעות נותרו',
-    switchToEnglish: 'English'
-  }
-};
+import { Header } from '../../components/shared/Header';
+import { useAppTranslation } from '../../hooks/useAppTranslation';
+import { chatbotService } from '../../services/graphql/graphqlChatbotService';
 
 // Define message type
 type Message = {
@@ -64,44 +36,38 @@ type Message = {
   sender: 'user' | 'assistant';
 };
 
-const ChatScreen = () => {
-  const insets = useSafeAreaInsets();
+// Define User type
+type User = {
+  firstName?: string;
+  userName?: string;
+  email?: string;
+  profile_picture_uri?: string;
+};
+
+const ChatScreen: React.FC = () => {
   const { getUserInfo } = useAuth();
   const { user } = useAuthStore();
-  const [inputText, setInputText] = useState('');
-  const scrollViewRef = useRef(null);
-  const [showLimitWarning, setShowLimitWarning] = useState(false);
+  const [inputText, setInputText] = useState<string>('');
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showLimitWarning, setShowLimitWarning] = useState<boolean>(false);
+  const [isResetting, setIsResetting] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // Add language state
-  const [language, setLanguage] = useState<Language>('en');
-  const t = translations[language]; // Current translations
+  // Get language from translation hook
+  const { language } = useAppTranslation();
   
-  // Load saved language preference on component mount
-  useEffect(() => {
-    const loadLanguagePreference = async () => {
-      try {
-        const savedLanguage = await AsyncStorage.getItem('language');
-        if (savedLanguage === 'en' || savedLanguage === 'he') {
-          setLanguage(savedLanguage as Language);
-        }
-      } catch (error) {
-        console.error('Failed to load language preference:', error);
-      }
-    };
-    
-    loadLanguagePreference();
-  }, []);
+  // Initialize with just the welcome message
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: 'Hello! How can I help you today with questions about allergies and EpiPens?',
+      timestamp: new Date(),
+      sender: 'assistant'
+    }
+  ]);
   
-  // Toggle language function
-  const toggleLanguage = () => {
-    const newLanguage = language === 'en' ? 'he' : 'en';
-    setLanguage(newLanguage);
-    
-    // Save language preference
-    AsyncStorage.setItem('language', newLanguage).catch(error => {
-      console.error('Failed to save language preference:', error);
-    });
-  };
+  // Keep track of conversation history for the API
+  const [conversationHistory, setConversationHistory] = useState<string[]>([]);
   
   // Fetch user data when component mounts if not already loaded
   useEffect(() => {
@@ -118,40 +84,6 @@ const ChatScreen = () => {
     fetchUserData();
   }, []);
   
-  // Mock data for messages
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! How can I help you today with questions about allergies and EpiPens?',
-      timestamp: new Date(Date.now() - 3600000),
-      sender: 'assistant'
-    },
-    {
-      id: '2',
-      text: 'I need information about how to use an EpiPen.',
-      timestamp: new Date(Date.now() - 3000000),
-      sender: 'user'
-    },
-    {
-      id: '3',
-      text: 'To use an EpiPen, remove the blue safety cap, then firmly push the orange tip against your outer thigh until you hear a click. Hold for 3 seconds. Call emergency services after use.',
-      timestamp: new Date(Date.now() - 2400000),
-      sender: 'assistant'
-    },
-    {
-      id: '4',
-      text: 'What are the common side effects after using it?',
-      timestamp: new Date(Date.now() - 1800000),
-      sender: 'user'
-    },
-    {
-      id: '5', 
-      text: 'Common side effects after using an EpiPen include increased heart rate, dizziness, anxiety, headache, and tremors. These are normal responses to epinephrine and typically subside within 20 minutes.',
-      timestamp: new Date(Date.now() - 1200000),
-      sender: 'assistant'
-    }
-  ]);
-  
   // Extract sent and received messages
   const sentMessages = messages.filter(msg => msg.sender === 'user');
   const receivedMessages = messages.filter(msg => msg.sender === 'assistant');
@@ -160,9 +92,12 @@ const ChatScreen = () => {
   const isLimitReached = sentMessages.length >= 10;
 
   // Send message function
-  const handleSendMessage = () => {
-    if (inputText.trim() === '' || isLimitReached) return;
+  const handleSendMessage = async () => {
+    if (inputText.trim() === '' || isLimitReached || isLoading) return;
     
+    setIsLoading(true);
+    
+    // Create new user message
     const newUserMessage: Message = {
       id: Date.now().toString(),
       text: inputText,
@@ -170,7 +105,14 @@ const ChatScreen = () => {
       sender: 'user'
     };
     
-    setMessages([...messages, newUserMessage]);
+    // Add user message to UI
+    setMessages(prevMessages => [...prevMessages, newUserMessage]);
+    
+    // Update conversation history
+    const updatedHistory = [...conversationHistory, inputText];
+    setConversationHistory(updatedHistory);
+    
+    // Clear input
     setInputText('');
     
     // Check if limit is now reached
@@ -178,33 +120,60 @@ const ChatScreen = () => {
       setShowLimitWarning(true);
     }
     
-    // Mock assistant response
-    setTimeout(() => {
+    try {
+      // Call the chatbot service
+      const response = await chatbotService.queryAllergies(updatedHistory);
+      
+      // Create assistant response message
       const assistantResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Thank you for your question. I've noted your inquiry and will respond accordingly.",
+        text: response,
         timestamp: new Date(),
         sender: 'assistant'
       };
+      
+      // Add assistant response to UI
       setMessages(prevMessages => [...prevMessages, assistantResponse]);
-    }, 1000);
-  };
-  
-  // Reset session function
-  const resetSession = () => {
-    setMessages([
-      {
-        id: 'welcome',
-        text: 'Hello! How can I help you today with questions about allergies and EpiPens?',
+    } catch (error) {
+      console.error("Error getting chatbot response:", error);
+      
+      // Create error response message
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Sorry, I couldn't process your request. Please try again later.",
         timestamp: new Date(),
         sender: 'assistant'
-      }
-    ]);
-    setShowLimitWarning(false);
+      };
+      
+      // Add error response to UI
+      setMessages(prevMessages => [...prevMessages, errorResponse]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Reset session function with animation effect
+  const resetSession = () => {
+    setIsResetting(true);
+    
+    // Add animation delay before resetting messages
+    setTimeout(() => {
+      setMessages([
+        {
+          id: 'welcome',
+          text: 'Hello! How can I help you today with questions about allergies and EpiPens?',
+          timestamp: new Date(),
+          sender: 'assistant'
+        }
+      ]);
+      setConversationHistory([]);
+      setShowLimitWarning(false);
+      setIsResetting(false);
+    }, 800);
   };
   
   // Get user's initial for avatar
-  const getUserInitial = () => {
+  const getUserInitial = (): string => {
     if (!user) return '';
     if (user.firstName) return user.firstName.charAt(0);
     if (user.userName) return user.userName.charAt(0);
@@ -213,7 +182,7 @@ const ChatScreen = () => {
   };
   
   // Format timestamp
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date): string => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
   
@@ -222,7 +191,6 @@ const ChatScreen = () => {
     if (scrollViewRef.current) {
       setTimeout(() => {
         if (scrollViewRef.current) {
-          // @ts-ignore
           scrollViewRef.current.scrollToEnd({ animated: true });
         }
       }, 100);
@@ -230,44 +198,47 @@ const ChatScreen = () => {
   }, [messages]);
   
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+    <SafeAreaView style={styles.safeArea} edges={['right', 'left']}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Header - Modified to keep title centered and add language toggle */}
-      <Box style={styles.header}>
-        <View style={styles.headerLeft}>
-          {/* Language toggle button */}
-          <TouchableOpacity
-            style={styles.languageButton}
-            onPress={toggleLanguage}
+      {/* Using the Header component for the title */}
+      <View style={styles.headerContainer}>
+        <Header 
+          title={language === 'en' ? 'EpiPen Assistant' : 'מסייע אפיפן'} 
+        />
+        
+        {/* Reset Button */}
+        <View style={styles.resetButtonContainer}>
+          <Button 
+            onPress={resetSession} 
+            variant="outline" 
+            size="sm" 
+            style={[
+              styles.resetButton,
+              isResetting && styles.resetButtonAnimated
+            ]}
           >
-            <Globe size={18} color={colors.primary} style={styles.languageIcon} />
-            <Text style={styles.languageText}>
-              {language === 'en' ? t.switchToHebrew : t.switchToEnglish}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.headerTitleContainer}>
-          <Heading size="lg" style={styles.headerTitle}>
-            {t.appTitle}
-          </Heading>
-        </View>
-        
-        <View style={styles.headerRight}>
-          <Button onPress={resetSession} variant="solid" size="sm" action="primary" style={styles.resetButton}>
-            <ButtonIcon as={RefreshCw} />
-            <ButtonText>{t.resetSession}</ButtonText>
+            <ButtonIcon 
+              as={RefreshCw} 
+              color="#0CB7F2" 
+              style={[
+                styles.resetIcon,
+                isResetting && styles.rotatingIcon
+              ]} 
+            />
+            <ButtonText style={{fontSize: 14, color: '#0CB7F2'}}>{language === 'en' ? 'Reset' : 'איפוס'}</ButtonText>
           </Button>
         </View>
-      </Box>
+      </View>
       
       {/* Medical Disclaimer - Shortened */}
       <Alert action="warning" variant="outline" style={styles.disclaimer}>
         <AlertIcon as={AlertTriangle} size="sm" />
         <View style={{ flex: 1 }}>
           <AlertText style={[{ flexShrink: 1 }, language === 'he' && styles.rtlText]}>
-            {t.disclaimer}
+            {language === 'en' 
+              ? 'For informational purposes only. Not a substitute for medical advice. Call emergency services in case of emergency.'
+              : 'למטרות מידע בלבד. לא תחליף לייעוץ רפואי. במקרה חירום, התקשר לשירותי חירום.'}
           </AlertText>
         </View>
       </Alert>
@@ -277,7 +248,9 @@ const ChatScreen = () => {
         <Alert action="error" style={styles.limitWarning}>
           <View style={{ flex: 1 }}>
             <AlertText style={[{ flexShrink: 1 }, language === 'he' && styles.rtlText]}>
-              {t.limitWarning}
+              {language === 'en'
+                ? 'You have reached the session limit of 10 messages. Please reset the session to continue.'
+                : 'הגעת למגבלת ההודעות. אנא אפס את השיחה כדי להמשיך.'}
             </AlertText>
           </View>
         </Alert>
@@ -286,7 +259,7 @@ const ChatScreen = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 65 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 1 : 20}
       >
         {/* Messages */}
         <ScrollView 
@@ -294,7 +267,7 @@ const ChatScreen = () => {
           style={styles.messagesContainer}
           contentContainerStyle={styles.messagesContent}
         >
-          {messages.map((message, index) => (
+          {messages.map((message) => (
             <View 
               key={message.id} 
               style={[
@@ -336,6 +309,15 @@ const ChatScreen = () => {
               )}
             </View>
           ))}
+          
+          {/* Loading indicator */}
+          {isLoading && (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>
+                {language === 'en' ? 'Assistant is typing...' : 'המסייע מקליד...'}
+              </Text>
+            </View>
+          )}
         </ScrollView>
 
         {/* Input Area with Messages Counter included */}
@@ -345,19 +327,22 @@ const ChatScreen = () => {
               style={[styles.textInput, language === 'he' && styles.rtlInput]}
               value={inputText}
               onChangeText={setInputText}
-              placeholder={t.messagePlaceholder}
+              placeholder={language === 'en' ? 'Type your message here...' : 'הקלד את ההודעה שלך כאן...'}
               placeholderTextColor="#999"
               multiline={false}
               maxLength={500}
-              editable={!isLimitReached}
+              editable={!isLimitReached && !isLoading}
               textAlign={language === 'he' ? 'right' : 'left'}
             />
             <TouchableOpacity 
-              style={[styles.sendButton, isLimitReached && styles.disabledButton]} 
+              style={[
+                styles.sendButton, 
+                (isLimitReached || isLoading || inputText.trim() === '') && styles.disabledButton
+              ]} 
               onPress={handleSendMessage}
-              disabled={isLimitReached || inputText.trim() === ''}
+              disabled={isLimitReached || isLoading || inputText.trim() === ''}
             >
-              <Send color={isLimitReached ? "#999" : colors.primary} size={24} />
+              <Send color={(isLimitReached || isLoading || inputText.trim() === '') ? "#999" : '#FF2D55'} size={24} />
             </TouchableOpacity>
           </View>
           
@@ -365,7 +350,7 @@ const ChatScreen = () => {
           <View style={styles.inputCounterContainer}>
             <Badge action="info" size="sm">
               <BadgeText style={language === 'he' && styles.rtlText}>
-                {10 - sentMessages.length} {t.messagesRemaining}
+                {10 - sentMessages.length} {language === 'en' ? 'messages remaining' : 'הודעות נותרו'}
               </BadgeText>
             </Badge>
           </View>
@@ -376,58 +361,51 @@ const ChatScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: colors.backgroundLight,
+    backgroundColor: 'white',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e4e8',
+  headerContainer: {
+    position: 'relative',
+    zIndex: 1,
   },
-  headerLeft: {
-    width: 80,
-  },
-  headerTitleContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    color: colors.primary,
-    textAlign: 'center',
-  },
-  headerRight: {
-    width: 80,
-    alignItems: 'flex-end',
+  resetButtonContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 16,
+    padding: 8,
+    right: 16,
+    zIndex: 10,
   },
   resetButton: {
-    paddingHorizontal: 8,
+    backgroundColor: '#E6F7FB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    borderWidth: 0.5,
+    borderColor: '#D0EFF6', 
   },
-  // Language toggle styles
-  languageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.backgroundLight,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.primary,
+  resetButtonPressed: {
+    backgroundColor: '#D0EFF6', 
+    transform: [{ scale: 0.98 }],
   },
-  languageIcon: {
-    marginRight: 4,
+  resetButtonAnimated: {
+    backgroundColor: '#E6F7FB',
   },
-  languageText: {
-    fontSize: 12,
-    color: colors.primary,
+  resetIcon: {
+    marginRight: 6,
+    color: '#0CB7F2',
   },
-  // RTL support styles
+  rotatingIcon: {
+    transform: [{ rotate: '180deg' }],
+  },
   rtlText: {
     textAlign: 'right',
     writingDirection: 'rtl',
@@ -490,12 +468,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     paddingHorizontal: 12,
-    height: 60, // Slightly reduced height
+    height: 60,
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#e1e4e8',
-    alignItems: 'center', // Center items vertically
-    justifyContent: 'space-between', // Space between input and button
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   inputCounterContainer: {
     backgroundColor: '#ffffff',
@@ -507,27 +485,35 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    height: 40, // Fixed height for better centering
+    height: 40,
     borderWidth: 1,
     borderColor: '#e1e4e8',
     borderRadius: 20,
     paddingHorizontal: 12,
     backgroundColor: '#f0f0f0',
-    textAlignVertical: 'center', // Center text vertically
-    fontSize: 16, // Consistent font size
-    lineHeight: 20, // Help with text alignment
+    textAlignVertical: 'center',
+    fontSize: 16,
+    lineHeight: 20,
   },
   sendButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.backgroundLight,
+    backgroundColor: '#f8f8f8',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 10,
   },
   disabledButton: {
     backgroundColor: '#e1e4e8',
+  },
+  loadingContainer: {
+    padding: 8,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#999',
+    fontStyle: 'italic',
   },
 });
 
