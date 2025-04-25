@@ -207,27 +207,23 @@ const ChatScreen: React.FC = () => {
           title={language === 'en' ? 'EpiPen Assistant' : 'מסייע אפיפן'} 
         />
         
-        {/* Reset Button */}
+        {/* Reset Button - icon only without borders */}
         <View style={styles.resetButtonContainer}>
-          <Button 
+          <TouchableOpacity 
             onPress={resetSession} 
-            variant="outline" 
-            size="sm" 
             style={[
               styles.resetButton,
               isResetting && styles.resetButtonAnimated
             ]}
           >
-            <ButtonIcon 
-              as={RefreshCw} 
+            <RefreshCw 
               color="#0CB7F2" 
+              size={22}
               style={[
-                styles.resetIcon,
                 isResetting && styles.rotatingIcon
               ]} 
             />
-            <ButtonText style={{fontSize: 14, color: '#0CB7F2'}}>{language === 'en' ? 'Reset' : 'איפוס'}</ButtonText>
-          </Button>
+          </TouchableOpacity>
         </View>
       </View>
       
@@ -346,9 +342,9 @@ const ChatScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
           
-          {/* Message counter below input field - visible while typing */}
+          {/* Message counter below input field - MODIFIED: added padding at the bottom */}
           <View style={styles.inputCounterContainer}>
-            <Badge action="info" size="sm">
+            <Badge action="info" size="sm" style={styles.counterBadge}>
               <BadgeText style={language === 'he' && styles.rtlText}>
                 {10 - sentMessages.length} {language === 'en' ? 'messages remaining' : 'הודעות נותרו'}
               </BadgeText>
@@ -372,25 +368,18 @@ const styles = StyleSheet.create({
   resetButtonContainer: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 50 : 16,
-    padding: 8,
-    right: 16,
+    right: 14,
     zIndex: 10,
   },
   resetButton: {
-    backgroundColor: '#E6F7FB',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    borderWidth: 0.5,
-    borderColor: '#D0EFF6', 
+    // Adjusted: smaller size, better positioned
+    padding: 6,
+    borderRadius: 40,
+    width: 40, // Smaller circle width
+    height: 40, // Smaller circle height
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent', // No background
   },
   resetButtonPressed: {
     backgroundColor: '#D0EFF6', 
@@ -477,11 +466,18 @@ const styles = StyleSheet.create({
   },
   inputCounterContainer: {
     backgroundColor: '#ffffff',
-    paddingBottom: 8,
-    paddingTop: 4,
+    // MODIFIED: further increased bottom padding
+    paddingBottom: 24,
+    paddingTop: 8,
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#e1e4e8',
+  },
+  counterBadge: {
+    // MODIFIED: added more padding for the counter badge
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 6, // Additional spacing at the bottom
   },
   textInput: {
     flex: 1,
