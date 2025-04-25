@@ -23,6 +23,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as ImagePicker from 'expo-image-picker';
 import { Pencil } from 'lucide-react-native';
 import { Pressable } from 'react-native';
+import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { RTLText, RTLView, RTLRow } from '@/components/shared/RTLComponents';
+import { colors } from '@/constants/Colors';
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -51,6 +54,7 @@ import {
 
 // Import the external validation schema
 import { profileSettingsSchema, ProfileSettingsFormData } from '@/schemas/profile-settings-schema';
+import { getAllergyItems } from '@/utils/allergy-utils';
 
 // Interface for form emergency contacts that allows optional fields during editing
 interface FormEmergencyContact {
@@ -62,11 +66,15 @@ export default function ProfileSettingsScreen() {
   const router = useRouter();
   const { getUserInfo, logout } = useAuth();
   const { user, refreshToken } = useAuthStore();
+  const { t, isRtl, toggleLanguage, language } = useAppTranslation();
   const [isLoading, setIsLoading] = useState(!user);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>(
-    Object.values(EAllergy).map((allergy: string) => ({label: allergy, value: allergy}))
-  );
+  const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>([]);
+  
+  // Update allergies items when language changes
+  useEffect(() => {
+    setAllergiesItems(getAllergyItems(isRtl));
+  }, [isRtl, language]);
   
   // Helper function to safely convert error messages to strings
   const getErrorMessage = (error: any): string => {
@@ -195,7 +203,7 @@ export default function ProfileSettingsScreen() {
     console.log('Permission status:', status);
     
     if (status !== 'granted') {
-      Alert.alert("Permission Required", "You need to grant permission to access your photos.");
+      Alert.alert(t('errors.permission_denied'), t('errors.media_permission_required'));
       return;
     }
   
@@ -215,31 +223,31 @@ export default function ProfileSettingsScreen() {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert("Error", "Failed to select image. Please try again.");
+      Alert.alert(t('errors.error'), t('errors.image_picker_error'));
     }
   };
 
   // Handle profile picture options
   const handleProfilePictureOptions = () => {
     Alert.alert(
-      "Profile Picture",
-      "Select an option",
+      t('profile.profile_picture'),
+      t('profile.select_option'),
       [
         {
-          text: "Choose from Library",
+          text: t('photo.choose'),
           onPress: handlePickImage
         },
         {
-          text: "Take Photo",
+          text: t('photo.take'),
           onPress: handleTakePhoto
         },
         {
-          text: "Remove Current Picture",
+          text: t('photo.remove'),
           onPress: handleRemovePicture,
           style: "destructive"
         },
         {
-          text: "Cancel",
+          text: t('buttons.cancel'),
           style: "cancel"
         }
       ]
@@ -250,7 +258,7 @@ export default function ProfileSettingsScreen() {
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert("Permission Required", "You need to grant camera permission to take a photo.");
+      Alert.alert(t('errors.permission_denied'), t('errors.camera_permission_required'));
       return;
     }
 
@@ -266,22 +274,22 @@ export default function ProfileSettingsScreen() {
       }
     } catch (error) {
       console.error('Error taking photo:', error);
-      Alert.alert("Error", "Failed to take photo. Please try again.");
+      Alert.alert(t('errors.error'), t('errors.camera_error'));
     }
   };
 
   // Remove profile picture handler
   const handleRemovePicture = () => {
     Alert.alert(
-      "Remove Picture",
-      "Are you sure you want to remove your profile picture?",
+      t('photo.remove'),
+      t('profile.remove_picture_confirmation'),
       [
         {
-          text: "Cancel",
+          text: t('buttons.cancel'),
           style: "cancel"
         },
         {
-          text: "Remove",
+          text: t('photo.remove'),
           onPress: () => {          
             setValue('profile_picture_uri', null);        
           },
@@ -333,8 +341,8 @@ export default function ProfileSettingsScreen() {
     
     // If no changes, show message and return
     if (!hasChanges && !data.password) {
-      Alert.alert("Info", "No changes detected.", [
-        { text: "OK", onPress: () => router.push("/(tabs)/profile") }
+      Alert.alert(t('profile.no_changes_title'), t('profile.no_changes_message'), [
+        { text: t('buttons.ok'), onPress: () => router.push("/(tabs)/profile") }
       ]);
       return;
     }
@@ -365,30 +373,30 @@ export default function ProfileSettingsScreen() {
       await UpdateUser(updatedUserData);
       await getUserInfo();
       
-      Alert.alert("Success", "Your profile has been updated.", [
-        { text: "OK", onPress: () => router.push("/(tabs)/profile") }
+      Alert.alert(t('profile.update_success_title'), t('profile.update_success_message'), [
+        { text: t('buttons.ok'), onPress: () => router.push("/(tabs)/profile") }
       ]);
     } catch (error) {
       console.error("Failed to update profile:", error);
       
       // Improved error handling for specific error cases
-      let errorMessage = "Failed to update profile. Please try again.";
+      let errorMessage = t('profile.update_failed');
       
       // Check for duplicate email error
       if (error instanceof Error) {
         const errorStr = error.toString();
         
         if (errorStr.includes("duplicate key error") && errorStr.includes("email")) {
-          errorMessage = "This email address is already in use. Please use a different email.";
+          errorMessage = t('profile.email_in_use');
         } else if (errorStr.includes("NOBRIDGE")) {
           // This catches the specific error format you mentioned
           if (errorStr.includes("duplicate key error") && errorStr.includes("email")) {
-            errorMessage = "This email address is already in use. Please use a different email.";
+            errorMessage = t('profile.email_in_use');
           }
         }
       }
       
-      Alert.alert("Error", errorMessage);
+      Alert.alert(t('errors.error'), errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -398,7 +406,7 @@ export default function ProfileSettingsScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <Center style={{ flex: 1 }}>
-          <Text>Loading your profile settings...</Text>
+          <Text>{t('profile.loading')}</Text>
         </Center>
       </SafeAreaView>
     );
@@ -418,8 +426,32 @@ export default function ProfileSettingsScreen() {
           >
             <Icon as={ChevronLeft} size="lg" color="#333333" />
           </TouchableOpacity>
-          <Heading size="lg">Settings</Heading>
-          <View style={styles.placeholder} />
+          <Heading size="lg">{t('profile.settings')}</Heading>
+          <TouchableOpacity 
+            style={styles.logoutTopButton}
+            onPress={() => {
+              if (isLoggingOut) return;
+              Alert.alert(
+                t('profile.logout'),
+                t('profile.logoutConfirmation'),
+                [
+                  { text: t('buttons.cancel'), style: "cancel" },
+                  { 
+                    text: t('buttons.logout'), 
+                    onPress: () => {
+                      if (!isLoggingOut) {
+                        handleLogout();
+                      }
+                    },
+                    style: "destructive" 
+                  }
+                ]
+              );
+            }}
+            disabled={isLoggingOut}
+          >
+            <Icon as={LogOut} size="md" color={colors.primary} />
+          </TouchableOpacity>
         </View>
         
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -457,34 +489,29 @@ export default function ProfileSettingsScreen() {
           </Center>
           
           <Box style={styles.formContainer}>
-            {/* Logout Button */}
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={() => {
-                if (isLoggingOut) return;
-                Alert.alert(
-                  "Logout",
-                  "Are you sure you want to logout?",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    { 
-                      text: "Yes, Logout", 
-                      onPress: () => {
-                        if (!isLoggingOut) {
-                          handleLogout();
-                        }
-                      },
-                      style: "destructive" 
-                    }
-                  ]
-                );
-              }}
-              disabled={isLoggingOut}
-            >
-              <Icon as={LogOut} size="md" color="#AF3C3F" />
-              <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
-            <Heading size="md" style={styles.sectionTitle}>Account Information</Heading>
+            {/* Language Toggle Section */}
+            <RTLView style={styles.languageSection}>
+              <RTLRow style={styles.languageHeader}>
+                <View style={{ flex: 1 }}>
+                  <Heading size="md" style={isRtl ? styles.rtlHeading : undefined}>{t('profile.language')}</Heading>
+                  <RTLText style={styles.sectionDescription}>{t('profile.languageDescription')}</RTLText>
+                </View>
+                <Button 
+                  style={isRtl ? styles.rtlLanguageButton : styles.languageButton}
+                  onPress={toggleLanguage}
+                >
+                  <ButtonText style={styles.languageButtonText}>
+                    {language === 'en' ? 'עברית' : 'English'}
+                  </ButtonText>
+                </Button>
+              </RTLRow>
+            </RTLView>
+            
+            <Divider style={styles.divider} />
+            
+            <RTLView>
+              <Heading size="md" style={isRtl ? styles.rtlHeading : undefined}>{t('profile.accountInfo')}</Heading>
+            </RTLView>
             
             {/* User Info Form */}
             <VStack space="md">
@@ -496,10 +523,11 @@ export default function ProfileSettingsScreen() {
                   render={({ field: { onChange, onBlur, value } }) => (
                     <Input>
                       <InputField
-                        placeholder="Username"
+                        placeholder={t('auth.register.step1.username')}
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
+                        style={isRtl ? { textAlign: 'right' } : undefined}
                       />
                     </Input>
                   )}
@@ -511,7 +539,7 @@ export default function ProfileSettingsScreen() {
               </FormControl>
               
               {/* First Name and Last Name */}
-              <HStack space="sm" style={styles.nameFields}>
+              <HStack space="sm" style={[styles.nameFields, isRtl ? { flexDirection: 'row-reverse' } : undefined]}>
                 <FormControl isInvalid={!!errors.firstName} style={styles.halfInput}>
                   <Controller
                     name="firstName"
@@ -519,10 +547,11 @@ export default function ProfileSettingsScreen() {
                     render={({ field: { onChange, onBlur, value } }) => (
                       <Input>
                         <InputField
-                          placeholder="First Name"
+                          placeholder={t('auth.register.step2.first_name')}
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
+                          style={isRtl ? { textAlign: 'right' } : undefined}
                         />
                       </Input>
                     )}
@@ -540,10 +569,11 @@ export default function ProfileSettingsScreen() {
                     render={({ field: { onChange, onBlur, value } }) => (
                       <Input>
                         <InputField
-                          placeholder="Last Name"
+                          placeholder={t('auth.register.step2.last_name')}
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
+                          style={isRtl ? { textAlign: 'right' } : undefined}
                         />
                       </Input>
                     )}
@@ -563,12 +593,13 @@ export default function ProfileSettingsScreen() {
                   render={({ field: { onChange, onBlur, value } }) => (
                     <Input>
                       <InputField
-                        placeholder="Email"
+                        placeholder={t('auth.email')}
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        style={isRtl ? { textAlign: 'right' } : undefined}
                       />
                     </Input>
                   )}
@@ -644,8 +675,10 @@ export default function ProfileSettingsScreen() {
             <Divider style={styles.divider} />
             
             {/* Allergies section - Using the same Chips component as registration */}
-            <Heading size="md" style={styles.sectionTitle}>Medical Information</Heading>
-            <Text style={styles.sectionDescription}>List any allergies or medical conditions that emergency responders should know about.</Text>
+            <RTLView>
+              <Heading size="md" style={isRtl ? styles.rtlHeading : undefined}>{t('profile.medicalInfo')}</Heading>
+            </RTLView>
+            <RTLText style={styles.sectionDescription}>{t('auth.register.step3.subtitle')}</RTLText>
             
             <FormControl isInvalid={!!errors.allergies}>
               <Controller
@@ -659,6 +692,7 @@ export default function ProfileSettingsScreen() {
                     setItems={setAllergiesItems}
                     selectedValues={value || []}
                     setSelectedValues={onChange}
+                    isRtl={isRtl}
                   />
                 )}
               />
@@ -670,35 +704,40 @@ export default function ProfileSettingsScreen() {
             
             <Divider style={styles.divider} />
             
-            {/* Emergency contacts section - Using similar structure to registration step-4 */}
-            <View style={styles.emergencyContactsHeader}>
-              <Heading size="md">Emergency Contacts</Heading>
+            {/* Emergency contacts section */}
+            <View style={[
+              styles.emergencyContactsHeader, 
+              isRtl && { flexDirection: 'row-reverse' }
+            ]}>
+              <Heading size="md" style={isRtl ? styles.rtlHeading : undefined}>{t('profile.emergencyContacts')}</Heading>
               <TouchableOpacity 
                 style={styles.addButton} 
                 onPress={addEmergencyContact}
               >
-                <Text style={styles.addButtonText}>+ Add</Text>
+                <RTLText style={styles.addButtonText}>+ {t('buttons.add')}</RTLText>
               </TouchableOpacity>
             </View>
             
-            <Text style={styles.sectionDescription}>People to contact in case of emergency.</Text>
+            <RTLText style={styles.sectionDescription}>{t('auth.register.step4.subtitle')}</RTLText>
             
             <VStack space="md" style={styles.emergencyContactsList}>
               {watch('emergencyContacts')?.map((_: any, index: number) => (
-                <View key={index} style={styles.emergencyContactItem}>
+                <RTLView key={index} style={styles.emergencyContactItem}>
                   <FormControl isInvalid={!!errors?.emergencyContacts 
                      && Array.isArray(errors.emergencyContacts)
-                     && !!errors.emergencyContacts[index]?.name}>
+                     && !!errors.emergencyContacts[index]?.name}
+                     style={{ width: '100%' }}>
                     <Controller
                       name={`emergencyContacts.${index}.name`}
                       control={control}
                       render={({ field: { onChange, onBlur, value } }) => (
                         <Input>
                           <InputField
-                            placeholder="Contact Name"
+                            placeholder={t('auth.register.step4.contact_name')}
                             value={value || ''}
                             onChangeText={onChange}
                             onBlur={onBlur}
+                            style={isRtl ? { textAlign: 'right' } : undefined}
                           />
                         </Input>
                       )}
@@ -714,7 +753,7 @@ export default function ProfileSettingsScreen() {
                     </FormControlError>
                   </FormControl>
                   
-                  <FormControl isInvalid={!!errors?.emergencyContacts && Array.isArray(errors.emergencyContacts) && !!errors.emergencyContacts[index]?.phone} style={{ marginTop: 8 }}>
+                  <FormControl isInvalid={!!errors?.emergencyContacts && Array.isArray(errors.emergencyContacts) && !!errors.emergencyContacts[index]?.phone} style={{ marginTop: 8, width: '100%' }}>
                     <Controller
                       name={`emergencyContacts.${index}.phone`}
                       control={control}
@@ -740,13 +779,13 @@ export default function ProfileSettingsScreen() {
                   
                   {(watch('emergencyContacts') || []).length > 1 && (
                     <TouchableOpacity 
-                      style={styles.removeButton}
+                      style={isRtl ? styles.rtlRemoveButton : styles.removeButton}
                       onPress={() => removeEmergencyContact(index)}
                     >
-                      <Text style={styles.removeButtonText}>Remove</Text>
+                      <RTLText style={styles.removeButtonText}>{t('profile.remove_contact')}</RTLText>
                     </TouchableOpacity>
                   )}
-                </View>
+                </RTLView>
               ))}
             </VStack>
             
@@ -756,7 +795,7 @@ export default function ProfileSettingsScreen() {
               onPress={handleSubmit(onSubmit)}
               isDisabled={isLoading}
             >
-              <ButtonText>{isLoading ? 'Saving...' : 'Save Changes'}</ButtonText>
+              <ButtonText>{isLoading ? t('profile.saving') : t('profile.save')}</ButtonText>
             </Button>
           </Box>
         </ScrollView>
@@ -784,6 +823,10 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 4,
+  },
+  logoutTopButton: {
+    padding: 8,
+    borderRadius: 8,
   },
   placeholder: {
     width: 28, // Same width as the back button for balanced layout
@@ -832,16 +875,42 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
+  logoutContainer: {
+    width: '100%',
+    alignItems: 'flex-end',
+    marginBottom: 24,
+  },
+  rtlLogoutContainer: {
+    width: '100%',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
-    padding: 10,
-    marginBottom: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+  },
+  rtlLogoutButton: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    backgroundColor: colors.white,
   },
   logoutText: {
-    color: '#AF3C3F',
+    color: colors.primary,
     marginLeft: 8,
+    fontWeight: '600',
+  },
+  rtlLogoutText: {
+    color: colors.primary,
+    marginRight: 8,
     fontWeight: '600',
   },
   sectionTitle: {
@@ -851,6 +920,45 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 12,
     fontSize: 14,
+  },
+  languageSection: {
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: colors.backgroundLight,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
+  },
+  languageHeader: {
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  languageButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    marginLeft: 12,
+  },
+  rtlLanguageButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  languageButtonText: {
+    fontWeight: '600',
+  },
+  rtlHeading: {
+    textAlign: 'right',
+  },
+  rtlText: {
+    textAlign: 'right',
   },
   nameFields: {
     justifyContent: 'space-between',
@@ -871,7 +979,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   addButtonText: {
-    color: '#AF3C3F',
+    color: colors.primary,
     fontWeight: '600',
   },
   emergencyContactsList: {
@@ -882,6 +990,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    width: '100%'
   },
   removeButton: {
     alignSelf: 'flex-end',
@@ -894,6 +1003,11 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 32,
-    backgroundColor: '#AF3C3F',
+    backgroundColor: colors.primary,
+  },
+  rtlRemoveButton: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    padding: 4,
   },
 });

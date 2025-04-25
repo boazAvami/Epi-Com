@@ -25,6 +25,7 @@ interface ChipsProps {
     setSelectedValues?: React.Dispatch<React.SetStateAction<string[]>>;
     type?: ChipsType;
     itemVariant?: ChipItemVariant;
+    isRtl?: boolean;
 }
 
 const Chips: React.FC<ChipsProps> = (props) => {
@@ -38,9 +39,12 @@ const Chips: React.FC<ChipsProps> = (props) => {
         setSelectedValues,
         type = "default",
         itemVariant,
+        isRtl: isRtlProp
     } = props;
     
-    const { isRtl } = useAppTranslation();
+    const { isRtl: isRtlContext } = useAppTranslation();
+
+    const isRtl = isRtlProp !== undefined ? isRtlProp : isRtlContext;
 
     const onSelectItem = (value: string) => {
         if (type === "filter") {
@@ -68,7 +72,8 @@ const Chips: React.FC<ChipsProps> = (props) => {
         <View style={[
             styles.container, 
             containerStyle, 
-            { justifyContent: isRtl ? "flex-end" : "flex-start" }
+            { justifyContent: isRtl ? "flex-end" : "flex-start" },
+            isRtl && styles.rtlContainer
         ]}>
             {items.map((item, index) => {
                 const isSelected = selectedValues?.includes(item.value);
@@ -81,10 +86,12 @@ const Chips: React.FC<ChipsProps> = (props) => {
                         style={[
                             itemContainerStyle,
                             isSelected ? styles.selectedChip : null,
+                            isRtl && styles.rtlChip
                         ]}
                         labelStyle={[
                             itemLabelStyle,
                             isSelected ? styles.selectedLabel : null,
+                            isRtl && styles.rtlChipText
                         ]}
                         trailingIcon={
                             type === "input"
@@ -119,4 +126,14 @@ const styles = StyleSheet.create({
     selectedLabel: {
         color: "white",
     },
+    rtlContainer: {
+        alignItems: 'flex-end',
+    },
+    rtlChip: {
+        marginRight: 0,
+        marginLeft: -2,
+    },
+    rtlChipText: {
+        textAlign: 'right',
+    }
 });

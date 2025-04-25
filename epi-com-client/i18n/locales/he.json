@@ -139,7 +139,10 @@
       "logout": "התנתק",
       "next": "המשך",
       "confirm": "אישור",
-      "select": "בחר"
+      "select": "בחר",
+      "ok": "אישור",
+      "go_back": "חזור",
+      "add": "הוסף"
     },
     "actions": {
       "openWhatsApp": "פתח בווטסאפ"
@@ -179,18 +182,55 @@
         "dob_required": "יש להזין תאריך לידה",
         "gender_required": "יש לבחור מגדר",
         "emergency_contact_required": "יש להזין לפחות איש קשר אחד לחירום",
-        "contact_name_min": "שם איש הקשר חייב להכיל לפחות 2 תווים",
-        "contact_name_max": "שם איש הקשר לא יכול להכיל יותר מ־30 תווים",
         "profile_picture_invalid": "כתובת התמונה אינה תקינה"
       }
     },
     "errors": {
       "location_denied": "הגישה למיקום נדחתה",
-      "location_error": "לא ניתן לקבל את המיקום שלך"
+      "location_error": "לא ניתן לקבל את המיקום שלך",
+      "permission_denied": "הגישה נדחתה",
+      "media_permission_required": "אתה צריך לאפשר גישה לספריית התמונות שלך.",
+      "camera_permission_required": "אתה צריך לאפשר גישה למצלמה כדי לצלם תמונה.",
+      "image_picker_error": "לא ניתן לבחור תמונה. אנא נסה שוב.",
+      "camera_error": "שגיאה בצילום התמונה. אנא נסה שוב.",
+      "error": "שגיאה",
+      "loading_profile": "טעינת פרופיל נכשלה",
+      "server_response_error": "שגיאה בתגובת השרת",
+      "server_error": "שגיאת שרת",
+      "retry": "נסה שוב"
     },
     "gender": {
       "male": "זכר",
       "female": "נקבה",
       "other": "אחר"
+    },
+    "profile": {
+      "settings": "הגדרות",
+      "accountInfo": "מידע חשבון",
+      "medicalInfo": "מידע רפואי",
+      "emergencyContacts": "אנשי קשר לחירום",
+      "edit": "ערוך פרופיל",
+      "save": "שמור שינויים",
+      "saving": "שומר...",
+      "cancel": "בטל",
+      "remove": "מחק",
+      "remove_contact": "מחק איש קשר",
+      "logout": "התנתק",
+      "logoutConfirmation": "האם אתה בטוח שברצונך להתנתק?",
+      "language": "שפה",
+      "languageDescription": "שנה את שפת היישום",
+      "changeLanguage": "החלף שפה",
+      "profile_picture": "תמונת פרופיל",
+      "select_option": "בחר אפשרות",
+      "remove_picture_confirmation": "האם אתה בטוח שברצונך להסיר את תמונת הפרופיל שלך?",
+      "loading": "טוען את הגדרות הפרופיל שלך...",
+      "no_refresh_token": "לא נמצא טוקן רענון.",
+      "logout_failed": "ההתנתקות נכשלה. נסה שוב.",
+      "no_changes_title": "מידע",
+      "no_changes_message": "לא זוהו שינויים.",
+      "update_success_title": "הצלחה",
+      "update_success_message": "הפרופיל שלך עודכן בהצלחה.",
+      "update_failed": "העדכון נכשל. אנא נסה שוב.",
+      "email_in_use": "כתובת האימייל כבר בשימוש. אנא השתמש בכתובת אחרת."
     }
   }
