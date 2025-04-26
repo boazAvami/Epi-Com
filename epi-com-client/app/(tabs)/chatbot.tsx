@@ -469,7 +469,6 @@ const styles = StyleSheet.create({
   },
   inputCounterContainer: {
     backgroundColor: '#ffffff',
-    // MODIFIED: further increased bottom padding
     paddingBottom: 24,
     paddingTop: 8,
     alignItems: 'center',
@@ -477,10 +476,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e1e4e8',
   },
   counterBadge: {
-    // MODIFIED: added more padding for the counter badge
     paddingVertical: 8,
     paddingHorizontal: 12,
-    marginBottom: 6, // Additional spacing at the bottom
+    marginBottom: 6, // spacing at the bottom
   },
   textInput: {
     flex: 1,
