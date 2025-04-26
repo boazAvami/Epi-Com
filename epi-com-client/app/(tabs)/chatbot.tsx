@@ -44,6 +44,9 @@ type User = {
   profile_picture_uri?: string;
 };
 
+// Define message limit as a constant
+const MESSAGE_LIMIT = 10;
+
 const ChatScreen: React.FC = () => {
   const { getUserInfo } = useAuth();
   const { user } = useAuthStore();
@@ -89,7 +92,7 @@ const ChatScreen: React.FC = () => {
   const receivedMessages = messages.filter(msg => msg.sender === 'assistant');
   
   // Check if message limit is reached
-  const isLimitReached = sentMessages.length >= 10;
+  const isLimitReached = sentMessages.length >= MESSAGE_LIMIT;
 
   // Send message function
   const handleSendMessage = async () => {
@@ -116,7 +119,7 @@ const ChatScreen: React.FC = () => {
     setInputText('');
     
     // Check if limit is now reached
-    if (sentMessages.length === 9) {
+    if (sentMessages.length === MESSAGE_LIMIT - 1) {
       setShowLimitWarning(true);
     }
     
@@ -239,14 +242,14 @@ const ChatScreen: React.FC = () => {
         </View>
       </Alert>
       
-      {/* Session Limit Warning */}
+      {/* Session Limit Warning - UPDATED with reset button explanation */}
       {showLimitWarning && (
         <Alert action="error" style={styles.limitWarning}>
           <View style={{ flex: 1 }}>
             <AlertText style={[{ flexShrink: 1 }, language === 'he' && styles.rtlText]}>
               {language === 'en'
-                ? 'You have reached the session limit of 10 messages. Please reset the session to continue.'
-                : 'הגעת למגבלת ההודעות. אנא אפס את השיחה כדי להמשיך.'}
+                ? `You have reached the session limit of ${MESSAGE_LIMIT} messages. Please tap the refresh icon (⟳) in the top-right corner to reset the session and continue.`
+                : `הגעת למגבלת ההודעות (${MESSAGE_LIMIT}). אנא הקש על סמל הרענון (⟳) בפינה הימנית העליונה כדי לאפס את השיחה ולהמשיך.`}
             </AlertText>
           </View>
         </Alert>
@@ -346,7 +349,7 @@ const ChatScreen: React.FC = () => {
           <View style={styles.inputCounterContainer}>
             <Badge action="info" size="sm" style={styles.counterBadge}>
               <BadgeText style={language === 'he' && styles.rtlText}>
-                {10 - sentMessages.length} {language === 'en' ? 'messages remaining' : 'הודעות נותרו'}
+                {MESSAGE_LIMIT - sentMessages.length} {language === 'en' ? 'messages remaining' : 'הודעות נותרו'}
               </BadgeText>
             </Badge>
           </View>
@@ -368,7 +371,7 @@ const styles = StyleSheet.create({
   resetButtonContainer: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 50 : 16,
-    right: 14,
+    right: 24, // Moved to the left (increased right margin)
     zIndex: 10,
   },
   resetButton: {
