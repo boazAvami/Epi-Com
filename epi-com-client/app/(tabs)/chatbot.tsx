@@ -46,6 +46,7 @@ type User = {
 
 // Define message limit as a constant
 const MESSAGE_LIMIT = 10;
+const THRESHOLD_TO_SHOW_WARNING = 1;
 
 const ChatScreen: React.FC = () => {
   const { getUserInfo } = useAuth();
@@ -55,6 +56,8 @@ const ChatScreen: React.FC = () => {
   const [showLimitWarning, setShowLimitWarning] = useState<boolean>(false);
   const [isResetting, setIsResetting] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [charCount, setCharCount] = useState<number>(0);
+
   
   // Get language from translation hook
   const { language } = useAppTranslation();
@@ -207,7 +210,7 @@ const ChatScreen: React.FC = () => {
       {/* Using the Header component for the title */}
       <View style={styles.headerContainer}>
         <Header 
-          title={language === 'en' ? 'EpiPen Assistant' : 'מסייע אפיפן'} 
+          title={language === 'en' ? 'AI Assistant' : 'מסייע בינה מלאכותית'} 
         />
         
         {/* Reset Button - icon only without borders */}
@@ -325,7 +328,12 @@ const ChatScreen: React.FC = () => {
             <TextInput
               style={[styles.textInput, language === 'he' && styles.rtlInput]}
               value={inputText}
-              onChangeText={setInputText}
+              onChangeText={(text) => {
+                if (text.length <= 500) {
+                    setInputText(text);
+                    setCharCount(text.length);
+                  }
+                }}
               placeholder={language === 'en' ? 'Type your message here...' : 'הקלד את ההודעה שלך כאן...'}
               placeholderTextColor="#999"
               multiline={false}
@@ -345,14 +353,16 @@ const ChatScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
           
-          {/* Message counter below input field - MODIFIED: added padding at the bottom */}
-          <View style={styles.inputCounterContainer}>
-            <Badge action="info" size="sm" style={styles.counterBadge}>
-              <BadgeText style={language === 'he' && styles.rtlText}>
-                {MESSAGE_LIMIT - sentMessages.length} {language === 'en' ? 'messages remaining' : 'הודעות נותרו'}
-              </BadgeText>
-            </Badge>
-          </View>
+          {/* Message counter below input field - only shown when approaching limit */}
+          {(MESSAGE_LIMIT - sentMessages.length <= THRESHOLD_TO_SHOW_WARNING) && (
+            <View style={styles.inputCounterContainer}>
+                <Badge action="info" size="sm" style={styles.counterBadge}>
+                <BadgeText style={language === 'he' && styles.rtlText}>
+                    {MESSAGE_LIMIT - sentMessages.length} {language === 'en' ? 'messages remaining' : 'הודעות נותרו'}
+                </BadgeText>
+                </Badge>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
