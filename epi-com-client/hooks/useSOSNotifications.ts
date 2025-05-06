@@ -6,6 +6,7 @@ type SOSNotificationData = {
     type: "sos";
     sosId: string;
     userId: string;
+    timestamp: number;
     location: {
         latitude: number;
         longitude: number;
@@ -34,6 +35,7 @@ export function useSOSNotifications() {
                         userId: String(data.userId),
                         lat: data.location.latitude.toString(),
                         lng: data.location.longitude.toString(),
+                        timestamp: data.timestamp,
                     },
                 });
             }

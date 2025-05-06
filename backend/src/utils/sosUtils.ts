@@ -15,6 +15,7 @@ async function sendPushNotification(pushToken: string, sosId: string, location: 
             screen: 'SOSMap',
             sosId,
             location,
+            timestamp: Date.now()
         }
     }, {
         headers: {

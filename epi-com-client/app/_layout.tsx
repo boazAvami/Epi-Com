@@ -15,6 +15,12 @@ import { useAuth as useAuthStore } from '../stores/useAuth';
 import { Poppins_400Regular, Poppins_700Bold, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { useSOSNotifications } from '@/hooks/useSOSNotifications';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/he';
+
+dayjs.extend(relativeTime);
+dayjs.locale('he');
 
 SplashScreen.preventAutoHideAsync();
 
