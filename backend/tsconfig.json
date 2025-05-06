@@ -12,6 +12,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/tests/**/*.ts"  // Include the tests directory
+    "src/tests/**/*.ts",
+    "src/types/global.d.ts"
   ]
 }

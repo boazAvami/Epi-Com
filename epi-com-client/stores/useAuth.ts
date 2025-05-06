@@ -9,6 +9,9 @@ import * as tokenStorage from '../utils/tokenStorage';
 import { GetLoggedUser } from "@/services/graphql/graphqlUserService";
 import { IUser } from "@shared/types";
 import { jwtDecode } from "jwt-decode";
+import {registerForPushNotificationsAsync} from "@/utils/sos-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {updatePushToken} from "@/services/commonService";
 type JwtPayload = {
     exp: number;
 };
@@ -36,6 +39,15 @@ export const useAuth = create<AuthState>((set) => ({
         await tokenStorage.saveRefreshToken(refreshToken);
         await tokenStorage.saveUserId(_id);
         set({ userId: _id, token: accessToken, refreshToken });
+
+        const pushToken = await registerForPushNotificationsAsync();
+        if (pushToken) {
+            const stored = await AsyncStorage.getItem("pushToken");
+            if (stored !== pushToken) {
+                await updatePushToken(pushToken);
+                await AsyncStorage.setItem("pushToken", pushToken);
+            }
+        }
     },
 
     googleLogin: async (credential) => {
@@ -45,6 +57,15 @@ export const useAuth = create<AuthState>((set) => ({
         await tokenStorage.saveRefreshToken(refreshToken);
         await tokenStorage.saveUserId(_id);
         set({ userId: _id, token: accessToken, refreshToken });
+
+        const pushToken = await registerForPushNotificationsAsync();
+        if (pushToken) {
+            const stored = await AsyncStorage.getItem("pushToken");
+            if (stored !== pushToken) {
+                await updatePushToken(pushToken);
+                await AsyncStorage.setItem("pushToken", pushToken);
+            }
+        }
     },
 
     logout: async () => {
@@ -95,6 +116,15 @@ export const useAuth = create<AuthState>((set) => ({
 
             const { me }: { me: IUser } = await GetLoggedUser();
             set({ user: me });
+
+            const pushToken = await registerForPushNotificationsAsync();
+            if (pushToken) {
+                const stored = await AsyncStorage.getItem("pushToken");
+                if (stored !== pushToken) {
+                    await updatePushToken(pushToken);
+                    await AsyncStorage.setItem("pushToken", pushToken);
+                }
+            }
         } catch (error) {
             await tokenStorage.deleteToken();
             await tokenStorage.deleteRefreshToken();

@@ -65,6 +65,10 @@ const userSchema = new mongoose.Schema<IUser>({
   refreshToken: {
     type: [String],
     default: [],
+  },
+  pushToken: {
+    type: String,
+    default: null,
   }
 });
 

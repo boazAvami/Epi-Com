@@ -7,55 +7,61 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { Slot } from 'expo-router';
-import {AuthProvider} from '@/context/authContext';
+import { AuthProvider } from '@/context/authContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../i18n';
 import { useAuth as useAuthStore } from '../stores/useAuth';
 import { Poppins_400Regular, Poppins_700Bold, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
-import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { useNotifications } from '@/hooks/useNotifications';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutInner() {
-    return <BottomSheetModalProvider>
-              <Slot screenOptions={{ headerShown: false }} />
-          </BottomSheetModalProvider>;
+    return (
+        <BottomSheetModalProvider>
+            <Slot screenOptions={{ headerShown: false }} />
+        </BottomSheetModalProvider>
+    );
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_700Bold,
-    Poppins_600SemiBold
-  });
+    const colorScheme = useColorScheme();
+    const [fontsLoaded] = useFonts({
+        Poppins_400Regular,
+        Poppins_700Bold,
+        Poppins_600SemiBold,
+    });
+
     const loadStoredAuth = useAuthStore((s) => s.loadStoredAuth);
+
+    useNotifications();
+
     useEffect(() => {
         loadStoredAuth();
     }, []);
 
-
     useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+        if (fontsLoaded) {
+            SplashScreen.hideAsync();
+        }
+    }, [fontsLoaded]);
+
+    if (!fontsLoaded) {
+        return null;
     }
-  }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
-
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <GluestackUIProvider mode="light">
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <AuthProvider>
-              <RootLayoutInner />
-          </AuthProvider>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </GluestackUIProvider>
-    </GestureHandlerRootView>
-  );
+    return (
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <GluestackUIProvider mode="light">
+                <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                    <AuthProvider>
+                        <RootLayoutInner />
+                    </AuthProvider>
+                    <StatusBar style="auto" />
+                </ThemeProvider>
+            </GluestackUIProvider>
+        </GestureHandlerRootView>
+    );
 }
