@@ -1,5 +1,6 @@
 import { SOSModel, ISOS } from '../../models/sosModel';
 import mongoose from 'mongoose';
+import {findAndNotifyNearbyUsers} from "../../utils/sosUtils";
 
 export const sosResolvers = {
   Mutation: {
@@ -8,9 +9,11 @@ export const sosResolvers = {
         userId: new mongoose.Types.ObjectId(userId),
         location,
         status: 'active',
-        responders: [],  // Initially, no responders
+        responders: [],
       });
       await sos.save();
+      await findAndNotifyNearbyUsers(userId, sos._id.toString(), location);
+
       return {
         status: 'success',
         message: 'SOS alert sent to nearby EpiPen holders'
