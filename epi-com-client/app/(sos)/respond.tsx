@@ -11,11 +11,13 @@ import {Text} from "@/components/ui/text";
 import dayjs from "dayjs";
 import {Center} from "@/components/ui/center";
 import {colors} from "@/constants/Colors";
+import {useSOS} from "@/hooks/useSOS";
 
 export default function SOSResponseScreen() {
     const { sosId, userId, lat, lng, timestamp } = useLocalSearchParams();
     const router = useRouter();
     const [sosUser, setSosUser] = useState<Partial<IUser> | null>(null);
+    const {responseToSOS} = useSOS();
 
     useEffect(() => {
         const getSOSUser = async () => {
@@ -52,16 +54,14 @@ export default function SOSResponseScreen() {
             .catch((err) => console.error('Error opening Google Maps:', err));
     };
 
-    const handleHelp = () => {
-        // Send response to backend that user is on their way
+    const handleHelp = async () => {
+        await responseToSOS(sosId as string, {latitude: Number(lat), longitude: Number(lng)});
+
+        // TODO: SHOW DETAILS
     };
 
     const handleCannotHelp = () => {
         router.push('/(tabs)')
-    };
-
-    const handleContact = () => {
-        // Open contact option (e.g. call or message)
     };
 
     const getSOSLocation: () => { latitude: number, longitude: number } = () => {

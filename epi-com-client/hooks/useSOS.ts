@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Coordinate } from '@/types';
-import {sendSOSMutation, stopSOSMutation} from "@/services/graphql/graphqlSosService";
+import {responseToSOSMutation, sendSOSMutation, stopSOSMutation} from "@/services/graphql/graphqlSosService";
 import {useAuth} from "@/stores/useAuth";
 
 type SendSOSParams = {
@@ -47,9 +47,27 @@ export function useSOS() {
         }
     };
 
+    const responseToSOS = async (sosId: string, location: { latitude: number, longitude: number }) => {
+        try {
+            setLoading(true);
+            setError(null);
+            setSuccess(false);
+
+            await responseToSOSMutation(userId as string, sosId, location);
+
+            setSuccess(true);
+        } catch (err: any) {
+            console.error('Failed to stop SOS', err);
+            setError(err?.message || 'Unknown error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         sendSOS,
         stopSOS,
+        responseToSOS,
         loading,
         error,
         success,
