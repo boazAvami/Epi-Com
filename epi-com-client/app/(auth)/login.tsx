@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { Center } from '@/components/ui/center';
-import { Text } from '@/components/ui/text';
 import LoginCard, { LoginCardHandle } from "@/app/(auth)/login-card";
 import { HStack } from "@/components/ui/hstack";
 import { Link, LinkText } from "@/components/ui/link";
@@ -11,7 +10,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 import LottieView from 'lottie-react-native';
 import { GoogleLoginButton } from "@/components/GoogleLoginButton";
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { RTLText, RTLView } from '@/components/shared/RTLComponents';
+import { RTLText } from '@/components/shared/RTLComponents';
 import LanguageToggle from '@/components/shared/LanguageToggle';
 
 const Login = () => {
@@ -42,9 +41,9 @@ const Login = () => {
     }, [isLoading, loadingMessages.length]);
 
     return (
-        <ScrollView
+        <View
             className="p-16"
-            contentContainerStyle={{
+            style={{
                 flexGrow: 1,
                 justifyContent: 'center',
             }}
@@ -103,7 +102,7 @@ const Login = () => {
                     </VStack>
                 )}
             </Center>
-        </ScrollView>
+        </View>
     );
 };
 

@@ -12,17 +12,23 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../i18n';
 import { useAuth as useAuthStore } from '../stores/useAuth';
+import { Poppins_400Regular, Poppins_700Bold, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
+import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutInner() {
-    return <Slot screenOptions={{ headerShown: false }} />;
+    return <BottomSheetModalProvider>
+              <Slot screenOptions={{ headerShown: false }} />
+          </BottomSheetModalProvider>;
 }
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Poppins_400Regular,
+    Poppins_700Bold,
+    Poppins_600SemiBold
   });
     const loadStoredAuth = useAuthStore((s) => s.loadStoredAuth);
     useEffect(() => {
