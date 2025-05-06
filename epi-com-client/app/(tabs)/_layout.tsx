@@ -31,7 +31,7 @@ export default function TabLayout() {
                         ),
                     },
                     {
-                        name: '(sos)/index',
+                        name: 'sos',
                         isCenter: true,
                     },
                     {
@@ -90,7 +90,7 @@ export default function TabLayout() {
         >
             <Tabs.Screen name="index" options={{title: 'Home'}}/>
             <Tabs.Screen name="create" options={{title: 'Create'}}/>
-            <Tabs.Screen name="(sos)/index" options={{title: 'SOS'}}/>
+            <Tabs.Screen name="sos" options={{title: 'SOS'}}/>
             <Tabs.Screen name="chatbot" options={{title: 'Chat'}}/>
             <Tabs.Screen name="profile" options={{title: 'Profile'}}/>
         </Tabs>

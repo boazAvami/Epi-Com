@@ -18,3 +18,20 @@ export const sendSOSMutation = async (userId: string, location: Coordinate) => {
 
     return graphqlRequest<{ sendSOS: { status: string; message: string } }>(query, variables);
 };
+
+export const stopSOSMutation = async (userId: string) => {
+    const query = `
+        mutation stopSOS($userId: ID!) {
+            stopSOS(userId: $userId) {
+                status
+                message
+            }
+        }
+    `;
+
+    const variables = {
+        userId
+    };
+
+    return graphqlRequest<{ stopSOS: { status: string; message: string } }>(query, variables);
+};

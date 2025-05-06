@@ -5,8 +5,9 @@ import * as Location from 'expo-location';
 import { useEpipens } from "@/hooks/useEpipens";
 import { Coordinate } from "@/types";
 import { EpipenMarker } from "@/components/map/EpipenMarker";
-import { useFocusEffect } from "expo-router";
+import {useFocusEffect, useRouter} from "expo-router";
 import {useSOS} from "@/hooks/useSOS";
+import {Button, ButtonText} from "@/components/ui/button";
 
 type Pulse = { id: string; radius: number };
 
@@ -20,11 +21,11 @@ const messages = [
 ];
 
 export default function SOSMapScreen() {
-    const { sendSOS } = useSOS();
+    const router = useRouter();
+    const { sendSOS, stopSOS } = useSOS();
     const idCounter = useRef(0);
     const mapRef = useRef<MapView | null>(null);
     const zoomOutIntervalRef = useRef<number | null>(null);
-    const [hasSentSOS, setHasSentSOS] = useState(false);
 
     const createId = () => {
         idCounter.current += 1;
@@ -49,20 +50,45 @@ export default function SOSMapScreen() {
         outputRange: ['0deg', '360deg'],
     });
 
+    const handleCancel = async () => {
+        try {
+            await stopSOS();
+
+            if (zoomOutIntervalRef.current) {
+                clearInterval(zoomOutIntervalRef.current);
+                zoomOutIntervalRef.current = null;
+            }
+
+            setPulses([]);
+
+            if (mapRef.current) {
+                mapRef.current.animateToRegion({
+                    latitude: location?.latitude as number,
+                    longitude: location?.longitude as number,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                }, 500);
+            }
+
+            router.back();
+
+        } catch (e) {
+            console.error("❌ ביטול נכשל", e);
+        }
+    };
 
     useEffect(() => {
-        if (location && !hasSentSOS) {
+        if (location) {
             (async () => {
                 try {
                     await sendSOS({location});
                     console.log('SOS sent successfully');
-                    setHasSentSOS(true);
                 } catch (error) {
                     console.error('Failed to send SOS:', error);
                 }
             })();
         }
-    }, [location, hasSentSOS]);
+    }, [location]);
 
     useEffect(() => {
         (async () => {
@@ -88,7 +114,7 @@ export default function SOSMapScreen() {
             setPulses((prev: Pulse[]) =>
                 prev
                     .map((p: Pulse) => ({ ...p, radius: p.radius + 2 }))
-                    .filter((p) => p.radius <= pulseMaxRadius) // 🚀 מותאם למקסימום דינאמי
+                    .filter((p) => p.radius <= pulseMaxRadius)
             );
         }, 20);
 
@@ -96,7 +122,7 @@ export default function SOSMapScreen() {
             clearInterval(pulseAdder);
             clearInterval(pulseInterval);
         };
-    }, [location, pulseMaxRadius]); // 🚀 נוסיף את pulseMaxRadius לתלות
+    }, [location, pulseMaxRadius]);
 
     useEffect(() => {
         const textInterval = setInterval(() => {
@@ -168,7 +194,6 @@ export default function SOSMapScreen() {
                     }, 1000);
                 }
 
-                // 🚀 הגדלת טווח הפולסים יחד עם הזום
                 setPulseMaxRadius((prevRadius) => prevRadius * 1.3);
 
                 return newZoom;
@@ -180,7 +205,7 @@ export default function SOSMapScreen() {
         React.useCallback(() => {
             if (location && mapRef.current) {
                 setCurrentZoom(0.01);
-                setPulseMaxRadius(500); // 🚀 גם מאפסים טווח פולסים כשחוזרים
+                setPulseMaxRadius(500);
 
                 mapRef.current.animateToRegion({
                     latitude: location.latitude,
@@ -242,6 +267,11 @@ export default function SOSMapScreen() {
                     );
                 })}
             </MapView>
+            <View>
+                <Button onPress={handleCancel} style={styles.cancelButton}>
+                    <ButtonText>ביטול</ButtonText>
+                </Button>
+            </View>
 
             <View style={styles.messageContainer}>
                 <Animated.Text style={[styles.messageText, { opacity: opacityAnim }]}>
@@ -282,4 +312,12 @@ const styles = StyleSheet.create({
         borderTopColor: 'transparent',
         borderRadius: 9,
     },
+    cancelButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        backgroundColor: '#FE385C',
+        borderRadius: 20,
+        padding: 5
+    }
 });

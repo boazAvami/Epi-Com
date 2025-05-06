@@ -26,7 +26,7 @@ async function sendPushNotification(pushToken: string, sosId: string, location: 
 
 export async function findAndNotifyNearbyUsers(userId: string, sosId: string, location: { latitude: number, longitude: number }): Promise<void> {
     const nearbyUsers = await userModel.find({
-        _id: { $ne: userId },
+        // _id: { $ne: userId },
         pushToken: { $exists: true, $ne: null }
     });
 

@@ -14,7 +14,7 @@ import '../i18n';
 import { useAuth as useAuthStore } from '../stores/useAuth';
 import { Poppins_400Regular, Poppins_700Bold, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { useNotifications } from '@/hooks/useNotifications';
+import { useSOSNotifications } from '@/hooks/useSOSNotifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,7 +36,7 @@ export default function RootLayout() {
 
     const loadStoredAuth = useAuthStore((s) => s.loadStoredAuth);
 
-    useNotifications();
+    useSOSNotifications();
 
     useEffect(() => {
         loadStoredAuth();

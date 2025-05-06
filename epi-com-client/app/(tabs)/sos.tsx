@@ -17,7 +17,7 @@ export default function SOSScreen() {
     const [timerKey, setTimerKey] = useState(0);
     const [isUrgent, setIsUrgent] = useState(false);
     const handleSendSOS = useCallback(() => {
-        router.push('/(tabs)/(sos)/map');
+        router.push('/(sos)/map');
     }, [router]);
 
     const handleCancel = useCallback(() => {
