@@ -13,9 +13,11 @@ import {Center} from "@/components/ui/center";
 import {colors} from "@/constants/Colors";
 import {useSOS} from "@/hooks/useSOS";
 import * as Location from 'expo-location';
+import {useNavigationApps} from "@/hooks/useNavigationApps";
 
 export default function SOSResponseScreen() {
     const { sosId, userId, location, timestamp } = useLocalSearchParams();
+    const { handleWazeNavigate, handleGoogleNavigate } = useNavigationApps();
     const [sosLocation = {longitude: 0, latitude: 0}, setSosLocation] = useState<ILocation>();
     const router = useRouter();
     const [sosUser, setSosUser] = useState<Partial<IUser> | null>(null);
@@ -30,32 +32,6 @@ export default function SOSResponseScreen() {
         setSosLocation(JSON.parse(location as string));
         getSOSUser();
     }, []);
-
-    const handleWazeNavigate = () => {
-        const wazeUrl = `waze://?ll=${sosLocation.latitude},${sosLocation.longitude}&navigate=yes`;
-        Linking.canOpenURL(wazeUrl)
-            .then(supported => {
-                if (supported) {
-                    return Linking.openURL(wazeUrl);
-                } else {
-                    return Linking.openURL(`https://waze.com/ul?ll=${sosLocation.latitude},${sosLocation.longitude}&navigate=yes`);
-                }
-            })
-            .catch(err => console.error('Error opening Waze:', err));
-    };
-
-    const handleGoogleNavigate = () => {
-        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${sosLocation.latitude},${sosLocation.longitude}&travelmode=driving`;
-        Linking.canOpenURL(googleMapsUrl)
-            .then((supported) => {
-                if (supported) {
-                    Linking.openURL(googleMapsUrl);
-                } else {
-                    console.warn('Cannot open Google Maps');
-                }
-            })
-            .catch((err) => console.error('Error opening Google Maps:', err));
-    };
 
     const handleHelp = async () => {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -94,7 +70,7 @@ export default function SOSResponseScreen() {
                                              initialRegion={{ ...sosLocation, latitudeDelta: 0.01, longitudeDelta: 0.01 }}>
                         <Marker coordinate={sosLocation} />
                     </MapView>
-                    <Button onPress={handleGoogleNavigate} style={styles.googleMapsButton}>
+                    <Button onPress={() => handleGoogleNavigate(sosLocation)} style={styles.googleMapsButton}>
                         <Image
                             source={require('../../assets/images/google-maps-logo.png')}
                             style={{ width: 20, height: 20 }}
@@ -102,7 +78,7 @@ export default function SOSResponseScreen() {
                         />
                     </Button>
 
-                    <Button onPress={handleWazeNavigate} style={styles.wazeButton}>
+                    <Button onPress={() => handleWazeNavigate(sosLocation)} style={styles.wazeButton}>
                         <Image
                             source={require('../../assets/images/waze-logo.png')}
                             style={{ width: 20, height: 20 }}
