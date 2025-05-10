@@ -1,36 +1,110 @@
-import {Router, useRouter} from 'expo-router';
-import { View } from 'react-native';
-import { useAuth } from '@/context/authContext';
-import { Button, ButtonText } from "@/components/ui/button"
-import {VStack} from "@/components/ui/vstack";
-import {Box} from "@/components/ui/box";
-import {Heading} from "@/components/ui/heading";
-import {Center} from "@/components/ui/center";
+import React, { useRef, useState, useEffect } from 'react';
+import { ScrollView, View } from 'react-native';
+import { Center } from '@/components/ui/center';
+import { Text } from '@/components/ui/text';
+import LoginCard, { LoginCardHandle } from "@/app/(auth)/login-card";
+import { HStack } from "@/components/ui/hstack";
+import { Link, LinkText } from "@/components/ui/link";
+import { Router, useRouter } from "expo-router";
+import { VStack } from "@/components/ui/vstack";
+import { Button, ButtonText } from "@/components/ui/button";
+import LottieView from 'lottie-react-native';
+import { GoogleLoginButton } from "@/components/GoogleLoginButton";
+import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { RTLText, RTLView } from '@/components/shared/RTLComponents';
+import LanguageToggle from '@/components/shared/LanguageToggle';
 
-export default function LoginScreen() {
-    const { login } = useAuth();
+const Login = () => {
     const router: Router = useRouter();
+    const loginCardRef = useRef<LoginCardHandle>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingTextIndex, setLoadingTextIndex] = useState(0);
+    const { t, isRtl } = useAppTranslation();
 
-    const handleLogin = () => {
-        login();
-        router.replace('/');
+    const loadingMessages = [
+        t('auth.loading.checking'),
+        t('auth.loading.almost'),
+        t('auth.loading.final'),
+    ];
+
+    const submit = () => {
+        loginCardRef.current?.submit();
     };
 
+    useEffect(() => {
+        if (!isLoading) return;
+
+        const interval = setInterval(() => {
+            setLoadingTextIndex((prev) => (prev + 1) % loadingMessages.length);
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [isLoading, loadingMessages.length]);
+
     return (
-        <View>
-            <Center className="p-20">
-                <Heading>Login Page</Heading>
-                <Box className="justify-center h-80">
-                    <VStack space="md" reversed={false}>
-                        <Button size="md" variant="solid" action="primary" onPress={handleLogin}>
-                            <ButtonText>Login</ButtonText>
-                        </Button>
-                        <Button size="md" variant="solid" action="primary" onPress={() => router.push('/register')}>
-                            <ButtonText>Go to Register</ButtonText>
-                        </Button>
+        <ScrollView
+            className="p-16"
+            contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: 'center',
+            }}
+        >
+            {/* Language Toggle Button */}
+            <View style={{ 
+                position: 'absolute', 
+                top: 50, 
+                right: 20, 
+                zIndex: 100 
+            }}>
+                <LanguageToggle />
+            </View>
+
+            <Center className="h-full">
+                {isLoading ? (
+                    <VStack className="items-center space-y-4">
+                        <LottieView
+                            source={require('@/assets/animations/register-loading.json')}
+                            autoPlay
+                            loop
+                            style={{ width: 200, height: 200 }}
+                        />
+                        <RTLText className="text-lg text-center text-[#4F4F4F]">
+                            {loadingMessages[loadingTextIndex]}
+                        </RTLText>
                     </VStack>
-                </Box>
+                ) : (
+                    <VStack className="max-w-[440px] w-[80%]">
+                        <LoginCard ref={loginCardRef} setIsLoading={setIsLoading} />
+                        <VStack className="w-full my-7" space="lg">
+                            <Button
+                                className="w-full"
+                                onPress={submit}
+                                style={{ backgroundColor: '#FE385C', borderRadius: 20 }}
+                            >
+                                <ButtonText className="font-medium">
+                                    {t('auth.login_button')}
+                                </ButtonText>
+                            </Button>
+                            <GoogleLoginButton />
+                        </VStack>
+                        <HStack className={`self-center flex-row${isRtl ? '-reverse' : ''}`} space="sm">
+                            <Link onPress={() => router.push('/register-intro')}>
+                                <LinkText
+                                    className="font-medium text-primary-700"
+                                    size="md"
+                                >
+                                    {t('auth.sign_up_link')}
+                                </LinkText>
+                            </Link>
+                            <RTLText className="text-base">
+                                {t('auth.no_account')}
+                            </RTLText>
+                        </HStack>
+                    </VStack>
+                )}
             </Center>
-        </View>
+        </ScrollView>
     );
-}
+};
+
+export default Login;

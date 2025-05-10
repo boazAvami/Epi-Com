@@ -7,6 +7,11 @@ export const epiPenTypeDefs = gql`
     longitude: Float!
   }
 
+  enum EpiPenKind {
+    JUNIOR
+    ADULT
+  }
+
   type Contact {
     phone: String!
     name: String!
@@ -21,6 +26,7 @@ export const epiPenTypeDefs = gql`
     contact: Contact!
     image: String
     serialNumber: String!
+    kind: EpiPenKind!
   }
 
   input LocationInput {
@@ -40,6 +46,7 @@ export const epiPenTypeDefs = gql`
     contact: ContactInput!
     image: String
     serialNumber: String!
+    kind: EpiPenKind!
   }
 
   input UpdateEpiPenInput {
@@ -50,6 +57,7 @@ export const epiPenTypeDefs = gql`
     contact: ContactInput
     image: String
     serialNumber: String
+    kind: EpiPenKind
   }
 
   input DeleteEpiPenInput {
@@ -79,6 +87,7 @@ export const epiPenTypeDefs = gql`
     epiPenById(_id: ID!): EpiPen
     epiPensByUser(userId: ID!): [EpiPen]
     nearbyEpiPens(input: NearbyEpiPenInput!): [NearbyEpiPen]
+    allEpiPens: [EpiPen]
   }
 
   type Mutation {

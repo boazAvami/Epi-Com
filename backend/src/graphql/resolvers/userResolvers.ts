@@ -1,4 +1,5 @@
-import { userModel, IUser } from "../../models/userModel";
+import { userModel } from "../../models/userModel";
+import { IUser } from '@shared/types';
 
 export const userResolvers = {
   Query: {
