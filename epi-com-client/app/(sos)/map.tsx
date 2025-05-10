@@ -40,6 +40,7 @@ export default function SOSMapScreen() {
                     pulses={pulses}
                     markers={markers}
                     pulseMaxRadius={pulseMaxRadius}
+                    responders={respondersData}
                 />
 
                 <View style={styles.cancelWrapper}>

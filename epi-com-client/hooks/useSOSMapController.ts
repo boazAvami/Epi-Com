@@ -34,7 +34,7 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
 
     const [location, setLocation] = useState<ILocation | null>(null);
     const { markers } = useEpipens(location);
-    const [pulses, setPulses] = useState<{ id: string; radius: number }[]>([]);
+    const [pulses, setPulses] = useState<{ id: string; radius: number; createdAt: number }[]>([]);
     const [showSearchMessages, setShowSearchMessages] = useState(true);
     const [messageIndex, setMessageIndex] = useState(0);
     const [currentZoom, setCurrentZoom] = useState(0.01);
