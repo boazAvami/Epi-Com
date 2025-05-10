@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import {useEffect, useRef, useState} from "react";
 import * as Notifications from "expo-notifications";
 import { Notification } from "expo-notifications";
 import {useRouter} from "expo-router";
@@ -16,10 +16,28 @@ export function useSOSNotifications() {
     const router = useRouter();
     const notificationListener = useRef<Notifications.EventSubscription | null>(null);
     const responseListener = useRef<Notifications.EventSubscription | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [sosInfo, setSosInfo] = useState<{
+        sosId: string;
+        userId: string;
+        location: ILocation;
+        timestamp?: number;
+    } | null>(null);
 
     useEffect(() => {
         notificationListener.current = Notifications.addNotificationReceivedListener((notification: Notification) => {
-            // TODO: לטפל בהתראה
+            const data = notification.request.content.data as SOSNotificationData;
+
+            if (data.type === ESOSNotificationType.SOS_SENT && data.sosId && data.userId && data.location) {
+                setSosInfo({
+                    sosId: data.sosId,
+                    location: data.location,
+                    timestamp: data.timestamp,
+                    userId: data.userId
+                });
+
+                setModalVisible(true);
+            }
         });
 
         responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
@@ -43,4 +61,10 @@ export function useSOSNotifications() {
             responseListener.current?.remove();
         };
     }, []);
+
+    return {
+        modalVisible,
+        setModalVisible,
+        sosInfo,
+    };
 }

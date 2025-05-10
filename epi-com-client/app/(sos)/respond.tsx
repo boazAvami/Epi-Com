@@ -108,7 +108,6 @@ export default function SOSResponseScreen() {
                     </VStack>
                 </Center>
 
-
                  <VStack>
                     <Center>
                         {hasSharedLocation ?

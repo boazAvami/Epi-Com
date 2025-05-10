@@ -4,7 +4,7 @@ import {ESOSNotificationType, ILocation, IUser} from "@shared/types";
 import {ISOS} from "../models/sosModel";
 const PUSH_REQUESTS_URL: string = 'https://exp.host/--/api/v2/push/send';
 
-const createSendSOSPayload = (token: string, sosId: string, userLocation: ILocation) => {
+const createSendSOSPayload = (token: string, sosId: string, userId: string, userLocation: ILocation) => {
     return {
         to: token,
         title: '🚨 קריאת SOS דחופה',
@@ -14,6 +14,7 @@ const createSendSOSPayload = (token: string, sosId: string, userLocation: ILocat
         data: {
             type: ESOSNotificationType.SOS_SENT,
             sosId,
+            userId,
             location: userLocation,
             timestamp: Date.now()
         }
@@ -54,7 +55,7 @@ export async function findAndNotifyNearbyUsers(userId: string, sosId: string, lo
     });
 
     for (const user of nearbyUsers) {
-        await sendPushNotification(createSendSOSPayload(user.pushToken, sosId, location));
+        await sendPushNotification(createSendSOSPayload(user.pushToken, sosId, userId, location));
     }
 }
 

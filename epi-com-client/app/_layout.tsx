@@ -19,6 +19,8 @@ import { useSOSNotifications } from '@/hooks/useSOSNotifications';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/he';
+import SOSModal from "@/components/sos/SOSModal";
+import {ILocation} from "@shared/types";
 
 dayjs.extend(relativeTime);
 dayjs.locale('he');
@@ -42,8 +44,7 @@ export default function RootLayout() {
     });
 
     const loadStoredAuth = useAuthStore((s) => s.loadStoredAuth);
-
-    useSOSNotifications();
+    const { modalVisible, setModalVisible, sosInfo } = useSOSNotifications();
 
     useEffect(() => {
         loadStoredAuth();
@@ -65,6 +66,14 @@ export default function RootLayout() {
                 <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                     <AuthProvider>
                         <RootLayoutInner />
+                        <SOSModal
+                            visible={modalVisible}
+                            onClose={() => setModalVisible(false)}
+                            userId={sosInfo?.userId as string}
+                            location={sosInfo?.location as ILocation}
+                            sosId={sosInfo?.sosId as string}
+                            timestamp={sosInfo?.timestamp}
+                        />
                     </AuthProvider>
                     <StatusBar style="auto" />
                 </ThemeProvider>
