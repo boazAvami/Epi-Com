@@ -21,6 +21,7 @@ export default function SOSResponseScreen() {
     const [sosLocation = {longitude: 0, latitude: 0}, setSosLocation] = useState<ILocation>();
     const router = useRouter();
     const [sosUser, setSosUser] = useState<Partial<IUser> | null>(null);
+    const [hasSharedLocation, setHasSharedLocation] = useState(false);
     const {responseToSOS} = useSOS();
 
     useEffect(() => {
@@ -30,6 +31,7 @@ export default function SOSResponseScreen() {
         }
 
         setSosLocation(JSON.parse(location as string));
+        setHasSharedLocation(false);
         getSOSUser();
     }, []);
 
@@ -47,8 +49,7 @@ export default function SOSResponseScreen() {
         };
 
         await responseToSOS(sosId as string, userLocation);
-
-        // TODO: SHOW DETAILS
+        setHasSharedLocation(true);
     };
 
     const handleCannotHelp = () => {
@@ -108,14 +109,18 @@ export default function SOSResponseScreen() {
                 </Center>
 
 
-                <VStack>
+                 <VStack>
                     <Center>
-                        <Button onPress={handleHelp} style={styles.primaryButton}>
-                            <ButtonText>שתף פרטי מיקום</ButtonText>
-                        </Button>
-                        <Button variant="link" onPress={handleCannotHelp}>
-                            <ButtonText>לא יכול לעזור</ButtonText>
-                        </Button>
+                        {hasSharedLocation ?
+                            <Text> פרטי המיקום שותפו בהצלחה ✅ </Text>
+                            : <>
+                                <Button onPress={handleHelp} style={styles.primaryButton}>
+                                    <ButtonText>שתף פרטי מיקום</ButtonText>
+                                </Button>
+                                <Button variant="link" onPress={handleCannotHelp}>
+                                    <ButtonText>לא יכול לעזור</ButtonText>
+                                </Button>
+                            </>}
                     </Center>
                 </VStack>
             </VStack>
