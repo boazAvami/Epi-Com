@@ -5,6 +5,7 @@ import { EpipenMarker } from '@/components/map/EpipenMarker';
 import { Coordinate } from '@/types';
 import {ResponderCardProps} from "@/components/sos/ResponderCard";
 import {UserMarker} from "@/components/map/UserMarker";
+import PulseOverlay from "@/components/sos/PulseOverlay";
 
 interface Pulse {
     id: string;
@@ -13,13 +14,12 @@ interface Pulse {
 
 interface MapSectionProps {
     location: Coordinate;
-    pulses: Pulse[];
     markers: any[];
     pulseMaxRadius: number;
     responders: ResponderCardProps[]
 }
 
-const MapSection = forwardRef<MapView, MapSectionProps>(({ location, pulses, markers, pulseMaxRadius, responders }, mapRef) => {
+const MapSection = forwardRef<MapView, MapSectionProps>(({ location, markers, pulseMaxRadius, responders }, mapRef) => {
     return (
         <MapView
             ref={mapRef}
@@ -42,21 +42,9 @@ const MapSection = forwardRef<MapView, MapSectionProps>(({ location, pulses, mar
                 <UserMarker user={responder.user} onPress={() => {}} location={location} key={responder.user._id} description=""/>
             ))}
 
-            {pulses.map((pulse) => {
-                const opacityStroke = Math.max(0.02, 0.4 - pulse.radius / pulseMaxRadius);
-                const opacityFill = Math.max(0.005, 0.1 - pulse.radius / (pulseMaxRadius * 2));
-
-                return (
-                    <Circle
-                        key={pulse.id}
-                        center={location}
-                        radius={pulse.radius}
-                        strokeColor={`rgba(254,56,92,${opacityStroke})`}
-                        fillColor={`rgba(254,56,92,${opacityFill})`}
-                        zIndex={-1}
-                    />
-                );
-            })}
+            {location && <>
+                <PulseOverlay center={location} maxRadius={400} delay={1000} />
+            </>}
         </MapView>
     );
 });

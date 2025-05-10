@@ -1,14 +1,14 @@
-import {Dispatch, SetStateAction, useEffect, useRef, useState} from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Animated, Easing } from 'react-native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import * as Notifications from 'expo-notifications';
-import {ILocation, IUser} from '@shared/types';
+import { ILocation, IUser } from '@shared/types';
 import { useSOS } from '@/hooks/useSOS';
 import { useEpipens } from '@/hooks/useEpipens';
 import { SOSNotificationData } from '@/hooks/useSOSNotifications';
 import { ESOSNotificationType } from '@shared/types';
-import {ResponderCardProps} from "@/components/sos/ResponderCard";
+import { ResponderCardProps } from "@/components/sos/ResponderCard";
 
 const messages = [
     'מחפשים עזרה באזור שלך...',
@@ -22,7 +22,7 @@ const messages = [
 type Props = {
     mapRef: any;
     bottomSheetRef: any;
-    setRespondersData: Dispatch<SetStateAction<ResponderCardProps[]>>
+    setRespondersData: Dispatch<SetStateAction<ResponderCardProps[]>>;
 };
 
 export default function useSOSMapController({ mapRef, bottomSheetRef, setRespondersData }: Props) {
@@ -30,38 +30,20 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
     const { sendSOS, stopSOS } = useSOS();
     const zoomOutIntervalRef = useRef<number | null>(null);
     const notificationListener = useRef<Notifications.EventSubscription | null>(null);
-    const idCounter = useRef(0);
 
     const [location, setLocation] = useState<ILocation | null>(null);
     const { markers } = useEpipens(location);
-    const [pulses, setPulses] = useState<{ id: string; radius: number; createdAt: number }[]>([]);
     const [showSearchMessages, setShowSearchMessages] = useState(true);
     const [messageIndex, setMessageIndex] = useState(0);
     const [currentZoom, setCurrentZoom] = useState(0.01);
-    const [pulseMaxRadius, setPulseMaxRadius] = useState(500);
-    const [pulseTTL, setPulseTTL] = useState(4000);
     const [animationSpeedInterval, setAnimationSpeedInterval] = useState(4000);
 
     const opacityAnim = useRef(new Animated.Value(1)).current;
     const spinAnim = useRef(new Animated.Value(0)).current;
 
-    const createId = () => {
-        idCounter.current += 1;
-        return `pulse-${idCounter.current}`;
-    };
-
-    const addPulse = () => {
-        setPulses((prev) => [
-            ...prev,
-            { id: createId(), radius: 0, createdAt: Date.now(), opacity: 1 }
-        ]);
-    };
-
-
     const handleCancel = async () => {
         await stopSOS();
         if (zoomOutIntervalRef.current) clearInterval(zoomOutIntervalRef.current);
-        setPulses([]);
         if (mapRef.current && location) {
             mapRef.current.animateToRegion({
                 latitude: location.latitude,
@@ -117,34 +99,6 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
     }, [location]);
 
     useEffect(() => {
-        if (!location) return;
-
-        addPulse();
-        const pulseAdder = setInterval(() => addPulse(), 5000);
-
-        const pulseInterval = setInterval(() => {
-            const now = Date.now();
-            setPulses((prev) => {
-                const now = Date.now();
-                return prev
-                    .map((p) => {
-                        const age = now - p.createdAt;
-                        const fade = Math.max(1 - age / pulseTTL, 0);
-                        return {...p, radius: p.radius + 3, opacity: fade};
-                    })
-                    .filter((p) => p.opacity > 0);
-            });
-        }, 20);
-
-        return () => {
-            clearInterval(pulseAdder);
-            clearInterval(pulseInterval);
-        };
-    }, [location, pulseMaxRadius]);
-
-
-
-    useEffect(() => {
         const interval = setInterval(() => {
             Animated.timing(opacityAnim, {
                 toValue: 0,
@@ -177,8 +131,6 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
         if (!location || !mapRef.current) return;
 
         setCurrentZoom(0.01);
-        setPulseMaxRadius(1000);
-
         mapRef.current.animateToRegion({
             latitude: location.latitude,
             longitude: location.longitude,
@@ -199,12 +151,10 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
                 }, 1000);
 
                 setAnimationSpeedInterval((prev) => Math.max(prev * 0.7, 1000));
-                setPulseMaxRadius((r) => r * 3);
-                setPulseTTL((ttl) => Math.min(ttl * 1.5, 15000));
 
                 return nextZoom;
             });
-        }, 30000);
+        }, 10000);
 
         return () => {
             if (zoomOutIntervalRef.current) clearInterval(zoomOutIntervalRef.current);
@@ -213,13 +163,11 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
 
     return {
         location,
-        pulses,
         markers,
         showSearchMessages,
         messageIndex,
         opacityAnim,
         spinAnim,
         handleCancel,
-        pulseMaxRadius,
     };
 }

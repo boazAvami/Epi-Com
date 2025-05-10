@@ -15,7 +15,6 @@ export default function SOSMapScreen() {
 
     const {
         location,
-        pulses,
         markers,
         showSearchMessages,
         messageIndex,
@@ -37,7 +36,6 @@ export default function SOSMapScreen() {
                 <MapSection
                     ref={mapRef}
                     location={location}
-                    pulses={pulses}
                     markers={markers}
                     pulseMaxRadius={pulseMaxRadius}
                     responders={respondersData}
