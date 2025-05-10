@@ -1,13 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
-import MapView, { Circle } from 'react-native-maps';
+import React, {useEffect, useRef, useState} from 'react';
+import {Animated, Easing, Linking, StyleSheet, View} from 'react-native';
+import MapView, {Circle} from 'react-native-maps';
 import * as Location from 'expo-location';
-import { useEpipens } from "@/hooks/useEpipens";
-import { Coordinate } from "@/types";
-import { EpipenMarker } from "@/components/map/EpipenMarker";
+import {useEpipens} from "@/hooks/useEpipens";
+import {Coordinate} from "@/types";
+import {EpipenMarker} from "@/components/map/EpipenMarker";
 import {useFocusEffect, useRouter} from "expo-router";
 import {useSOS} from "@/hooks/useSOS";
 import {Button, ButtonText} from "@/components/ui/button";
+import * as Notifications from "expo-notifications";
+import {Notification} from "expo-notifications";
+import {SOSNotificationData} from "@/hooks/useSOSNotifications";
+import {ESOSNotificationType, IUser} from "@shared/types";
+import BottomSheet, {BottomSheetView} from "@gorhom/bottom-sheet";
+import {Text} from "@/components/ui/text";
 
 type Pulse = { id: string; radius: number };
 
@@ -26,6 +32,7 @@ export default function SOSMapScreen() {
     const idCounter = useRef(0);
     const mapRef = useRef<MapView | null>(null);
     const zoomOutIntervalRef = useRef<number | null>(null);
+    const notificationListener = useRef<Notifications.EventSubscription | null>(null);
 
     const createId = () => {
         idCounter.current += 1;
@@ -35,11 +42,16 @@ export default function SOSMapScreen() {
     const [location, setLocation] = useState<Coordinate | null>(null);
     const { markers } = useEpipens(location);
     const [pulses, setPulses] = useState<Pulse[]>([]);
+    const [showSearchMessages, setShowSearchMessages] = useState<boolean>(true);
     const [messageIndex, setMessageIndex] = useState(0);
     const opacityAnim = useRef(new Animated.Value(1)).current;
     const spinAnim = useRef(new Animated.Value(0)).current;
     const [currentZoom, setCurrentZoom] = useState(0.01);
     const [pulseMaxRadius, setPulseMaxRadius] = useState(500);
+
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    const [responderData, setResponderData] = useState<IUser | null>(null);
+
 
     const addPulse = () => {
         setPulses((prev) => [...prev, { id: createId(), radius: 0 }]);
@@ -77,12 +89,25 @@ export default function SOSMapScreen() {
         }
     };
 
+    const listenToResponders = () => {
+        notificationListener.current = Notifications.addNotificationReceivedListener((notification: Notification) => {
+            const data = notification.request.content.data as SOSNotificationData;
+
+            if (data.type === ESOSNotificationType.SOS_RESPONSE) {
+                setShowSearchMessages(false);
+                setResponderData(data.responder as IUser);
+                bottomSheetRef.current?.expand();
+            }
+        });
+    };
+
     useEffect(() => {
         if (location) {
             (async () => {
                 try {
                     await sendSOS({location});
                     console.log('SOS sent successfully');
+                    listenToResponders();
                 } catch (error) {
                     console.error('Failed to send SOS:', error);
                 }
@@ -229,58 +254,87 @@ export default function SOSMapScreen() {
     if (!location) return null;
 
     return (
-        <View style={styles.container}>
-            <MapView
-                ref={mapRef}
-                style={StyleSheet.absoluteFillObject}
-                initialRegion={{
-                    ...location,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                }}
-                showsUserLocation
-                zoomEnabled={false}
-                scrollEnabled={false}
-                pitchEnabled={false}
-            >
-                {markers.map((marker) => (
-                    <EpipenMarker
-                        key={marker.id}
-                        marker={marker}
-                        onPress={() => {}}
-                    />
-                ))}
-
-                {pulses.map((pulse) => {
-                    const opacityStroke = Math.max(0.02, 0.4 - pulse.radius / pulseMaxRadius);
-                    const opacityFill = Math.max(0.005, 0.1 - pulse.radius / (pulseMaxRadius * 2));
-
-                    return (
-                        <Circle
-                            key={pulse.id}
-                            center={location}
-                            radius={pulse.radius}
-                            strokeColor={`rgba(254,56,92,${opacityStroke})`}
-                            fillColor={`rgba(254,56,92,${opacityFill})`}
-                            zIndex={-1}
+        <>
+            <View style={styles.container}>
+                <MapView
+                    ref={mapRef}
+                    style={StyleSheet.absoluteFillObject}
+                    initialRegion={{
+                        ...location,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                    }}
+                    showsUserLocation
+                    zoomEnabled={false}
+                    scrollEnabled={false}
+                    pitchEnabled={false}
+                >
+                    {markers.map((marker) => (
+                        <EpipenMarker
+                            key={marker.id}
+                            marker={marker}
+                            onPress={() => {}}
                         />
-                    );
-                })}
-            </MapView>
-            <View>
-                <Button onPress={handleCancel} style={styles.cancelButton}>
-                    <ButtonText>ביטול</ButtonText>
-                </Button>
+                    ))}
+
+                    {pulses.map((pulse) => {
+                        const opacityStroke = Math.max(0.02, 0.4 - pulse.radius / pulseMaxRadius);
+                        const opacityFill = Math.max(0.005, 0.1 - pulse.radius / (pulseMaxRadius * 2));
+
+                        return (
+                            <Circle
+                                key={pulse.id}
+                                center={location}
+                                radius={pulse.radius}
+                                strokeColor={`rgba(254,56,92,${opacityStroke})`}
+                                fillColor={`rgba(254,56,92,${opacityFill})`}
+                                zIndex={-1}
+                            />
+                        );
+                    })}
+                </MapView>
+                <View>
+                    <Button onPress={handleCancel} style={styles.cancelButton}>
+                        <ButtonText>ביטול</ButtonText>
+                    </Button>
+                </View>
+
+                {showSearchMessages && <View style={styles.messageContainer}>
+                    <Animated.Text style={[styles.messageText, {opacity: opacityAnim}]}>
+                        {messages[messageIndex]}
+                    </Animated.Text>
+                    <Animated.View style={[styles.spinner, {transform: [{rotate: spin}]}]}/>
+                </View>}
             </View>
 
-            <View style={styles.messageContainer}>
-                <Animated.Text style={[styles.messageText, { opacity: opacityAnim }]}>
-                    {messages[messageIndex]}
-                </Animated.Text>
-                <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]} />
-            </View>
-        </View>
-    );
+            <BottomSheet
+                ref={bottomSheetRef}
+                index={-1} // מצב התחלתי - סגור
+                snapPoints={['10%', '50%']}
+                enablePanDownToClose={false}
+                handleIndicatorStyle={{
+                    backgroundColor: '#ccc',
+                    width: 40,
+                    height: 4,
+                    borderRadius: 2,
+                    alignSelf: 'center',
+                    marginTop: 8,
+                }}
+            >
+            <BottomSheetView style={{ padding: 16 }}>
+                <View style={{ alignItems: 'center' }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>תגובה התקבלה!</Text>
+                    <Text style={{ marginVertical: 10 }}>{responderData?.firstName} שיתף איתך את מיקומו ופרטיו</Text>
+                    {responderData?.phone_number && (
+                        <Button onPress={() => Linking.openURL(`tel:${responderData.phone_number}`)}>
+                            <ButtonText>התקשר ל-{responderData.firstName}</ButtonText>
+                        </Button>
+                    )}
+                </View>
+            </BottomSheetView>
+        </BottomSheet>
+    </>
+);
 }
 
 const styles = StyleSheet.create({

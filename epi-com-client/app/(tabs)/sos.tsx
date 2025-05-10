@@ -37,7 +37,7 @@ export default function SOSScreen() {
     );
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
             <Center className="p-20 mt-10">
                 <VStack space="xl">
                     <PulsingSOSButton onPress={handleSendSOS} isUrgent={isUrgent} />

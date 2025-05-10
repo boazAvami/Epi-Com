@@ -1,10 +1,11 @@
 import { SOSModel, ISOS } from '../../models/sosModel';
 import mongoose from 'mongoose';
-import {findAndNotifyNearbyUsers} from "../../utils/sosUtils";
+import {findAndNotifyNearbyUsers, notifyUserResponse} from "../../utils/sosUtils";
+import {ILocation} from "@shared/types";
 
 export const sosResolvers = {
   Mutation: {
-    sendSOS: async (_: any, { userId, location }: { userId: string, location: { latitude: number, longitude: number } }) => {
+    sendSOS: async (_: any, { userId, location }: { userId: string, location: ILocation }) => {
       const sos = new SOSModel({
         userId: new mongoose.Types.ObjectId(userId),
         location,
@@ -19,7 +20,7 @@ export const sosResolvers = {
         message: 'SOS alert sent to nearby EpiPen holders'
       };
     },
-    responseToSOS: async (_: any, { userId, sosId, location }: { userId: string, sosId: string, location: { latitude: number, longitude: number } }) => {
+    responseToSOS: async (_: any, { userId, sosId, location }: { userId: string, sosId: string, location: ILocation }) => {
       const sos = await SOSModel.findById(sosId);
       if (!sos) {
         throw new Error('SOS not found');
@@ -31,6 +32,7 @@ export const sosResolvers = {
       // Add the user as a responder
       sos.responders.push(new mongoose.Types.ObjectId(userId));
       await sos.save();
+      await notifyUserResponse(userId, sos, location);
 
       return {
         status: 'success',

@@ -104,9 +104,8 @@ const styles = StyleSheet.create({
         height: 60,
         alignItems: 'center',
         justifyContent: 'space-around',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
         paddingHorizontal: 10,
+        paddingBottom: 30
     },
     tabItem: {
         flex: 1,

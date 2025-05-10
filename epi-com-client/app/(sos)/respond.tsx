@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
-import {View, StyleSheet, TouchableOpacity, Image, Linking} from 'react-native';
+import {View, StyleSheet, Image, Linking} from 'react-native';
 import {Button, ButtonText} from '@/components/ui/button';
 import MapView, { Marker } from 'react-native-maps';
 import {useLocalSearchParams, useRouter} from 'expo-router';
 import {GetUser} from "@/services/graphql/graphqlUserService";
-import {IUser} from "@shared/types";
+import {ILocation, IUser} from "@shared/types";
 import {Avatar, AvatarFallbackText, AvatarImage} from "@/components/ui/avatar";
 import {VStack} from "@/components/ui/vstack";
 import {Text} from "@/components/ui/text";
@@ -12,9 +12,11 @@ import dayjs from "dayjs";
 import {Center} from "@/components/ui/center";
 import {colors} from "@/constants/Colors";
 import {useSOS} from "@/hooks/useSOS";
+import * as Location from 'expo-location';
 
 export default function SOSResponseScreen() {
-    const { sosId, userId, lat, lng, timestamp } = useLocalSearchParams();
+    const { sosId, userId, location, timestamp } = useLocalSearchParams();
+    const [sosLocation = {longitude: 0, latitude: 0}, setSosLocation] = useState<ILocation>();
     const router = useRouter();
     const [sosUser, setSosUser] = useState<Partial<IUser> | null>(null);
     const {responseToSOS} = useSOS();
@@ -25,24 +27,25 @@ export default function SOSResponseScreen() {
             setSosUser(sosUser.user);
         }
 
+        setSosLocation(JSON.parse(location as string));
         getSOSUser();
     }, []);
 
     const handleWazeNavigate = () => {
-        const wazeUrl = `waze://?ll=${lat},${lng}&navigate=yes`;
+        const wazeUrl = `waze://?ll=${sosLocation.latitude},${sosLocation.longitude}&navigate=yes`;
         Linking.canOpenURL(wazeUrl)
             .then(supported => {
                 if (supported) {
                     return Linking.openURL(wazeUrl);
                 } else {
-                    return Linking.openURL(`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`);
+                    return Linking.openURL(`https://waze.com/ul?ll=${sosLocation.latitude},${sosLocation.longitude}&navigate=yes`);
                 }
             })
             .catch(err => console.error('Error opening Waze:', err));
     };
 
     const handleGoogleNavigate = () => {
-        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${sosLocation.latitude},${sosLocation.longitude}&travelmode=driving`;
         Linking.canOpenURL(googleMapsUrl)
             .then((supported) => {
                 if (supported) {
@@ -55,17 +58,25 @@ export default function SOSResponseScreen() {
     };
 
     const handleHelp = async () => {
-        await responseToSOS(sosId as string, {latitude: Number(lat), longitude: Number(lng)});
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+            alert('לא אושרה גישה למיקום. לא ניתן לשלוח תגובת SOS.');
+            return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const userLocation: ILocation = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+        };
+
+        await responseToSOS(sosId as string, userLocation);
 
         // TODO: SHOW DETAILS
     };
 
     const handleCannotHelp = () => {
         router.push('/(tabs)')
-    };
-
-    const getSOSLocation: () => { latitude: number, longitude: number } = () => {
-        return {latitude: Number(lat), longitude: Number(lng)};
     };
 
     const getTimeString: () => string = () => dayjs(new Date(Number(timestamp))).fromNow();
@@ -80,8 +91,8 @@ export default function SOSResponseScreen() {
                                              scrollEnabled={false}
                                              pitchEnabled={false}
                                              style={styles.map}
-                                             initialRegion={{ ...getSOSLocation(), latitudeDelta: 0.01, longitudeDelta: 0.01 }}>
-                        <Marker coordinate={getSOSLocation()} />
+                                             initialRegion={{ ...sosLocation, latitudeDelta: 0.01, longitudeDelta: 0.01 }}>
+                        <Marker coordinate={sosLocation} />
                     </MapView>
                     <Button onPress={handleGoogleNavigate} style={styles.googleMapsButton}>
                         <Image
@@ -124,7 +135,7 @@ export default function SOSResponseScreen() {
                 <VStack>
                     <Center>
                         <Button onPress={handleHelp} style={styles.primaryButton}>
-                            <ButtonText>אני בדרך</ButtonText>
+                            <ButtonText>שתף פרטי מיקום</ButtonText>
                         </Button>
                         <Button variant="link" onPress={handleCannotHelp}>
                             <ButtonText>לא יכול לעזור</ButtonText>
