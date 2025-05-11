@@ -3,7 +3,6 @@ import { Center } from "@/components/ui/center";
 import React, { useState, useCallback } from "react";
 import PulsingSOSButton from "@/components/sos/PulsingSOSButton";
 import { VStack } from "@/components/ui/vstack";
-import CancelTimer from "@/components/sos/CancelTimer";
 import EmergencyContactsList from "@/components/sos/EmergencyContactsList";
 import { useAuth } from "@/stores/useAuth";
 import { IEmergencyContact } from "@shared/types";
@@ -14,28 +13,14 @@ export default function SOSScreen() {
     const { user } = useAuth();
     const router = useRouter();
 
-    const [showTimer, setShowTimer] = useState(true);
-    const [timerKey, setTimerKey] = useState(0);
     const [isUrgent, setIsUrgent] = useState(false);
     const handleSendSOS = useCallback(() => {
         router.push('/(sos)/map');
     }, [router]);
 
-    const handleCancel = useCallback(() => {
-        setShowTimer(false);
-        setIsUrgent(false);
-    }, []);
-
     const handleTick = useCallback((secondsLeft: number) => {
         setIsUrgent(secondsLeft <= 3 && secondsLeft > 0);
     }, []);
-
-    useFocusEffect(
-        useCallback(() => {
-            setShowTimer(true);
-            setTimerKey(prev => prev + 1);
-        }, [])
-    );
 
     return (
         <View style={{ flex: 1, backgroundColor: '#fff' }}>

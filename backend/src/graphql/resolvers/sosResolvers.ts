@@ -1,6 +1,6 @@
 import { SOSModel, ISOS } from '../../models/sosModel';
 import mongoose from 'mongoose';
-import {findAndNotifyNearbyUsers, notifyUserResponse} from "../../utils/sosUtils";
+import {findAndNotifyNearbyUsers, notifyRespondersSOSStopped, notifyUserResponse} from "../../utils/sosUtils";
 import {ILocation} from "@shared/types";
 
 export const sosResolvers = {
@@ -25,18 +25,23 @@ export const sosResolvers = {
       if (!sos) {
         throw new Error('SOS not found');
       }
+
       if (sos.status !== 'active') {
         throw new Error('SOS alert is no longer active');
       }
 
-      // Add the user as a responder
-      sos.responders.push(new mongoose.Types.ObjectId(userId));
-      await sos.save();
+      const userObjectId = new mongoose.Types.ObjectId(userId);
+
+      if (!sos.responders.some(id => id.equals(userObjectId))) {
+        sos.responders.push(userObjectId);
+        await sos.save();
+      }
+
       await notifyUserResponse(userId, sos, location);
 
       return {
         status: 'success',
-        message: 'SOS response was sent to caller'
+        message: 'SOS response was sent to caller',
       };
     },
     stopSOS: async (_: any, { userId }: { userId: string }) => {
@@ -47,7 +52,7 @@ export const sosResolvers = {
 
       sos.status = 'stopped';
       await sos.save();
-
+      await notifyRespondersSOSStopped(sos);
       return {
         status: 'success',
         message: 'SOS alert stopped'

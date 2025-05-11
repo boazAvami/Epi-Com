@@ -15,7 +15,7 @@ const sosSchema: Schema = new Schema({
     longitude: { type: Number, required: true },
   },
   status: { type: String, enum: ['active', 'responded', 'stopped'], default: 'active' },
-  responders: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  responders: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
   createdAt: { type: Date, default: Date.now },
 });
 
