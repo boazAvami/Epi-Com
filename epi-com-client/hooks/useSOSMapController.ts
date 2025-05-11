@@ -27,7 +27,7 @@ type Props = {
 
 export default function useSOSMapController({ mapRef, bottomSheetRef, setRespondersData }: Props) {
     const router = useRouter();
-    const { sendSOS, stopSOS } = useSOS();
+    const { sendSOS, stopSOS, sendExpandSOSRange } = useSOS();
     const zoomOutIntervalRef = useRef<number | null>(null);
     const notificationListener = useRef<Notifications.EventSubscription | null>(null);
 
@@ -37,6 +37,7 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
     const [messageIndex, setMessageIndex] = useState(0);
     const [currentZoom, setCurrentZoom] = useState(0.01);
     const [animationSpeedInterval, setAnimationSpeedInterval] = useState(4000);
+    const [sosId, setSosId] = useState('');
 
     const opacityAnim = useRef(new Animated.Value(1)).current;
     const spinAnim = useRef(new Animated.Value(0)).current;
@@ -90,7 +91,8 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
         if (!location) return;
         (async () => {
             try {
-                await sendSOS({ location });
+                const sendRes = await sendSOS({ location });
+                setSosId(sendRes?.sosId as string);
                 listenToResponders();
             } catch (e) {
                 console.error('SOS Failed:', e);
@@ -150,16 +152,25 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
                     longitudeDelta: nextZoom,
                 }, 1000);
 
+                const newRange: number = getNextRange(nextZoom);
+                console.log('Expanding search to radius (m):', newRange);
+                sendExpandSOSRange({sosId, location, newRange});
+
                 setAnimationSpeedInterval((prev) => Math.max(prev * 0.7, 1000));
 
                 return nextZoom;
             });
-        }, 10000);
+        }, 30000);
 
         return () => {
             if (zoomOutIntervalRef.current) clearInterval(zoomOutIntervalRef.current);
         };
-    }, [location]);
+    }, [location, sosId]);
+
+    const getNextRange = (nextZoom: number) => {
+        const KM_PER_LAT_DEGREE: number = 111.32;
+        return  Math.floor((nextZoom / 2) * KM_PER_LAT_DEGREE * 1000);
+    }
 
     return {
         location,

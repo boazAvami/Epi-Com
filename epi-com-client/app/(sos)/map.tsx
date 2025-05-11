@@ -21,7 +21,6 @@ export default function SOSMapScreen() {
         spinAnim,
         opacityAnim,
         handleCancel,
-        pulseMaxRadius,
     } = useSOSMapController({
         mapRef,
         bottomSheetRef,
@@ -37,7 +36,6 @@ export default function SOSMapScreen() {
                     ref={mapRef}
                     location={location}
                     markers={markers}
-                    pulseMaxRadius={pulseMaxRadius}
                     responders={respondersData}
                 />
 

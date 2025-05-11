@@ -4,7 +4,6 @@ import Svg, { Circle } from 'react-native-svg';
 
 interface PulseOverlayProps {
     center: { latitude: number; longitude: number };
-    maxRadius: number;
     duration?: number;
     delay?: number;
 }
@@ -13,7 +12,6 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const PulseOverlay: React.FC<PulseOverlayProps> = ({
                                                        center,
-                                                       maxRadius,
                                                        duration = 3000,
                                                        delay = 1000,
                                                    }) => {
@@ -31,7 +29,7 @@ const PulseOverlay: React.FC<PulseOverlayProps> = ({
 
         Animated.parallel([
             Animated.timing(radiusAnim, {
-                toValue: maxRadius,
+                toValue: 500,
                 duration,
                 easing: Easing.out(Easing.ease),
                 useNativeDriver: false,
@@ -55,7 +53,7 @@ const PulseOverlay: React.FC<PulseOverlayProps> = ({
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             isAnimatingRef.current = false;
         };
-    }, [center.latitude, center.longitude, maxRadius, duration, delay]);
+    }, [center.latitude, center.longitude, 500, duration, delay]);
 
     return (
         <Svg style={StyleSheet.absoluteFill}>

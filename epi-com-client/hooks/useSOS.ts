@@ -1,10 +1,21 @@
 import { useState } from 'react';
 import { Coordinate } from '@/types';
-import {responseToSOSMutation, sendSOSMutation, stopSOSMutation} from "@/services/graphql/graphqlSosService";
+import {
+    responseToSOSMutation,
+    sendExpandSOSRangeMutation,
+    sendSOSMutation,
+    stopSOSMutation
+} from "@/services/graphql/graphqlSosService";
 import {useAuth} from "@/stores/useAuth";
 
 type SendSOSParams = {
     location: Coordinate;
+};
+
+type SendExpandSOSParams = {
+    location: Coordinate;
+    sosId: string;
+    newRange: number;
 };
 
 export function useSOS() {
@@ -19,11 +30,29 @@ export function useSOS() {
             setError(null);
             setSuccess(false);
 
-            await sendSOSMutation(userId as string, location);
+            const res = await sendSOSMutation(userId as string, location);
+            setSuccess(true);
+
+            return res.sendSOS;
+        } catch (err: any) {
+            console.error('Failed to send SOS', err);
+            setError(err?.message || 'Unknown error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const sendExpandSOSRange = async ({ sosId, location, newRange }: SendExpandSOSParams) => {
+        try {
+            setLoading(true);
+            setError(null);
+            setSuccess(false);
+
+            await sendExpandSOSRangeMutation(userId as string, sosId as string, location, newRange );
 
             setSuccess(true);
         } catch (err: any) {
-            console.error('Failed to send SOS', err);
+            console.error('Failed to expand SOS range', err);
             setError(err?.message || 'Unknown error');
         } finally {
             setLoading(false);
@@ -68,6 +97,7 @@ export function useSOS() {
         sendSOS,
         stopSOS,
         responseToSOS,
+        sendExpandSOSRange,
         loading,
         error,
         success,

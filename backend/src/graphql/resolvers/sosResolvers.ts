@@ -1,6 +1,11 @@
 import { SOSModel, ISOS } from '../../models/sosModel';
 import mongoose from 'mongoose';
-import {findAndNotifyNearbyUsers, notifyRespondersSOSStopped, notifyUserResponse} from "../../utils/sosUtils";
+import {
+  filterAlreadyNotifiedUsers,
+  getNearbyUserIdsWithEpipens,
+  notifyRespondersSOSStopped,
+  notifyUserResponse, notifyUsersAndUpdateSOS
+} from "../../utils/sosUtils";
 import {ILocation} from "@shared/types";
 
 export const sosResolvers = {
@@ -13,11 +18,34 @@ export const sosResolvers = {
         responders: [],
       });
       await sos.save();
-      await findAndNotifyNearbyUsers(userId, sos._id.toString(), location);
+      const DEFAULT_RADIUS: number = 1000;
+      const nearbyUserIds = await getNearbyUserIdsWithEpipens(location, DEFAULT_RADIUS, userId);
+      await notifyUsersAndUpdateSOS(nearbyUserIds, sos, location, userId, sos._id.toString());
+      return {
+        status: 'success',
+        message: 'SOS alert sent to nearby EpiPen holders',
+        sosId: sos._id.toString()
+      };
+    },
+    expandSOSRange: async (_: any, {userId, sosId, location, newRadiusInMeters}: {
+          userId: string;
+          sosId: string;
+          location: ILocation;
+          newRadiusInMeters: number;
+        }
+    ) => {
+      const sos = await SOSModel.findById(sosId);
+      if (!sos) throw new Error('SOS not found');
+      if (sos.status !== 'active') throw new Error('SOS is not active');
+      if (sos.userId.toString() !== userId) throw new Error('Unauthorized');
+
+      const nearbyUserIds = await getNearbyUserIdsWithEpipens(location, newRadiusInMeters, userId);
+      const userIdsToNotify = filterAlreadyNotifiedUsers(nearbyUserIds, sos, userId);
+      const notifiedCount = await notifyUsersAndUpdateSOS(userIdsToNotify, sos, location, userId, sosId);
 
       return {
         status: 'success',
-        message: 'SOS alert sent to nearby EpiPen holders'
+        message: `Sent SOS to ${notifiedCount} more users in extended radius`,
       };
     },
     responseToSOS: async (_: any, { userId, sosId, location }: { userId: string, sosId: string, location: ILocation }) => {

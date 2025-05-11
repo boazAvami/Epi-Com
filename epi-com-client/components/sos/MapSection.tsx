@@ -15,11 +15,10 @@ interface Pulse {
 interface MapSectionProps {
     location: Coordinate;
     markers: any[];
-    pulseMaxRadius: number;
     responders: ResponderCardProps[]
 }
 
-const MapSection = forwardRef<MapView, MapSectionProps>(({ location, markers, pulseMaxRadius, responders }, mapRef) => {
+const MapSection = forwardRef<MapView, MapSectionProps>(({ location, markers, responders }, mapRef) => {
     return (
         <MapView
             ref={mapRef}
@@ -43,7 +42,7 @@ const MapSection = forwardRef<MapView, MapSectionProps>(({ location, markers, pu
             ))}
 
             {location && <>
-                <PulseOverlay center={location} maxRadius={400} delay={1000} />
+                <PulseOverlay center={location} delay={1000} />
             </>}
         </MapView>
     );

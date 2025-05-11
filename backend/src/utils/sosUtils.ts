@@ -2,6 +2,8 @@ import axios from 'axios';
 import {userModel} from "../models/userModel";
 import {ESOSNotificationType, ILocation, IUser} from "@shared/types";
 import {ISOS} from "../models/sosModel";
+import { EpiPenModel } from '../models/epipenModel';
+import mongoose from "mongoose";
 const PUSH_REQUESTS_URL: string = 'https://exp.host/--/api/v2/push/send';
 
 const createSendSOSPayload = (token: string, sosId: string, userId: string, userLocation: ILocation) => {
@@ -52,7 +54,6 @@ const createSOSStoppedPayload = (token: string, sosUser: IUser) => {
     };
 };
 
-
 async function sendPushNotification(payload: any) {
     if (!payload.to.startsWith('ExponentPushToken')) return;
 
@@ -64,15 +65,62 @@ async function sendPushNotification(payload: any) {
     });
 }
 
-export async function findAndNotifyNearbyUsers(userId: string, sosId: string, location: ILocation): Promise<void> {
-    const nearbyUsers = await userModel.find({
-        // _id: { $ne: userId },
-        pushToken: { $exists: true, $ne: null }
+export async function getNearbyUserIdsWithEpipens(
+    location: ILocation,
+    radiusInMeters: number = 1000,
+    excludeUserId: string
+): Promise<string[]> {
+    const nearbyEpipens = await EpiPenModel.find({
+        location: {
+            $nearSphere: {
+                $geometry: {
+                    type: 'Point',
+                    coordinates: [location.longitude, location.latitude],
+                },
+                $maxDistance: radiusInMeters,
+            },
+        },
     });
 
-    for (const user of nearbyUsers) {
-        await sendPushNotification(createSendSOSPayload(user.pushToken, sosId, userId, location));
+    return [
+        ...new Set(
+            nearbyEpipens
+                .map(epi => epi.userId.toString())
+                .filter(id => id !== excludeUserId)
+        ),
+    ];
+}
+
+export function filterAlreadyNotifiedUsers(nearbyUserIds: string[], sos: ISOS, callerId: string): string[] {
+    const already = new Set((sos as any).notifiedUserIds?.map(id => id.toString()) ?? []);
+
+    return nearbyUserIds.filter(id => id !== callerId && !already.has(id));
+}
+
+export async function notifyUsersAndUpdateSOS(
+    userIds: string[],
+    sos: ISOS,
+    location: ILocation,
+    senderId: string,
+    sosId: string
+): Promise<number> {
+    if (userIds.length === 0) return 0;
+
+    const users = await userModel.find({
+        _id: { $in: userIds },
+        pushToken: { $exists: true, $ne: null },
+    });
+
+    for (const user of users) {
+        await sendPushNotification(
+            createSendSOSPayload(user.pushToken, sosId, senderId, location)
+        );
     }
+
+    sos.notifiedUserIds = [...(sos.notifiedUserIds ?? []), ...userIds.map(id => new mongoose.Types.ObjectId(id))];
+    await sos.save();
+
+    return users.length;
 }
 
 export async function notifyUserResponse(responderId: string, sos: ISOS, location: ILocation): Promise<void> {
