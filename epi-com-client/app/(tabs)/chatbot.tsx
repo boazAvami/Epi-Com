@@ -27,6 +27,7 @@ import { colors } from '../../constants/Colors';
 import { Header } from '../../components/shared/Header';
 import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { chatbotService } from '../../services/graphql/graphqlChatbotService';
+import { RTLText, RTLView, RTLRow } from '@/components/shared/RTLComponents';
 
 // Define message type
 type Message = {
@@ -60,13 +61,13 @@ const ChatScreen: React.FC = () => {
 
   
   // Get language from translation hook
-  const { language } = useAppTranslation();
+  const { t, isRtl, language } = useAppTranslation();
   
   // Initialize with just the welcome message
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! How can I help you today with questions about allergies and EpiPens?',
+      text: t('chat.welcome_message'),
       timestamp: new Date(),
       sender: 'assistant'
     }
@@ -89,6 +90,18 @@ const ChatScreen: React.FC = () => {
 
     fetchUserData();
   }, []);
+  
+  // Update welcome message when language changes
+  useEffect(() => {
+    setMessages(prevMessages => {
+      const newMessages = [...prevMessages];
+      newMessages[0] = {
+        ...newMessages[0],
+        text: t('chat.welcome_message')
+      };
+      return newMessages;
+    });
+  }, [language, t]);
   
   // Extract sent and received messages
   const sentMessages = messages.filter(msg => msg.sender === 'user');
@@ -146,7 +159,7 @@ const ChatScreen: React.FC = () => {
       // Create error response message
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Sorry, I couldn't process your request. Please try again later.",
+        text: t('chat.error_message'),
         timestamp: new Date(),
         sender: 'assistant'
       };
@@ -167,7 +180,7 @@ const ChatScreen: React.FC = () => {
       setMessages([
         {
           id: 'welcome',
-          text: 'Hello! How can I help you today with questions about allergies and EpiPens?',
+          text: t('chat.welcome_message'),
           timestamp: new Date(),
           sender: 'assistant'
         }
@@ -210,7 +223,7 @@ const ChatScreen: React.FC = () => {
       {/* Using the Header component for the title */}
       <View style={styles.headerContainer}>
         <Header 
-          title={language === 'en' ? 'AI Assistant' : 'מסייע בינה מלאכותית'} 
+          title={t('chat.title')} 
         />
         
         {/* Reset Button - icon only without borders */}
@@ -237,10 +250,8 @@ const ChatScreen: React.FC = () => {
       <Alert action="warning" variant="outline" style={styles.disclaimer}>
         <AlertIcon as={AlertTriangle} size="sm" />
         <View style={{ flex: 1 }}>
-          <AlertText style={[{ flexShrink: 1 }, language === 'he' && styles.rtlText]}>
-            {language === 'en' 
-              ? 'For informational purposes only. Not a substitute for medical advice. Call emergency services in case of emergency.'
-              : 'למטרות מידע בלבד. לא תחליף לייעוץ רפואי. במקרה חירום, התקשר לשירותי חירום.'}
+          <AlertText style={[{ flexShrink: 1 }, isRtl && styles.rtlText]}>
+            {t('chat.disclaimer')}
           </AlertText>
         </View>
       </Alert>
@@ -249,10 +260,8 @@ const ChatScreen: React.FC = () => {
       {showLimitWarning && (
         <Alert action="error" style={styles.limitWarning}>
           <View style={{ flex: 1 }}>
-            <AlertText style={[{ flexShrink: 1 }, language === 'he' && styles.rtlText]}>
-              {language === 'en'
-                ? `You have reached the session limit of ${MESSAGE_LIMIT} messages. Please tap the refresh icon (⟳) in the top-right corner to reset the session and continue.`
-                : `הגעת למגבלת ההודעות (${MESSAGE_LIMIT}). אנא הקש על סמל הרענון (⟳) בפינה הימנית העליונה כדי לאפס את השיחה ולהמשיך.`}
+            <AlertText style={[{ flexShrink: 1 }, isRtl && styles.rtlText]}>
+              {t('chat.limit_warning', { limit: MESSAGE_LIMIT })}
             </AlertText>
           </View>
         </Alert>
@@ -290,8 +299,8 @@ const ChatScreen: React.FC = () => {
                   message.sender === 'user' ? styles.userMessage : styles.assistantMessage
                 ]}
               >
-                <Text style={language === 'he' && styles.rtlText}>{message.text}</Text>
-                <Text size="xs" style={[styles.timestamp, language === 'he' && styles.rtlText]}>
+                <RTLText style={isRtl ? styles.rtlText : undefined}>{message.text}</RTLText>
+                <Text size="xs" style={[styles.timestamp, isRtl && styles.rtlText]}>
                   {formatTime(message.timestamp)}
                 </Text>
               </Card>
@@ -315,9 +324,9 @@ const ChatScreen: React.FC = () => {
           {/* Loading indicator */}
           {isLoading && (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>
-                {language === 'en' ? 'Assistant is typing...' : 'המסייע מקליד...'}
-              </Text>
+              <RTLText style={styles.loadingText}>
+                {t('chat.typing')}
+              </RTLText>
             </View>
           )}
         </ScrollView>
@@ -326,20 +335,20 @@ const ChatScreen: React.FC = () => {
         <View>
           <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.textInput, language === 'he' && styles.rtlInput]}
+              style={[styles.textInput, isRtl && styles.rtlInput]}
               value={inputText}
               onChangeText={(text) => {
                 if (text.length <= 500) {
-                    setInputText(text);
-                    setCharCount(text.length);
-                  }
-                }}
-              placeholder={language === 'en' ? 'Type your message here...' : 'הקלד את ההודעה שלך כאן...'}
+                  setInputText(text);
+                  setCharCount(text.length);
+                }
+              }}
+              placeholder={t('chat.input_placeholder')}
               placeholderTextColor="#999"
               multiline={false}
               maxLength={500}
               editable={!isLimitReached && !isLoading}
-              textAlign={language === 'he' ? 'right' : 'left'}
+              textAlign={isRtl ? 'right' : 'left'}
             />
             <TouchableOpacity 
               style={[
@@ -356,11 +365,13 @@ const ChatScreen: React.FC = () => {
           {/* Message counter below input field - only shown when approaching limit */}
           {(MESSAGE_LIMIT - sentMessages.length <= THRESHOLD_TO_SHOW_WARNING) && (
             <View style={styles.inputCounterContainer}>
-                <Badge action="info" size="sm" style={styles.counterBadge}>
-                <BadgeText style={language === 'he' && styles.rtlText}>
-                    {MESSAGE_LIMIT - sentMessages.length} {language === 'en' ? 'messages remaining' : 'הודעות נותרו'}
+              <Badge action="info" size="sm" style={styles.counterBadge}>
+                <BadgeText style={isRtl && styles.rtlText}>
+                  {t('chat.messages_remaining', { 
+                    remaining: MESSAGE_LIMIT - sentMessages.length 
+                  })}
                 </BadgeText>
-                </Badge>
+              </Badge>
             </View>
           )}
         </View>
