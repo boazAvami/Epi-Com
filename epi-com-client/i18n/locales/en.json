@@ -195,6 +195,6 @@
       "error_message": "Sorry, I couldn't process your request. Please try again later.",
       "typing": "Assistant is typing...",
       "input_placeholder": "Type your message here...",
-      "messages_remaining": "{remaining} messages remaining"
+      "messages_remaining_suffix": "messages remaining"
     }
   }

@@ -331,8 +331,8 @@ const ChatScreen: React.FC = () => {
           )}
         </ScrollView>
 
-        {/* Input Area with Messages Counter included */}
-        <View>
+        {/* Input Area with Messages Counter included - with subtle bottom margin */}
+        <View style={styles.bottomContainer}>
           <View style={styles.inputContainer}>
             <TextInput
               style={[styles.textInput, isRtl && styles.rtlInput]}
@@ -366,10 +366,8 @@ const ChatScreen: React.FC = () => {
           {(MESSAGE_LIMIT - sentMessages.length <= THRESHOLD_TO_SHOW_WARNING) && (
             <View style={styles.inputCounterContainer}>
               <Badge action="info" size="sm" style={styles.counterBadge}>
-                <BadgeText style={isRtl && styles.rtlText}>
-                  {t('chat.messages_remaining', { 
-                    remaining: MESSAGE_LIMIT - sentMessages.length 
-                  })}
+              <BadgeText style={isRtl ? styles.rtlText : undefined}>
+                  {MESSAGE_LIMIT - sentMessages.length} {t('chat.messages_remaining_suffix')}
                 </BadgeText>
               </Badge>
             </View>
@@ -384,6 +382,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  bottomContainer: {
+    marginBottom: 12, // bottom padding to the input area
   },
   headerContainer: {
     position: 'relative',

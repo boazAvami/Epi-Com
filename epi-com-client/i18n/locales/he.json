@@ -199,6 +199,6 @@
       "error_message": "מצטער, לא הצלחתי לעבד את הבקשה שלך. אנא נסה שוב מאוחר יותר.",
       "typing": "המסייע מקליד...",
       "input_placeholder": "הקלד את ההודעה שלך כאן...",
-      "messages_remaining": "{remaining} הודעות נותרו"
+      "messages_remaining_suffix": "הודעות נותרו"
     }
   }
