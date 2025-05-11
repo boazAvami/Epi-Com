@@ -7,6 +7,7 @@ import MapSection from "@/components/sos/MapSection";
 import useSOSMapController from "@/hooks/useSOSMapController";
 import { Button, ButtonText } from "@/components/ui/button";
 import {ResponderCardProps} from "@/components/sos/ResponderCard";
+import {EpipenMarker} from "@/types";
 
 export default function SOSMapScreen() {
     const mapRef = useRef(null);
@@ -24,7 +25,7 @@ export default function SOSMapScreen() {
     } = useSOSMapController({
         mapRef,
         bottomSheetRef,
-        setRespondersData
+        setRespondersData,
     });
 
     if (!location) return null;
@@ -57,6 +58,7 @@ export default function SOSMapScreen() {
                 ref={bottomSheetRef}
                 responders={respondersData}
                 onCancelSOS={handleCancel}
+                mapRef={mapRef}
             />
         </>
     );

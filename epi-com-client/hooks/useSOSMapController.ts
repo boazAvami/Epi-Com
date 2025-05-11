@@ -9,6 +9,8 @@ import { useEpipens } from '@/hooks/useEpipens';
 import { SOSNotificationData } from '@/hooks/useSOSNotifications';
 import { ESOSNotificationType } from '@shared/types';
 import { ResponderCardProps } from "@/components/sos/ResponderCard";
+import {EpipenMarker} from "@/types";
+import {getUserEpiPens} from "@/services/graphql/graphqlEpipenService";
 
 const messages = [
     'מחפשים עזרה באזור שלך...',
@@ -30,9 +32,8 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
     const { sendSOS, stopSOS, sendExpandSOSRange } = useSOS();
     const zoomOutIntervalRef = useRef<number | null>(null);
     const notificationListener = useRef<Notifications.EventSubscription | null>(null);
-
     const [location, setLocation] = useState<ILocation | null>(null);
-    const { markers } = useEpipens(location);
+    const { markers, parseEpipen } = useEpipens(location);
     const [showSearchMessages, setShowSearchMessages] = useState(true);
     const [messageIndex, setMessageIndex] = useState(0);
     const [currentZoom, setCurrentZoom] = useState(0.01);
@@ -57,14 +58,16 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
     };
 
     const listenToResponders = () => {
-        notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
+        notificationListener.current = Notifications.addNotificationReceivedListener(async (notification) => {
             const data = notification.request.content.data as SOSNotificationData;
             if (data.type === ESOSNotificationType.SOS_RESPONSE) {
                 setShowSearchMessages(false);
 
-                const newResponder = {
+                const epipenList = await getUserEpiPens((data.responder as IUser)._id as string);
+                const newResponder: ResponderCardProps = {
                     user: data.responder as IUser,
                     userLocation: data.location as ILocation,
+                    epipenList: epipenList.epiPensByUser.map((epipen: any) => parseEpipen(epipen)) as EpipenMarker[],
                 };
 
                 setRespondersData((prev: ResponderCardProps[]) => {

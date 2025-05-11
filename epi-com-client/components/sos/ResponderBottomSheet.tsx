@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react';
+import React, {forwardRef, RefObject, useState} from 'react';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Dimensions, LayoutChangeEvent, StyleSheet } from 'react-native';
 import { ICarouselInstance, Pagination } from 'react-native-reanimated-carousel';
@@ -13,11 +13,12 @@ import { Button, ButtonText } from "@/components/ui/button";
 interface Props {
     responders: ResponderCardProps[];
     onCancelSOS: () => void;
+    mapRef: RefObject<any>;
 }
 
 const width = Dimensions.get('window').width;
 
-const ResponderListBottomSheet = forwardRef<BottomSheet, Props>(({ responders, onCancelSOS }, ref) => {
+const ResponderListBottomSheet = forwardRef<BottomSheet, Props>(({ responders, onCancelSOS, mapRef }, ref) => {
     const carouselRef = React.useRef<ICarouselInstance>(null);
     const progress = useSharedValue<number>(0);
     const [sheetHeight, setSheetHeight] = useState<number>(0);
@@ -53,6 +54,8 @@ const ResponderListBottomSheet = forwardRef<BottomSheet, Props>(({ responders, o
                         <ResponderCard
                             user={responders[0].user}
                             userLocation={responders[0].userLocation}
+                            epipenList={responders[0].epipenList || []}
+                            mapRef={mapRef}
                         />
                     ) : (
                         <>
@@ -63,7 +66,7 @@ const ResponderListBottomSheet = forwardRef<BottomSheet, Props>(({ responders, o
                                 data={responders}
                                 onProgressChange={progress}
                                 renderItem={({ item }) => (
-                                    <ResponderCard user={item.user} userLocation={item.userLocation} />
+                                    <ResponderCard user={item.user} userLocation={item.userLocation} epipenList={item.epipenList || []} mapRef={mapRef}/>
                                 )}
                             />
                             <Pagination.Basic
@@ -120,6 +123,7 @@ const styles = StyleSheet.create({
         padding: 5,
         width: '80%',
         marginTop: 30,
+        marginBottom: 30,
     },
 });
 

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/authContext';
 import { Settings } from "lucide-react-native";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth as useAuthStore } from '@/stores/useAuth';
-import { getUserEpiPens } from '@/services/graphql/graphqlEpipenService';
+import { getCurrentUserEpiPens } from '@/services/graphql/graphqlEpipenService';
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -67,8 +67,8 @@ export default function ProfileScreen() {
       try {
         setIsLoadingEpiPens(true);
         
-        // Get EpiPens using the getUserEpiPens function
-        const response = await getUserEpiPens();
+        // Get EpiPens using the getCurrentUserEpiPens function
+        const response = await getCurrentUserEpiPens();
 
         if (response && response.epiPensByUser) {
           setEpiPens(response.epiPensByUser);

@@ -1,10 +1,10 @@
-import React, { forwardRef } from 'react';
+import React, {ForwardedRef, forwardRef, RefObject} from 'react';
 import { StyleSheet } from 'react-native';
-import MapView, {Circle, Marker} from 'react-native-maps';
-import { EpipenMarker } from '@/components/map/EpipenMarker';
-import { Coordinate } from '@/types';
+import MapView from 'react-native-maps';
+import {Coordinate, EpipenMarker as Epipen} from '@/types';
 import {ResponderCardProps} from "@/components/sos/ResponderCard";
 import {UserMarker} from "@/components/map/UserMarker";
+import {EpipenMarker} from "@/components/map/EpipenMarker";
 import PulseOverlay from "@/components/sos/PulseOverlay";
 
 interface Pulse {
@@ -14,11 +14,18 @@ interface Pulse {
 
 interface MapSectionProps {
     location: Coordinate;
-    markers: any[];
+    markers: Epipen[];
     responders: ResponderCardProps[]
 }
 
 const MapSection = forwardRef<MapView, MapSectionProps>(({ location, markers, responders }, mapRef) => {
+    const [mapRegion, setMapRegion] = React.useState<Coordinate>(location);
+    const getAllRespondersEpipens = () => {
+        return responders.reduce((acc: Epipen[], responder) => {
+            return acc.concat(responder.epipenList);
+        }, []);
+    }
+
     return (
         <MapView
             ref={mapRef}
@@ -32,8 +39,18 @@ const MapSection = forwardRef<MapView, MapSectionProps>(({ location, markers, re
             zoomEnabled={false}
             scrollEnabled={false}
             pitchEnabled={false}
+            onRegionChangeComplete={(region) => {
+                setMapRegion({
+                    latitude: region.latitude,
+                    longitude: region.longitude
+                });
+            }}
         >
             {markers.map((marker) => (
+                <EpipenMarker key={marker.id} marker={marker} onPress={() => {}} />
+            ))}
+
+            {getAllRespondersEpipens().map((marker) => (
                 <EpipenMarker key={marker.id} marker={marker} onPress={() => {}} />
             ))}
 
@@ -42,7 +59,7 @@ const MapSection = forwardRef<MapView, MapSectionProps>(({ location, markers, re
             ))}
 
             {location && <>
-                <PulseOverlay center={location} delay={1000} />
+                <PulseOverlay center={location} mapRegion={mapRegion} delay={1000} mapRef={mapRef as RefObject<MapView>} />
             </>}
         </MapView>
     );

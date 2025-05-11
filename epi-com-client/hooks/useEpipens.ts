@@ -10,6 +10,7 @@ interface UseEpipensResult {
   selectedEpipen: EpipenMarker | null;
   selectEpipen: (marker: EpipenMarker | null) => void;
   isLoading: boolean;
+  parseEpipen: (epiPen: any) => EpipenMarker;
 }
 
 /**
@@ -30,23 +31,7 @@ export function useEpipens(userLocation: Coordinate | null): UseEpipensResult {
         const epiPens = response.allEpiPens;
         
         // Transform the server response to match our local EpipenMarker format
-        const transformedEpiPens: EpipenMarker[] = epiPens.map(epiPen => ({
-          id: epiPen._id,
-          type: epiPen.kind === 'ADULT' ? 'adult' : 'junior',
-          coordinate: {
-            latitude: epiPen.location.latitude,
-            longitude: epiPen.location.longitude
-          },
-          description: epiPen.description || `${epiPen.kind.toLowerCase()} Injector`,
-          expireDate: epiPen.expiryDate,
-          contact: {
-            name: epiPen.contact.name,
-            phone: epiPen.contact.phone
-          },
-          photo: epiPen.image,
-          serialNumber: epiPen.serialNumber,
-          userId: epiPen.userId
-        }));
+        const transformedEpiPens: EpipenMarker[] = epiPens.map(epiPen => parseEpipen(epiPen));
         
         setMarkers(transformedEpiPens);
       } catch (error) {
@@ -134,12 +119,33 @@ export function useEpipens(userLocation: Coordinate | null): UseEpipensResult {
     setSelectedEpipen(marker);
   }, []);
 
+  const parseEpipen: (epiPen: any) => EpipenMarker = (epiPen: any) => {
+    return {
+      id: epiPen._id,
+      type: epiPen.kind === 'ADULT' ? 'adult' : 'junior',
+      coordinate: {
+        latitude: epiPen.location.latitude,
+        longitude: epiPen.location.longitude
+      },
+      description: epiPen.description || `${epiPen.kind.toLowerCase()} Injector`,
+      expireDate: epiPen.expiryDate,
+      contact: {
+        name: epiPen.contact.name,
+        phone: epiPen.contact.phone
+      },
+      photo: epiPen.image,
+      serialNumber: epiPen.serialNumber,
+      userId: epiPen.userId
+    }
+  }
+
   return {
     markers,
     sortedMarkers,
     addMarker,
     selectedEpipen,
     selectEpipen,
-    isLoading
+    isLoading,
+    parseEpipen
   };
 }

@@ -87,8 +87,13 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
         const getDistanceString = async () => {
             try {
                 const loc: ILocation = await getCurrentLocation();
+                if (location && loc) {
+                    const text: string = getDistanceText(location, loc);
 
-                setDistanceText(getDistanceText(location, loc));
+                    if (text) {
+                        setDistanceText(getDistanceText(location, loc));
+                    }
+                }
             } catch (e) {
                 console.error('❌ Could not get location:', e);
             }
