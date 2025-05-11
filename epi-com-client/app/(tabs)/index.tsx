@@ -1,17 +1,17 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { View, StatusBar } from 'react-native';
 import { useAuth } from '@/context/authContext';
-import { useLocation } from '../../hooks/useLocation';
-import { useEpipens } from '../../hooks/useEpipens';
-import { EpipenMarker, Coordinate } from '../../types';
-import { Header } from '../../components/shared/Header';
-import { EpipenMap, EpipenMapRef } from '../../components/map/EpipenMap';
-import { EpipenList } from '../../components/epipenList/EpipenList';
-import { EpipenDetails } from '../../components/epipenDetails/EpipenDetails';
-import { AddEpipenModal } from '../../components/addEpipen/AddEpipenModal';
-import { EpipenFormData } from '../../components/addEpipen/EpipenForm';
+import { useLocation } from '@/hooks/useLocation';
+import { useEpipens } from '@/hooks/useEpipens';
+import { EpipenMarker, Coordinate } from '@/types';
+import { Header } from '@/components/shared/Header';
+import { EpipenMap, EpipenMapRef } from '@/components/map/EpipenMap';
+import { EpipenList } from '@/components/epipenList/EpipenList';
+import { EpipenDetails } from '@/components/epipenDetails/EpipenDetails';
+import { AddEpipenModal } from '@/components/addEpipen/AddEpipenModal';
+import { EpipenFormData } from '@/components/addEpipen/EpipenForm';
 import { StyleSheet } from 'react-native';
-import { colors } from '../../constants/Colors';
+import { colors } from '@/constants/Colors';
 
 export default function HomeScreen() {
   const { logout } = useAuth();

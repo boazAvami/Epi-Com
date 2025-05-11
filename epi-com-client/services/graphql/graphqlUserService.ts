@@ -31,6 +31,30 @@ export const GetLoggedUser = async () => {
 };
 
 /**
+ * Fetch user's information by id
+ * @returns Promise with the user data
+ */
+export const GetUser = async (userId: string) => {
+    const query = `
+        query GetUser($userId: ID!) {
+          user(userId: $userId) {
+            userName
+            firstName,
+            lastName,
+            phone_number,
+            profile_picture_uri,
+            gender,
+            allergies
+          }
+        }`;
+
+    const variables = {
+        userId
+    }
+    return graphqlRequest<{ user: Partial<IUser> }>(query, variables);
+};
+
+/**
  * Update the currently logged in user's information
  * @param userData Partial user data to update
  * @returns Promise with the updated user

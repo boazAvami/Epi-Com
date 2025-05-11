@@ -15,6 +15,7 @@ export const sosTypeDefs = gql`
   type SOSResponse {
     status: String!
     message: String!
+    sosId: String
   }
 
   type Query {
@@ -23,6 +24,7 @@ export const sosTypeDefs = gql`
 
   type Mutation {
     sendSOS(userId: ID!, location: LocationInput!): SOSResponse!
+    expandSOSRange(userId: ID!, sosId: ID!, location: LocationInput! newRadiusInMeters: Int!): SOSResponse!
     responseToSOS(userId: ID!, sosId: ID!, location: LocationInput!): SOSResponse!
     stopSOS(userId: ID!): SOSResponse!
   }

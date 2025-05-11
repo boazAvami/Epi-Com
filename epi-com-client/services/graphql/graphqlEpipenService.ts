@@ -159,7 +159,20 @@ export const deleteEpiPen = async (id: string) => {
 /**
  * Get all EpiPens owned by the current user
  */
-export const getUserEpiPens = async () => {
+export const getCurrentUserEpiPens = async () => {
+  const userId = await tokenStorage.getUserId();
+
+  if (userId) {
+    return getUserEpiPens(userId);
+  }
+
+  throw new Error('User is not logged in');
+};
+
+/**
+ * Get all EpiPens owned by user
+ */
+export const getUserEpiPens = async (userId: string) => {
   const query = `
     query GetUserEpiPens($userId: ID!) {
       epiPensByUser(userId: $userId) {
@@ -181,15 +194,13 @@ export const getUserEpiPens = async () => {
     }
   `;
 
-  // Get the userId from the auth store
-  const userId = await tokenStorage.getUserId();
-  
   if (!userId) {
-    throw new Error('User not logged in');
+    throw new Error('User ID is required');
   }
 
   return graphqlRequest<{ epiPensByUser: any[] }>(query, { userId });
 };
+
 
 /**
  * Get nearby EpiPens within a specified radius

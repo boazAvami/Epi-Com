@@ -51,12 +51,6 @@ const EpipenMarkerComponent: React.FC<EpipenMarkerProps> = ({
     };
   };
   
-  // Calculate icon size based on marker size
-  const getIconSize = () => {
-    const markerSize = getMarkerStyle().width as number;
-    return Math.max(12, markerSize * 0.5); // 50% of marker size, minimum 12
-  };
-  
   return (
     <Marker
       key={marker.id}
@@ -66,7 +60,7 @@ const EpipenMarkerComponent: React.FC<EpipenMarkerProps> = ({
       onPress={() => onPress(marker)}
     >
       <View style={getMarkerStyle()}>
-        <Ionicons name="medkit" size={5} color={colors.white} />
+        <Ionicons name="medkit" size={10} color={colors.white} />
       </View>
     </Marker>
   );

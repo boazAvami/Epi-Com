@@ -84,7 +84,7 @@ export const EpipenMap = forwardRef<EpipenMapRef, EpipenMapProps>(({
   } | null>(null);
   
   // Debounce timer for search
-  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimerRef = useRef<number | null>(null);
 
   // Expose methods through ref
   useImperativeHandle(ref, () => ({

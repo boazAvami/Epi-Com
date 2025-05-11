@@ -6,6 +6,9 @@ export const userResolvers = {
     me: async (_: any, __: any, { userId }: any) => { // Use userId from context
       return await userModel.findById(userId);
     },
+    user: async (_: any, {}, { userId }: {userId?: string}) => {
+          return userModel.findById(userId);
+    },
   },
   Mutation: {
     deleteUser: async (_: any, __: any, { userId }: any) => { // Use userId from context

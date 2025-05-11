@@ -14,6 +14,7 @@ module.exports = function(api) {
                 "tailwind.config": "./tailwind.config.js",
                 '@shared/types': '../packages/types/src'
             }
-        }]]
+        }],
+        "react-native-reanimated/plugin"]
     };
 };

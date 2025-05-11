@@ -69,7 +69,7 @@ export class App {
       typeDefs,
       resolvers,
       context: ({ req }) => {
-        return { userId: (req as any).user?._id };
+        return { userId: (req as any).user?.id };
       },
       introspection: true,
     });

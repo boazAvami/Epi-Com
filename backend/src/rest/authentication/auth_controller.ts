@@ -207,7 +207,22 @@ export const logout = async (req: Request, res: Response) => {
     }
 };
 
+export const updatePushToken = async (req: Request, res: Response) => {
+    const userId = (req as any).user?.id;
+    const { pushToken } = req.body;
 
+    if (!userId || !pushToken) {
+        return res.status(400).json({ message: 'Missing user or push token' });
+    }
+
+    try {
+        await userModel.updateOne({ _id: userId }, { pushToken });
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('🔴 Error updating push token:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
 
 export const client = new OAuth2Client();
 export const googleSignin = async (req: Request, res: Response) => {    
