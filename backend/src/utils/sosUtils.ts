@@ -86,7 +86,7 @@ export async function getNearbyUserIdsWithEpipens(
         ...new Set(
             nearbyEpipens
                 .map(epi => epi.userId.toString())
-                // .filter(id => id !== excludeUserId)
+                .filter(id => id !== excludeUserId)
         ),
     ];
 }
