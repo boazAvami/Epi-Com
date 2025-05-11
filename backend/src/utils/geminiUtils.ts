@@ -12,7 +12,7 @@ class GeminiUtils {
     const response = await result.response;
     const text = response.text();
 
-    return text || "Sorry, I can only assist with allergy-related topics.";
+    return text || "Sorry, I could not generate a response. please try again.";
   }
 
   private buildAllergyPrompt(conversation: string[], user: IUser): string {
