@@ -288,7 +288,11 @@ const ChatScreen: React.FC = () => {
             >
               {message.sender === 'assistant' && (
                 <Avatar size="sm" style={styles.avatar}>
-                  <AvatarFallbackText>EP</AvatarFallbackText>
+                  <AvatarImage 
+                    source={require('@/assets/images/chatbot_avatar.png')} 
+                    alt="Chatbot"
+                  />
+                  <AvatarFallbackText>AI</AvatarFallbackText>
                 </Avatar>
               )}
               
