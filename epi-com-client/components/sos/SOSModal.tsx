@@ -78,8 +78,8 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
 
         const location = await Location.getCurrentPositionAsync({});
         return {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: location?.coords?.latitude,
+            longitude: location?.coords?.longitude,
         };
     };
 
