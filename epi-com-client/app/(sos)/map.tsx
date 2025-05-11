@@ -69,8 +69,7 @@ const styles = StyleSheet.create({
     cancelWrapper: {
         position: 'absolute',
         top: 50,
-        right: 20,
-        zIndex: 999,
+        right: 20
     },
     cancelButton: {
         backgroundColor: '#FE385C',

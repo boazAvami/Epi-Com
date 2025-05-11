@@ -15,6 +15,9 @@ import {colors} from "@/constants/Colors";
 import {Divider} from "@/components/ui/divider";
 import {EpipenList} from "@/components/epipenList/EpipenList";
 import {EpipenMarker} from "@/types";
+import {EpipenItem} from "@/components/epipenItem/EpipenItem";
+import {EpipenInfoCard} from "@/components/epipenDetails/EpipenInfoCard";
+import {EpipenDetails} from "@/components/epipenDetails/EpipenDetails";
 
 export interface ResponderCardProps {
     user: IUser;
@@ -25,6 +28,8 @@ export interface ResponderCardProps {
 
 export default function ResponderCard({ user, userLocation, epipenList, mapRef }: ResponderCardProps) {
     const [distanceText, setDistanceText] = useState<string>('');
+    const [showEpipenInfo, setShowEpipenInfo] = useState<boolean>(false);
+    const [selectedEpipen, setSelectedEpipen] = useState<EpipenMarker | undefined>();
     const {handleGoogleNavigate, handleWazeNavigate} = useNavigationApps();
 
     useEffect(() => {
@@ -61,7 +66,6 @@ export default function ResponderCard({ user, userLocation, epipenList, mapRef }
     };
 
     const handlePressOnEpipen = (epipen: EpipenMarker) => {
-        console.log('Epipen pressed:', epipen);
         if (mapRef?.current) {
             mapRef?.current.animateToRegion({
                 latitude: epipen.coordinate.latitude,
@@ -70,6 +74,14 @@ export default function ResponderCard({ user, userLocation, epipenList, mapRef }
                 longitudeDelta: 0.01,
             }, 500);
         }
+
+        setShowEpipenInfo(true);
+        setSelectedEpipen(epipen);
+    }
+
+    const handleEpipenClose = () => {
+        setShowEpipenInfo(false);
+        setSelectedEpipen(undefined);
     }
 
     return (
@@ -117,7 +129,9 @@ export default function ResponderCard({ user, userLocation, epipenList, mapRef }
 
                     <Divider className="my-0.5" style={styles.divider}></Divider>
 
-                    <EpipenList markers={epipenList} onSelectEpipen={handlePressOnEpipen}></EpipenList>
+                    {showEpipenInfo ?
+                        <EpipenDetails epipen={selectedEpipen as EpipenMarker} onClose={handleEpipenClose}></EpipenDetails> :
+                        <EpipenList markers={epipenList} onSelectEpipen={handlePressOnEpipen}></EpipenList>}
                 </Center>
             </VStack>
         </Center>
@@ -150,5 +164,8 @@ const styles = StyleSheet.create({
         width: 300,
         marginTop: 20,
         marginBottom: 20
+    },
+    epipenDetails: {
+        width: 100
     }
 });
