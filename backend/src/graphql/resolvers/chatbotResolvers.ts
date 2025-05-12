@@ -6,8 +6,11 @@ const MAX_CHARACTERS_PER_MESSAGE = 500;
 
 export const chatbotResolvers = {
   Mutation: {
-
-    queryChatbot: async (_: any, { messages}: { messages: string[] }, { userId }: { userId?: string }) => {
+    queryChatbot: async (
+      _: any,
+      { messages, language }: { messages: string[], language?: string },
+      { userId }: { userId?: string }
+    ) => {
       console.log(userId);
       try {
         // === Validation ===
@@ -31,12 +34,12 @@ export const chatbotResolvers = {
 
         let response: string;
         const user = await userModel.findById(userId);
-        if (!user) {
-          response = await geminiUtils.allergiesQuery(messages);
-        } else {
-          response = await geminiUtils.allergiesQuery(messages, user);
-        }
 
+        if (!user) {
+          response = await geminiUtils.allergiesQuery(messages,language);
+        } else {
+          response = await geminiUtils.allergiesQuery(messages,language, user);
+        }
 
         if (!response) {
           throw new Error("Sorry, something went wrong while processing your request.");
