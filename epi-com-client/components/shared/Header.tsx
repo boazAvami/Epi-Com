@@ -13,11 +13,11 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ title }) => {
-  const { language, toggleLanguage } = useAppTranslation();
+  const { t, language, toggleLanguage } = useAppTranslation();
   const insets = useSafeAreaInsets();
   
   // Get the appropriate title based on the current page
-  const headerTitle = title || (language === 'en' ? 'Where Is Epi' : 'איפה אפי');
+  const headerTitle = title || t('app.title');
   
   return (
     <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
