@@ -13,7 +13,7 @@ export interface IUser {
     profile_picture_uri?: string;
     allergies: string[];
     is_connected?: boolean;
-    gender?: EGender;
+    gender: EGender;
     refreshToken?: string[];
     emergencyContacts: { name: string; phone: string }[];
 }
