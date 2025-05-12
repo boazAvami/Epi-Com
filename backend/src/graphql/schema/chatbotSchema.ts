@@ -6,6 +6,9 @@ export const chatbotTypeDefs = gql`
   }
 
   type Mutation {
-    queryChatbot(messages: [String!]!): ChatbotResponse!
+    queryChatbot(
+      messages: [String!]!
+      language: String
+    ): ChatbotResponse!
   }
 `;
