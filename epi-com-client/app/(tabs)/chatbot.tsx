@@ -140,8 +140,11 @@ const ChatScreen: React.FC = () => {
     }
     
     try {
+      // Determine which language to pass based on current UI language
+      const apiLanguage = language === 'he' ? 'Hebrew' : 'English';
+
       // Call the chatbot service
-      const response = await chatbotService.queryAllergies(updatedHistory);
+      const response = await chatbotService.queryAllergies(updatedHistory, apiLanguage);
       
       // Create assistant response message
       const assistantResponse: Message = {
@@ -388,7 +391,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   bottomContainer: {
-    marginBottom: 12, // bottom padding to the input area
+    marginBottom: 16, // bottom padding to the input area
   },
   headerContainer: {
     position: 'relative',
