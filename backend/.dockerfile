@@ -1,21 +1,24 @@
 FROM node:18-slim
 
-WORKDIR /app
+WORKDIR /app/backend
 
-# Copy backend code
+# Copy only package.json & tsconfig files first for caching
 COPY backend/package*.json ./
 COPY backend/tsconfig*.json ./
+
+# Copy source code
 COPY backend/src ./src
 
-# Copy shared package (used by @shared/types)
-COPY packages/types ../packages/types
+# Copy shared package
+COPY packages/types ../../packages/types
 
-# Install deps
+# Install dependencies
 RUN npm install
 
 # Build the app
 RUN npm run build
 
+# Expose port your app listens on (replace if not 5432)
 EXPOSE 5432
 
 ENV NODE_ENV=production
