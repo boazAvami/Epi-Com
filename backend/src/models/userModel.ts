@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema<IUser>({
   gender: {
     type: String,
     enum: Object.values(EGender), // Restrict to valid gender values
-    default: '',
+    default: null,
   },
   email: {
     type: String,

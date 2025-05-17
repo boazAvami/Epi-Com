@@ -1,5 +1,5 @@
 import { graphqlRequest } from './graphqlClient';
-import { IUser } from '@shared/types';
+import { IUser, EGender } from '@shared/types';
 import { RegisterData } from '@/shared/types/register-data.type';
 
 /**
@@ -47,7 +47,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
     if (userData.phone_number !== undefined) variables.phone_number = userData.phone_number;
     if (userData.date_of_birth !== undefined) variables.date_of_birth = userData.date_of_birth;
     if (userData.profile_picture_uri !== undefined) variables.profile_picture_uri = userData.profile_picture_uri;
-    if (userData.gender !== undefined) variables.gender = userData.gender;
+    if (userData.gender !== undefined) variables.gender = userData.gender; // This is now passing the enum value directly
     if (userData.allergies !== undefined) variables.allergies = userData.allergies;
     if (userData.emergencyContacts !== undefined) variables.emergencyContacts = userData.emergencyContacts;
 
@@ -60,7 +60,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
             $phone_number: String,
             $date_of_birth: String,
             $profile_picture_uri: String,
-            $gender: String,
+            $gender: Gender,
             $allergies: [String],
             $emergencyContacts: [EmergencyContactInput]
         ) {

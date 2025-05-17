@@ -1,8 +1,9 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import { App } from '../app';
-import { IUser, userModel } from '../models/userModel';
+import { userModel } from '../models/userModel';
 import {  EpiPenKind, EpiPenModel } from '../models/epipenModel'; // Assuming you have an epiPen model
+import {EGender, IUser} from '@shared/types';
 
 
 let appInstance: App = new App();
@@ -36,6 +37,7 @@ const testUser: IUser & { accessToken?: string; refreshToken?: string; _id?: str
   firstName: 'Test',
   lastName: 'User',
   phone_number: '0545325447',
+  gender: EGender.MALE,
   allergies: ['Peanuts'],
   emergencyContacts: [{ name: 'John Doe', phone: '1234567890' }],
 };
