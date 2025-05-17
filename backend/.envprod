@@ -4,7 +4,7 @@ PORT=5432
 #HTTPS_KEY=/path/to/private-key.pem
 #HTTPS_CERT=/path/to/certificate.pem
 
-MONGO_URI=mongodb://10.10.248.95:21771/epicom
+MONGO_URI=mongodb://admin:bartar20%40CS@10.10.248.95:21771/epicom?authSource=admin
 
 JWT_SECRET=boaztheking19238qsd23425gsgw356
 ACCESS_TOKEN_SECRET=boaztheking1923830201
