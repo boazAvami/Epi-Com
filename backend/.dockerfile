@@ -27,3 +27,4 @@ ENV NODE_ENV=production
 
 # Command to run the app (production)
 CMD ["npm", "run", "serve"]
+
