@@ -1,12 +1,12 @@
 NODE_ENV=production
 PORT=5432
 
-HTTPS_KEY=/path/to/private-key.pem
-HTTPS_CERT=/path/to/certificate.pem
+#HTTPS_KEY=/path/to/private-key.pem
+#HTTPS_CERT=/path/to/certificate.pem
 
 MONGO_URI=mongodb://localhost:21771/epicom
 
-JWT_SECRET=oaztheking19238qsd23425gsgw356
+JWT_SECRET=boaztheking19238qsd23425gsgw356
 ACCESS_TOKEN_SECRET=boaztheking1923830201
 REFRESH_TOKEN_SECRET=boaztheoneandonlyfuckinggod92450346
 

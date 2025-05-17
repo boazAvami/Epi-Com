@@ -11,7 +11,7 @@ COPY backend/src ./src
 COPY packages/types ../packages/types
 
 # Copy prod.env to .env
-COPY backend/prod.env .env
+COPY backend/.envprod .env
 
 # Install dependencies
 RUN npm install
