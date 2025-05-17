@@ -62,30 +62,6 @@ interface FormEmergencyContact {
   phone?: string;
 }
 
-// Define validation schema for profile settings
-const profileSettingsSchema = z.object({
-  userName: z.string().min(1, "Username is required"),
-  firstName: z.string().min(2, "first name is required"),
-  lastName: z.string().min(2, "last name is required"),
-  email: z.string().email("Invalid email address"),
-  phone_number: z.string().optional(),
-  gender: z.nativeEnum(EGender).optional(),
-  date_of_birth: z.date().optional(),
-  allergies: z.array(z.string()).optional(),
-  emergencyContacts: z.array(
-    z.object({
-      name: z.string().optional(),
-      phone: z.string().optional(),
-    })
-  ).optional(),
-  password: z.string().optional(),
-  confirmPassword: z.string().optional(),
-  profile_picture_uri: z.string().nullable().optional(),
-});
-
-// Make sure types match schema
-type ProfileSettingsFormData = z.infer<typeof profileSettingsSchema>;
-
 export default function ProfileSettingsScreen() {
   const router = useRouter();
   const { getUserInfo, logout } = useAuth();
