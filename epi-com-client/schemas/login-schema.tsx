@@ -1,15 +1,11 @@
-import {z} from "zod";
+import { z } from "zod";
+import { ValidationRules } from "@/utils/validation-utils";
 import { getValidationMessage } from "@/utils/validation-messages";
 
 export const loginSchema = z.object({
-    email: z
-        .string({ required_error: getValidationMessage('email_required') })
-        .min(1, getValidationMessage('email_required'))
-        .email(getValidationMessage('email_invalid')),
-
-    password: z
-        .string({ required_error: getValidationMessage('password_required') })
-        .min(3, getValidationMessage('password_min')),
+    email: ValidationRules.email(),
+    // Using custom validation for password since login has different requirements than registration
+    password: ValidationRules.password()
 });
 
 export type LoginSchemaType = z.infer<typeof loginSchema>;

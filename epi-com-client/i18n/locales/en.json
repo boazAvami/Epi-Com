@@ -133,14 +133,54 @@
     "buttons": {
       "cancel": "Cancel",
       "save": "Save",
-      "change_language": "Change to Hebrew",
+      "change_language": "Switch to Hebrew",
       "logout": "Logout",
       "next": "Next",
       "confirm": "Confirm",
-      "select": "Select"
+      "select": "Select",
+      "ok": "OK",
+      "go_back": "Go Back",
+      "add": "Add"
     },
     "actions": {
       "openWhatsApp": "Open in WhatsApp"
+    },
+    "profile": {
+      "save": "Save",
+      "logout": "Logout",
+      "settings": "Settings",
+      "accountInfo": "Account Information",
+      "medicalInfo": "Medical Information",
+      "allergies_description": "List any allergies or medical conditions that emergency responders should know about.",
+      "emergencyContacts": "Emergency Contacts",
+      "emergency_contacts_description": "People to contact in case of emergency.",
+      "add": "Add",
+      "remove": "Remove",
+      "saving": "Saving...",
+      "save_changes": "Save Changes",
+      "loading": "Loading your profile settings...",
+      "profile_picture": "Profile Picture",
+      "select_option": "Select an option",
+      "confirm_remove_picture": "Are you sure you want to remove your profile picture?",
+      "passwords_dont_match": "Passwords do not match.",
+      "info": "Info",
+      "no_changes": "No changes detected.",
+      "success": "Success",
+      "profile_updated": "Your profile has been updated.",
+      "update_failed": "Failed to update profile. Please try again.",
+      "no_refresh_token": "No refresh token found.",
+      "logout_failed": "Failed to logout. Please try again.",
+      "confirm_logout": "Are you sure you want to logout?",
+      "yes_logout": "Yes, Logout",
+      "language": "Language",
+      "languageDescription": "Change the application language",
+      "changeLanguage": "Switch Language",
+      "logoutConfirmation": "Are you sure you want to logout?",
+      "no_changes_title": "Information",
+      "no_changes_message": "No changes detected.",
+      "update_success_title": "Success",
+      "update_success_message": "Your profile has been updated successfully.",
+      "email_in_use": "This email address is already in use. Please use a different email."
     },
     "validation": {
       "error_title": "Missing Required Fields",
@@ -175,12 +215,24 @@
         "dob_required": "Please enter your date of birth",
         "gender_required": "Please select your gender",
         "emergency_contact_required": "Please add at least one emergency contact",
+        "contact_name_min": "Contact name must be at least 2 characters",
+        "contact_name_max": "Contact name cannot exceed 30 characters",
         "profile_picture_invalid": "Invalid image URL"
       }
     },
     "errors": {
+      "error": "Error",
       "location_denied": "Location access denied",
-      "location_error": "Couldn't get your location"
+      "location_error": "Couldn't get your location",
+      "permission_denied": "Permission denied",
+      "media_permission_required": "You need to grant permission to access your photos.",
+      "camera_permission_required": "You need to grant camera permission to take a photo.",
+      "image_picker_error": "Failed to select image. Please try again.",
+      "camera_error": "Failed to take photo. Please try again.",
+      "loading_profile": "Failed to load profile",
+      "server_response_error": "Server response error",
+      "server_error": "Server error",
+      "retry": "Retry"
     },
     "gender": {
       "male": "Male",

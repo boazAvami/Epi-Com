@@ -18,13 +18,14 @@ import { UpdateUser } from '@/services/graphql/graphqlUserService';
 import DateInput from "@/components/DatePicker";
 import { EGender, EAllergy, IEmergencyContact } from '@shared/types';
 import { RegisterData } from '@/shared/types/register-data.type';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, FieldError, FieldErrorsImpl, Merge } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import * as ImagePicker from 'expo-image-picker';
 import { Pencil } from 'lucide-react-native';
 import { Pressable } from 'react-native';
-
+import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { RTLText, RTLView, RTLRow } from '@/components/shared/RTLComponents';
+import { colors } from '@/constants/Colors';
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -50,6 +51,10 @@ import {
   AvatarFallbackText,
   AvatarImage,
 } from '@/components/ui/avatar';
+
+// Import the external validation schema
+import { profileSettingsSchema, ProfileSettingsFormData } from '@/schemas/profile-settings-schema';
+import { getAllergyItems } from '@/utils/allergy-utils';
 
 // Interface for form emergency contacts that allows optional fields during editing
 interface FormEmergencyContact {
@@ -85,11 +90,23 @@ export default function ProfileSettingsScreen() {
   const router = useRouter();
   const { getUserInfo, logout } = useAuth();
   const { user, refreshToken } = useAuthStore();
+  const { t, isRtl, toggleLanguage, language } = useAppTranslation();
   const [isLoading, setIsLoading] = useState(!user);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>(
-    Object.values(EAllergy).map((allergy: string) => ({label: allergy, value: allergy}))
-  );
+  const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>([]);
+  
+  // Update allergies items when language changes
+  useEffect(() => {
+    setAllergiesItems(getAllergyItems(isRtl));
+  }, [isRtl, language]);
+  
+  // Helper function to safely convert error messages to strings
+  const getErrorMessage = (error: any): string => {
+    if (!error) return '';
+    if (typeof error === 'string') return error;
+    if (typeof error.message === 'string') return error.message;
+    return 'Invalid input';
+  };
   
   // Set up form with React Hook Form
   const {
@@ -136,7 +153,7 @@ export default function ProfileSettingsScreen() {
           setValue('gender', user.gender as EGender);
           
           if (user.date_of_birth) {
-            // Convert to number firs
+            // Convert to number first
             const timestamp = Number(user.date_of_birth);
             const dateObj = new Date(timestamp);
 
@@ -174,12 +191,12 @@ export default function ProfileSettingsScreen() {
     setValue('emergencyContacts', [...currentContacts, { name: '', phone: '' }]);
   };
   
-  // Remove emergency contact
+  // Remove emergency contact with proper TypeScript typing
   const removeEmergencyContact = (index: number) => {
     const currentContacts = watch('emergencyContacts') || [];
     setValue(
       'emergencyContacts',
-      currentContacts.filter((_, i) => i !== index)
+      currentContacts.filter((_contact: FormEmergencyContact, i: number) => i !== index)
     );
   };
   
@@ -210,11 +227,11 @@ export default function ProfileSettingsScreen() {
     console.log('Permission status:', status);
     
     if (status !== 'granted') {
-      Alert.alert("Permission Required", "You need to grant permission to access your photos.");
+      Alert.alert(t('errors.permission_denied'), t('errors.media_permission_required'));
       return;
     }
   
-    try {  // Add try/catch to catch any errors
+    try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -222,90 +239,91 @@ export default function ProfileSettingsScreen() {
         quality: 0.8,
       });
       
-      console.log('Image picker result:', result);  // Add this line
+      console.log('Image picker result:', result);
       
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        console.log('Setting new image URI:', result.assets[0].uri);  // Add this line
+        console.log('Setting new image URI:', result.assets[0].uri);
         setValue('profile_picture_uri', result.assets[0].uri);
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert("Error", "Failed to select image. Please try again.");
+      Alert.alert(t('errors.error'), t('errors.image_picker_error'));
     }
   };
 
-  // Add this function to your component
-const handleProfilePictureOptions = () => {
-  Alert.alert(
-    "Profile Picture",
-    "Select an option",
-    [
-      {
-        text: "Choose from Library",
-        onPress: handlePickImage
-      },
-      {
-        text: "Take Photo",
-        onPress: handleTakePhoto
-      },
-      {
-        text: "Remove Current Picture",
-        onPress: handleRemovePicture,
-        style: "destructive"
-      },
-      {
-        text: "Cancel",
-        style: "cancel"
-      }
-    ]
-  );
-};
-
-// Add these two new handler functions
-const handleTakePhoto = async () => {
-  const { status } = await ImagePicker.requestCameraPermissionsAsync();
-  if (status !== 'granted') {
-    Alert.alert("Permission Required", "You need to grant camera permission to take a photo.");
-    return;
-  }
-
-  try {
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setValue('profile_picture_uri', result.assets[0].uri);
-    }
-  } catch (error) {
-    console.error('Error taking photo:', error);
-    Alert.alert("Error", "Failed to take photo. Please try again.");
-  }
-};
-
-const handleRemovePicture = () => {
-  Alert.alert(
-    "Remove Picture",
-    "Are you sure you want to remove your profile picture?",
-    [
-      {
-        text: "Cancel",
-        style: "cancel"
-      },
-      {
-        text: "Remove",
-        onPress: () => {          
-          setValue('profile_picture_uri', null);        
+  // Handle profile picture options
+  const handleProfilePictureOptions = () => {
+    Alert.alert(
+      t('profile.profile_picture'),
+      t('profile.select_option'),
+      [
+        {
+          text: t('photo.choose'),
+          onPress: handlePickImage
         },
-        style: "destructive"
+        {
+          text: t('photo.take'),
+          onPress: handleTakePhoto
+        },
+        {
+          text: t('photo.remove'),
+          onPress: handleRemovePicture,
+          style: "destructive"
+        },
+        {
+          text: t('buttons.cancel'),
+          style: "cancel"
+        }
+      ]
+    );
+  };
+
+  // Take photo handler
+  const handleTakePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t('errors.permission_denied'), t('errors.camera_permission_required'));
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setValue('profile_picture_uri', result.assets[0].uri);
       }
-    ]
-  );
-};
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert(t('errors.error'), t('errors.camera_error'));
+    }
+  };
+
+  // Remove profile picture handler
+  const handleRemovePicture = () => {
+    Alert.alert(
+      t('photo.remove'),
+      t('profile.remove_picture_confirmation'),
+      [
+        {
+          text: t('buttons.cancel'),
+          style: "cancel"
+        },
+        {
+          text: t('photo.remove'),
+          onPress: () => {          
+            setValue('profile_picture_uri', null);        
+          },
+          style: "destructive"
+        }
+      ]
+    );
+  };
   
-  // Convert form emergency contacts to IEmergencyContact[] | null
+  // Convert form emergency contacts to IEmergencyContact[] | null with proper TypeScript typing
   const convertEmergencyContacts = (
     contacts?: FormEmergencyContact[] | null
   ): IEmergencyContact[] | null => {
@@ -313,8 +331,8 @@ const handleRemovePicture = () => {
     
     // Filter out invalid contacts (where name or phone is empty)
     const validContacts = contacts
-      .filter(contact => contact.name && contact.phone) // Only keep contacts with both name and phone
-      .map(contact => ({
+      .filter((contact: FormEmergencyContact) => contact.name && contact.phone) // Only keep contacts with both name and phone
+      .map((contact: FormEmergencyContact) => ({
         name: contact.name as string, // We've verified these exist in the filter
         phone: contact.phone as string
       }));
@@ -322,22 +340,14 @@ const handleRemovePicture = () => {
     return validContacts.length > 0 ? validContacts : null;
   };
   
-  // Handle form submission
+  // Handle form submission with improved error handling
   const onSubmit = async (data: ProfileSettingsFormData) => {
-    if (data.password !== data.confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
-      return;
-    }
-    
     // Check if any changes were made
     if (!user) return;
 
     const formDateStr = data.date_of_birth?.toISOString();
     const userDateStr = user.date_of_birth ? new Date(Number(user.date_of_birth)).toISOString() : undefined;
     
-    // Explicit check for profile picture change
-    const isPictureChanged = data.profile_picture_uri !== user.profile_picture_uri;
-
     const hasChanges = 
       data.userName !== user.userName ||
       data.firstName !== (user.firstName || '') ||
@@ -355,14 +365,13 @@ const handleRemovePicture = () => {
     
     // If no changes, show message and return
     if (!hasChanges && !data.password) {
-      Alert.alert("Info", "No changes detected.", [
-        { text: "OK", onPress: () => router.push("/(tabs)/profile") }
+      Alert.alert(t('profile.no_changes_title'), t('profile.no_changes_message'), [
+        { text: t('buttons.ok'), onPress: () => router.push("/(tabs)/profile") }
       ]);
       return;
     }
 
-    // If it's an empty string, set it to null for the API
-    const profilePictureValue = data.profile_picture_uri // === '' ? null : data.profile_picture_uri;
+    const profilePictureValue = data.profile_picture_uri;
 
     // Prepare data for update with type conversion for emergency contacts
     const updatedUserData: Partial<RegisterData> = {
@@ -388,12 +397,30 @@ const handleRemovePicture = () => {
       await UpdateUser(updatedUserData);
       await getUserInfo();
       
-      Alert.alert("Success", "Your profile has been updated.", [
-        { text: "OK", onPress: () => router.push("/(tabs)/profile") }
+      Alert.alert(t('profile.update_success_title'), t('profile.update_success_message'), [
+        { text: t('buttons.ok'), onPress: () => router.push("/(tabs)/profile") }
       ]);
     } catch (error) {
       console.error("Failed to update profile:", error);
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+      
+      // Improved error handling for specific error cases
+      let errorMessage = t('profile.update_failed');
+      
+      // Check for duplicate email error
+      if (error instanceof Error) {
+        const errorStr = error.toString();
+        
+        if (errorStr.includes("duplicate key error") && errorStr.includes("email")) {
+          errorMessage = t('profile.email_in_use');
+        } else if (errorStr.includes("NOBRIDGE")) {
+          // This catches the specific error format you mentioned
+          if (errorStr.includes("duplicate key error") && errorStr.includes("email")) {
+            errorMessage = t('profile.email_in_use');
+          }
+        }
+      }
+      
+      Alert.alert(t('errors.error'), errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -403,7 +430,7 @@ const handleRemovePicture = () => {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <Center style={{ flex: 1 }}>
-          <Text>Loading your profile settings...</Text>
+          <Text>{t('profile.loading')}</Text>
         </Center>
       </SafeAreaView>
     );
@@ -423,8 +450,32 @@ const handleRemovePicture = () => {
           >
             <Icon as={ChevronLeft} size="lg" color="#333333" />
           </TouchableOpacity>
-          <Heading size="lg">Settings</Heading>
-          <View style={styles.placeholder} />
+          <Heading size="lg">{t('profile.settings')}</Heading>
+          <TouchableOpacity 
+            style={styles.logoutTopButton}
+            onPress={() => {
+              if (isLoggingOut) return;
+              Alert.alert(
+                t('profile.logout'),
+                t('profile.logoutConfirmation'),
+                [
+                  { text: t('buttons.cancel'), style: "cancel" },
+                  { 
+                    text: t('buttons.logout'), 
+                    onPress: () => {
+                      if (!isLoggingOut) {
+                        handleLogout();
+                      }
+                    },
+                    style: "destructive" 
+                  }
+                ]
+              );
+            }}
+            disabled={isLoggingOut}
+          >
+            <Icon as={LogOut} size="md" color={colors.primary} />
+          </TouchableOpacity>
         </View>
         
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -455,41 +506,36 @@ const handleRemovePicture = () => {
                 </Avatar>
               </Pressable>
               <FormControlError>
-                <FormControlErrorText>{errors.profile_picture_uri?.message}</FormControlErrorText>
+                <FormControlErrorText>{getErrorMessage(errors.profile_picture_uri?.message)}</FormControlErrorText>
                 <FormControlErrorIcon as={AlertTriangle} />
               </FormControlError>
             </FormControl>
           </Center>
           
           <Box style={styles.formContainer}>
-            {/* Logout Button */}
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={() => {
-                if (isLoggingOut) return;
-                Alert.alert(
-                  "Logout",
-                  "Are you sure you want to logout?",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    { 
-                      text: "Yes, Logout", 
-                      onPress: () => {
-                        if (!isLoggingOut) {
-                          handleLogout();
-                        }
-                      },
-                      style: "destructive" 
-                    }
-                  ]
-                );
-              }}
-              disabled={isLoggingOut}
-            >
-              <Icon as={LogOut} size="md" color="#AF3C3F" />
-              <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
-            <Heading size="md" style={styles.sectionTitle}>Account Information</Heading>
+            {/* Language Toggle Section */}
+            <RTLView style={styles.languageSection}>
+              <RTLRow style={styles.languageHeader}>
+                <View style={{ flex: 1 }}>
+                  <Heading size="md" style={isRtl ? styles.rtlHeading : undefined}>{t('profile.language')}</Heading>
+                  <RTLText style={styles.sectionDescription}>{t('profile.languageDescription')}</RTLText>
+                </View>
+                <Button 
+                  style={isRtl ? styles.rtlLanguageButton : styles.languageButton}
+                  onPress={toggleLanguage}
+                >
+                  <ButtonText style={styles.languageButtonText}>
+                    {language === 'en' ? 'עברית' : 'English'}
+                  </ButtonText>
+                </Button>
+              </RTLRow>
+            </RTLView>
+            
+            <Divider style={styles.divider} />
+            
+            <RTLView>
+              <Heading size="md" style={isRtl ? styles.rtlHeading : undefined}>{t('profile.accountInfo')}</Heading>
+            </RTLView>
             
             {/* User Info Form */}
             <VStack space="md">
@@ -501,22 +547,23 @@ const handleRemovePicture = () => {
                   render={({ field: { onChange, onBlur, value } }) => (
                     <Input>
                       <InputField
-                        placeholder="Username"
+                        placeholder={t('auth.register.step1.username')}
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
+                        style={isRtl ? { textAlign: 'right' } : undefined}
                       />
                     </Input>
                   )}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.userName?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.userName?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
               
               {/* First Name and Last Name */}
-              <HStack space="sm" style={styles.nameFields}>
+              <HStack space="sm" style={[styles.nameFields, isRtl ? { flexDirection: 'row-reverse' } : undefined]}>
                 <FormControl isInvalid={!!errors.firstName} style={styles.halfInput}>
                   <Controller
                     name="firstName"
@@ -524,14 +571,19 @@ const handleRemovePicture = () => {
                     render={({ field: { onChange, onBlur, value } }) => (
                       <Input>
                         <InputField
-                          placeholder="First Name"
+                          placeholder={t('auth.register.step2.first_name')}
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
+                          style={isRtl ? { textAlign: 'right' } : undefined}
                         />
                       </Input>
                     )}
                   />
+                  <FormControlError>
+                    <FormControlErrorText>{getErrorMessage(errors.firstName?.message)}</FormControlErrorText>
+                    <FormControlErrorIcon as={AlertTriangle} />
+                  </FormControlError>
                 </FormControl>
                 
                 <FormControl isInvalid={!!errors.lastName} style={styles.halfInput}>
@@ -541,14 +593,19 @@ const handleRemovePicture = () => {
                     render={({ field: { onChange, onBlur, value } }) => (
                       <Input>
                         <InputField
-                          placeholder="Last Name"
+                          placeholder={t('auth.register.step2.last_name')}
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
+                          style={isRtl ? { textAlign: 'right' } : undefined}
                         />
                       </Input>
                     )}
                   />
+                  <FormControlError>
+                    <FormControlErrorText>{getErrorMessage(errors.lastName?.message)}</FormControlErrorText>
+                    <FormControlErrorIcon as={AlertTriangle} />
+                  </FormControlError>
                 </FormControl>
               </HStack>
               
@@ -560,18 +617,19 @@ const handleRemovePicture = () => {
                   render={({ field: { onChange, onBlur, value } }) => (
                     <Input>
                       <InputField
-                        placeholder="Email"
+                        placeholder={t('auth.email')}
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        style={isRtl ? { textAlign: 'right' } : undefined}
                       />
                     </Input>
                   )}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.email?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.email?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
@@ -591,7 +649,7 @@ const handleRemovePicture = () => {
                   )}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.phone_number?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.phone_number?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
@@ -611,7 +669,7 @@ const handleRemovePicture = () => {
                   )}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.gender?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.gender?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
@@ -632,7 +690,7 @@ const handleRemovePicture = () => {
                   }}
                 />
                 <FormControlError>
-                  <FormControlErrorText>{errors.date_of_birth?.message}</FormControlErrorText>
+                  <FormControlErrorText>{getErrorMessage(errors.date_of_birth?.message)}</FormControlErrorText>
                   <FormControlErrorIcon as={AlertTriangle} />
                 </FormControlError>
               </FormControl>
@@ -640,51 +698,11 @@ const handleRemovePicture = () => {
             
             <Divider style={styles.divider} />
             
-            {/* Password section */}
-            {/* <Heading size="md" style={styles.sectionTitle}>Change Password</Heading>
-            <VStack space="md">
-              <FormControl isInvalid={!!errors.password}>
-                <Controller
-                  name="password"
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <Input>
-                      <InputField
-                        placeholder="New Password"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        secureTextEntry
-                      />
-                    </Input>
-                  )}
-                />
-              </FormControl>
-              
-              <FormControl isInvalid={!!errors.confirmPassword}>
-                <Controller
-                  name="confirmPassword"
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <Input>
-                      <InputField
-                        placeholder="Confirm New Password"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        secureTextEntry
-                      />
-                    </Input>
-                  )}
-                />
-              </FormControl>
-            </VStack> */}
-            
-            {/* <Divider style={styles.divider} /> */}
-            
             {/* Allergies section - Using the same Chips component as registration */}
-            <Heading size="md" style={styles.sectionTitle}>Medical Information</Heading>
-            <Text style={styles.sectionDescription}>List any allergies or medical conditions that emergency responders should know about.</Text>
+            <RTLView>
+              <Heading size="md" style={isRtl ? styles.rtlHeading : undefined}>{t('profile.medicalInfo')}</Heading>
+            </RTLView>
+            <RTLText style={styles.sectionDescription}>{t('auth.register.step3.subtitle')}</RTLText>
             
             <FormControl isInvalid={!!errors.allergies}>
               <Controller
@@ -698,55 +716,68 @@ const handleRemovePicture = () => {
                     setItems={setAllergiesItems}
                     selectedValues={value || []}
                     setSelectedValues={onChange}
+                    isRtl={isRtl}
                   />
                 )}
               />
               <FormControlError>
-                <FormControlErrorText>{errors.allergies?.message}</FormControlErrorText>
+                <FormControlErrorText>{getErrorMessage(errors.allergies?.message)}</FormControlErrorText>
                 <FormControlErrorIcon as={AlertTriangle} />
               </FormControlError>
             </FormControl>
             
             <Divider style={styles.divider} />
             
-            {/* Emergency contacts section - Using similar structure to registration step-4 */}
-            <View style={styles.emergencyContactsHeader}>
-              <Heading size="md">Emergency Contacts</Heading>
+            {/* Emergency contacts section */}
+            <View style={[
+              styles.emergencyContactsHeader, 
+              isRtl && { flexDirection: 'row-reverse' }
+            ]}>
+              <Heading size="md" style={isRtl ? styles.rtlHeading : undefined}>{t('profile.emergencyContacts')}</Heading>
               <TouchableOpacity 
                 style={styles.addButton} 
                 onPress={addEmergencyContact}
               >
-                <Text style={styles.addButtonText}>+ Add</Text>
+                <RTLText style={styles.addButtonText}>+ {t('buttons.add')}</RTLText>
               </TouchableOpacity>
             </View>
             
-            <Text style={styles.sectionDescription}>People to contact in case of emergency.</Text>
+            <RTLText style={styles.sectionDescription}>{t('auth.register.step4.subtitle')}</RTLText>
             
             <VStack space="md" style={styles.emergencyContactsList}>
-              {watch('emergencyContacts')?.map((_, index) => (
-                <View key={index} style={styles.emergencyContactItem}>
-                  <FormControl isInvalid={!!errors?.emergencyContacts?.[index]?.name}>
+              {watch('emergencyContacts')?.map((_: any, index: number) => (
+                <RTLView key={index} style={styles.emergencyContactItem}>
+                  <FormControl isInvalid={!!errors?.emergencyContacts 
+                     && Array.isArray(errors.emergencyContacts)
+                     && !!errors.emergencyContacts[index]?.name}
+                     style={{ width: '100%' }}>
                     <Controller
                       name={`emergencyContacts.${index}.name`}
                       control={control}
                       render={({ field: { onChange, onBlur, value } }) => (
                         <Input>
                           <InputField
-                            placeholder="Contact Name"
+                            placeholder={t('auth.register.step4.contact_name')}
                             value={value || ''}
                             onChangeText={onChange}
                             onBlur={onBlur}
+                            style={isRtl ? { textAlign: 'right' } : undefined}
                           />
                         </Input>
                       )}
                     />
                     <FormControlError>
-                      <FormControlErrorText>{errors?.emergencyContacts?.[index]?.name?.message}</FormControlErrorText>
+                      <FormControlErrorText>
+                        {errors?.emergencyContacts && 
+                         Array.isArray(errors.emergencyContacts) && 
+                         errors.emergencyContacts[index]?.name ? 
+                         getErrorMessage(errors.emergencyContacts[index].name?.message) : ''}
+                      </FormControlErrorText>
                       <FormControlErrorIcon as={AlertTriangle} />
                     </FormControlError>
                   </FormControl>
                   
-                  <FormControl isInvalid={!!errors?.emergencyContacts?.[index]?.phone} style={{ marginTop: 8 }}>
+                  <FormControl isInvalid={!!errors?.emergencyContacts && Array.isArray(errors.emergencyContacts) && !!errors.emergencyContacts[index]?.phone} style={{ marginTop: 8, width: '100%' }}>
                     <Controller
                       name={`emergencyContacts.${index}.phone`}
                       control={control}
@@ -755,25 +786,30 @@ const handleRemovePicture = () => {
                           onChange={onChange} 
                           onBlur={onBlur} 
                           value={value || ''}
-                          isInvalid={!!errors?.emergencyContacts?.[index]?.phone}
+                          isInvalid={!!errors?.emergencyContacts && Array.isArray(errors.emergencyContacts) && !!errors.emergencyContacts[index]?.phone}
                         />
                       )}
                     />
                     <FormControlError>
-                      <FormControlErrorText>{errors?.emergencyContacts?.[index]?.phone?.message}</FormControlErrorText>
+                      <FormControlErrorText>
+                        {errors?.emergencyContacts && 
+                         Array.isArray(errors.emergencyContacts) && 
+                         errors.emergencyContacts[index]?.phone ? 
+                         getErrorMessage(errors.emergencyContacts[index].phone?.message) : ''}
+                      </FormControlErrorText>
                       <FormControlErrorIcon as={AlertTriangle} />
                     </FormControlError>
                   </FormControl>
                   
                   {(watch('emergencyContacts') || []).length > 1 && (
                     <TouchableOpacity 
-                      style={styles.removeButton}
+                      style={isRtl ? styles.rtlRemoveButton : styles.removeButton}
                       onPress={() => removeEmergencyContact(index)}
                     >
-                      <Text style={styles.removeButtonText}>Remove</Text>
+                      <RTLText style={styles.removeButtonText}>{t('profile.remove_contact')}</RTLText>
                     </TouchableOpacity>
                   )}
-                </View>
+                </RTLView>
               ))}
             </VStack>
             
@@ -783,7 +819,7 @@ const handleRemovePicture = () => {
               onPress={handleSubmit(onSubmit)}
               isDisabled={isLoading}
             >
-              <ButtonText>{isLoading ? 'Saving...' : 'Save Changes'}</ButtonText>
+              <ButtonText>{isLoading ? t('profile.saving') : t('profile.save')}</ButtonText>
             </Button>
           </Box>
         </ScrollView>
@@ -811,6 +847,10 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 4,
+  },
+  logoutTopButton: {
+    padding: 8,
+    borderRadius: 8,
   },
   placeholder: {
     width: 28, // Same width as the back button for balanced layout
@@ -859,16 +899,42 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
+  logoutContainer: {
+    width: '100%',
+    alignItems: 'flex-end',
+    marginBottom: 24,
+  },
+  rtlLogoutContainer: {
+    width: '100%',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
-    padding: 10,
-    marginBottom: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+  },
+  rtlLogoutButton: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    backgroundColor: colors.white,
   },
   logoutText: {
-    color: '#AF3C3F',
+    color: colors.primary,
     marginLeft: 8,
+    fontWeight: '600',
+  },
+  rtlLogoutText: {
+    color: colors.primary,
+    marginRight: 8,
     fontWeight: '600',
   },
   sectionTitle: {
@@ -878,6 +944,45 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 12,
     fontSize: 14,
+  },
+  languageSection: {
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: colors.backgroundLight,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
+  },
+  languageHeader: {
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  languageButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    marginLeft: 12,
+  },
+  rtlLanguageButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  languageButtonText: {
+    fontWeight: '600',
+  },
+  rtlHeading: {
+    textAlign: 'right',
+  },
+  rtlText: {
+    textAlign: 'right',
   },
   nameFields: {
     justifyContent: 'space-between',
@@ -898,7 +1003,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   addButtonText: {
-    color: '#AF3C3F',
+    color: colors.primary,
     fontWeight: '600',
   },
   emergencyContactsList: {
@@ -909,6 +1014,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    width: '100%'
   },
   removeButton: {
     alignSelf: 'flex-end',
@@ -921,6 +1027,11 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 32,
-    backgroundColor: '#AF3C3F',
+    backgroundColor: colors.primary,
+  },
+  rtlRemoveButton: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    padding: 4,
   },
 });
