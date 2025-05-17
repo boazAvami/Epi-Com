@@ -1,18 +1,19 @@
-# Start from Node
 FROM node:18-slim
 
 WORKDIR /app
 
-# Copy backend code and types
+# Copy backend code
 COPY backend/package*.json ./
 COPY backend/tsconfig*.json ./
 COPY backend/src ./src
-COPY packages/types ./packages/types
 
-# Install dependencies
+# Copy shared package (used by @shared/types)
+COPY packages/types ../packages/types
+
+# Install deps
 RUN npm install
 
-# Build
+# Build the app
 RUN npm run build
 
 EXPOSE 5432
