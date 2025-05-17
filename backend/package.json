@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/index.ts",
     "build": "rm -rf dist && tsc && tsc-alias",
-    "serve": "node dist/src/index.js",
+    "serve": "node dist/app/src/index.js",
     "start": "npm run build && npm run serve",
     "test": "jest"
   },
