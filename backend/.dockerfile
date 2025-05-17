@@ -13,11 +13,14 @@ RUN npm install
 # Copy the rest of your application
 COPY . .
 
+# Rename prod.env to .env so dotenv picks it up
+RUN cp prod.env .env
+
 # Build the app using the build script from package.json
 RUN npm run build
 
 # Expose the port that the app will run on
-EXPOSE 4000
+EXPOSE 5432
 
 # Set environment variable for HTTPS in production
 ENV NODE_ENV=production
