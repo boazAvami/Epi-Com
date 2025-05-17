@@ -27,3 +27,7 @@ ENV NODE_ENV=production
 
 # Start the app
 CMD ["npm", "run", "serve"]
+
+
+#docker build -t epi-backend -f ./backend/.dockerfile .
+#docker run -p 5432:5432 -d epi-backend
