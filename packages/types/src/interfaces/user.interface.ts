@@ -1,3 +1,5 @@
+import { EGender } from '../enums/gender.enum';
+
 export interface IUser {
     _id?: string;
     userName: string;
@@ -11,7 +13,7 @@ export interface IUser {
     profile_picture_uri?: string;
     allergies: string[];
     is_connected?: boolean;
-    gender?: string;
+    gender: EGender;
     refreshToken?: string[];
     emergencyContacts: { name: string; phone: string }[];
 }

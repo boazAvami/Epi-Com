@@ -206,7 +206,7 @@
         "confirm_password_min": "Confirm password must be at least 6 characters",
         "passwords_match": "Passwords don't match",
         "first_name_min": "First name must be at least 2 characters",
-        "first_name_max": "First name cannot exceed 50 characters",
+        "first_name_max": "First name cannot exceed 30 characters",
         "last_name_min": "Last name must be at least 2 characters",
         "last_name_max": "Last name cannot exceed 50 characters",
         "phone_required": "Please enter a phone number",
@@ -238,5 +238,15 @@
       "male": "Male",
       "female": "Female",
       "other": "Other"
+    },
+    "chat": {
+      "title": "AI Assistant",
+      "welcome_message": "Hello! How can I help you today with questions about allergies and EpiPens?",
+      "disclaimer": "For informational purposes only. Not a substitute for medical advice. Call emergency services in case of emergency.",
+      "limit_warning": "You have reached the session limit of {limit} messages. Please tap the refresh icon (⟳) in the top-right corner to reset the session and continue.",
+      "error_message": "Sorry, I couldn't process your request. Please try again later.",
+      "typing": "Assistant is typing...",
+      "input_placeholder": "Type your message here...",
+      "messages_remaining_suffix": "messages remaining"
     }
   }

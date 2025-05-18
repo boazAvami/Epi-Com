@@ -99,7 +99,7 @@ export default function ProfileSettingsScreen() {
       lastName: user?.lastName || '',
       email: user?.email || '',
       phone_number: user?.phone_number || '',
-      gender: user?.gender,
+      gender: user?.gender as EGender | undefined,
       date_of_birth: user?.date_of_birth ? new Date(Number(user.date_of_birth)) : undefined,
       allergies: user?.allergies || [],
       // Convert IEmergencyContact[] to FormEmergencyContact[]
@@ -126,7 +126,7 @@ export default function ProfileSettingsScreen() {
           setValue('lastName', user.lastName || '');
           setValue('email', user.email || '');
           setValue('phone_number', user.phone_number || '');
-          setValue('gender', user.gender);
+          setValue('gender', user.gender as EGender);
           
           if (user.date_of_birth) {
             // Convert to number first
@@ -331,7 +331,7 @@ export default function ProfileSettingsScreen() {
       data.profile_picture_uri !== user.profile_picture_uri ||
       data.email !== user.email ||
       data.phone_number !== (user.phone_number || '') ||
-      data.gender !== (user.gender || '') ||
+      data.gender !== (user.gender || null) ||
       formDateStr !== userDateStr ||
       JSON.stringify(data.allergies) !== JSON.stringify(user.allergies || []) ||
       JSON.stringify(data.emergencyContacts) !== JSON.stringify(user.emergencyContacts?.map(contact => ({

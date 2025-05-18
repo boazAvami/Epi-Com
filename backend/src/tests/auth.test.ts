@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { userModel } from "../models/userModel";
 import bcrypt from 'bcrypt';
 import { App } from "../app";
-import {IUser} from "@shared/types";
+import {EGender, IUser} from "@shared/types";
 
 let appInstance: App = new App();
 
@@ -35,6 +35,7 @@ const testUser: IUser & { accessToken?: string; refreshToken?: string; _id?: str
   email: "test@user.com",
   password: "testpassword",
   firstName: "sagi",
+  gender: EGender.MALE,
   lastName: "ezra",
   phone_number: "0545325447",
   allergies: ["Peanuts", "Gluten"],
@@ -44,6 +45,7 @@ const testUser: IUser & { accessToken?: string; refreshToken?: string; _id?: str
 const testUser2: IUser & { accessToken?: string; refreshToken?: string; _id?: string } = {
   userName: "testUser2",
   email: "test@user2.com",
+  gender: EGender.MALE,
   password: "testpassword2",
   allergies: [],
   emergencyContacts: [],
