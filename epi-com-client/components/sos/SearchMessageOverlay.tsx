@@ -1,23 +1,16 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
+import useSOSMapController from "@/hooks/useSOSMapController";
 
 interface Props {
     visible: boolean;
     messageIndex: number;
     spinAnim: Animated.Value;
     opacityAnim: Animated.Value;
+    messages: string[];
 }
 
-const messages: string[] = [
-    'מחפשים עזרה באזור שלך...',
-    'בודקים זמינות מחזיקי אפיפן...',
-    'מחברים אותך למי שיכול לעזור...',
-    'מתאמים עבורך מענה רפואי...',
-    'מקשרים אותך למחזיק אפיפן קרוב...',
-    'בודקים אפשרויות תגובה מיידית...'
-];
-
-export default function SearchMessageOverlay({ visible, messageIndex, spinAnim, opacityAnim }: Props) {
+export default function SearchMessageOverlay({ visible, messageIndex, spinAnim, opacityAnim, messages }: Props) {
     if (!visible) return null;
 
     const spin = spinAnim.interpolate({

@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useCallback } from 'react';
-import { I18nManager } from 'react-native';
-import { changeLanguage, isRTL } from '../i18n';
+import { changeLanguage, isRTL } from '@/i18n';
 
 export function useAppTranslation() {
   const { t, i18n } = useTranslation();

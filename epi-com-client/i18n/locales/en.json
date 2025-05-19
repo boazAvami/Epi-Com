@@ -248,5 +248,21 @@
       "typing": "Assistant is typing...",
       "input_placeholder": "Type your message here...",
       "messages_remaining_suffix": "messages remaining"
+    },
+    "sos": {
+      "explanation": "Pressing the emergency button will send an immediate help request",
+      "bold": " to nearby users who carry an EpiPen 🚨",
+      "search": {
+        "0": "Looking for help in your area...",
+        "1": "Checking availability of EpiPen holders...",
+        "2": "Connecting you to someone who can help...",
+        "3": "Coordinating medical assistance for you...",
+        "4": "Linking you to a nearby EpiPen holder...",
+        "5": "Checking immediate response options...",
+        "6": "Hang tight, we're almost there...",
+        "7": "Searching for the closest responders...",
+        "8": "Making sure help is on the way...",
+        "9": "Almost done, finding the best match for you..."
+      }
     }
   }

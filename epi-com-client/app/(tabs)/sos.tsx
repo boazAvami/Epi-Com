@@ -6,12 +6,14 @@ import { VStack } from "@/components/ui/vstack";
 import EmergencyContactsList from "@/components/sos/EmergencyContactsList";
 import { useAuth } from "@/stores/useAuth";
 import { IEmergencyContact } from "@shared/types";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter } from "expo-router";
 import {Text} from "@/components/ui/text";
+import {useAppTranslation} from "@/hooks/useAppTranslation";
 
 export default function SOSScreen() {
     const { user } = useAuth();
     const router = useRouter();
+    const { t, isRtl, language } = useAppTranslation();
 
     const [isUrgent, setIsUrgent] = useState(false);
     const handleSendSOS = useCallback(() => {
@@ -30,10 +32,10 @@ export default function SOSScreen() {
                         <PulsingSOSButton onPress={handleSendSOS} isUrgent={isUrgent} onTick={handleTick}/>
                     </Center>
 
-                    <View style={styles.sosExplanationBox}>
+                    <View style={[styles.sosExplanationBox, isRtl && { direction: 'rtl' }]}>
                         <Text style={styles.sosExplanationText}>
-                             בלחיצה על כפתור החירום תישלח בקשת עזרה מיידית
-                            <Text style={styles.boldText}> למשתמשים בסביבה שמחזיקים אפיפן 🚨</Text>
+                            {t('sos.explanation')}
+                            <Text style={styles.boldText}>{t('sos.bold')}</Text>
                         </Text>
                     </View>
                     <EmergencyContactsList contacts={user?.emergencyContacts as IEmergencyContact[]} />
@@ -48,9 +50,9 @@ const styles = StyleSheet.create({
         marginTop: 12,
         paddingHorizontal: 16,
         paddingVertical: 8,
-        backgroundColor: '#FEF2F2', // אדום בהיר
+        backgroundColor: '#FEF2F2',
         borderWidth: 1,
-        borderColor: '#FECACA', // גבול אדום בהיר
+        borderColor: '#FECACA',
         borderRadius: 12,
     },
     sosExplanationText: {

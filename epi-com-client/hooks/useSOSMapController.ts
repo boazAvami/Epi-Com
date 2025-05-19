@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import {Dispatch, SetStateAction, useEffect, useMemo, useRef, useState} from 'react';
 import { Animated, Easing } from 'react-native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
@@ -11,15 +11,7 @@ import { ESOSNotificationType } from '@shared/types';
 import { ResponderCardProps } from "@/components/sos/ResponderCard";
 import {EpipenMarker} from "@/types";
 import {getUserEpiPens} from "@/services/graphql/graphqlEpipenService";
-
-const messages = [
-    'מחפשים עזרה באזור שלך...',
-    'בודקים זמינות מחזיקי אפיפן...',
-    'מחברים אותך למי שיכול לעזור...',
-    'מתאמים עבורך מענה רפואי...',
-    'מקשרים אותך למחזיק אפיפן קרוב...',
-    'בודקים אפשרויות תגובה מיידית...'
-];
+import {useAppTranslation} from "@/hooks/useAppTranslation";
 
 type Props = {
     mapRef: any;
@@ -39,9 +31,21 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
     const [currentZoom, setCurrentZoom] = useState(0.01);
     const [animationSpeedInterval, setAnimationSpeedInterval] = useState(4000);
     const [sosId, setSosId] = useState('');
-
     const opacityAnim = useRef(new Animated.Value(1)).current;
     const spinAnim = useRef(new Animated.Value(0)).current;
+    const { t, language } = useAppTranslation();
+    const messages = useMemo(() => [
+        t('sos.search.0'),
+        t('sos.search.1'),
+        t('sos.search.2'),
+        t('sos.search.3'),
+        t('sos.search.4'),
+        t('sos.search.5'),
+        t('sos.search.6'),
+        t('sos.search.7'),
+        t('sos.search.8'),
+        t('sos.search.9'),
+    ], [language]);
 
     const handleCancel = async () => {
         await stopSOS();
@@ -183,5 +187,6 @@ export default function useSOSMapController({ mapRef, bottomSheetRef, setRespond
         opacityAnim,
         spinAnim,
         handleCancel,
+        messages
     };
 }

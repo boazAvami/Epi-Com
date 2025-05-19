@@ -7,7 +7,6 @@ import MapSection from "@/components/sos/MapSection";
 import useSOSMapController from "@/hooks/useSOSMapController";
 import { Button, ButtonText } from "@/components/ui/button";
 import {ResponderCardProps} from "@/components/sos/ResponderCard";
-import {EpipenMarker} from "@/types";
 
 export default function SOSMapScreen() {
     const mapRef = useRef(null);
@@ -22,6 +21,7 @@ export default function SOSMapScreen() {
         spinAnim,
         opacityAnim,
         handleCancel,
+        messages
     } = useSOSMapController({
         mapRef,
         bottomSheetRef,
@@ -47,6 +47,7 @@ export default function SOSMapScreen() {
                 </View>
 
                 <SearchMessageOverlay
+                    messages={messages}
                     visible={showSearchMessages}
                     messageIndex={messageIndex}
                     spinAnim={spinAnim}

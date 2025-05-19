@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   bottomContainer: {
-    marginBottom: 16, // bottom padding to the input area
+    marginBottom: 35, // bottom padding to the input area
   },
   headerContainer: {
     position: 'relative',
