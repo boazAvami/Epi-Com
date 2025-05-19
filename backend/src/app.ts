@@ -25,8 +25,8 @@ dotenv.config();
 
 const PORT = process.env.PORT || 4000;
 const NODE_ENV = process.env.NODE_ENV || "development"; // Default to development
-const HTTPS_KEY = process.env.HTTPS_KEY || "";
-const HTTPS_CERT = process.env.HTTPS_CERT || "";
+const HTTPS_KEY = process.env.HTTPS_KEY || undefined;
+const HTTPS_CERT = process.env.HTTPS_CERT || undefined;
 const USE_HTTPS = NODE_ENV === "production" && HTTPS_KEY && HTTPS_CERT; // Enable HTTPS only in production
 
 export class App {

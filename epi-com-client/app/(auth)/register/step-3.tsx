@@ -18,12 +18,7 @@ import Chips from "@/components/Chips";
 import {RegisterData} from "@/shared/types/register-data.type";
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { RTLText } from '@/components/shared/RTLComponents';
-
-// Helper to convert enum value to readable format
-const formatAllergyName = (allergyKey: string): string => {
-    // Convert camelCase to words with spaces
-    return allergyKey.replace(/([a-z])([A-Z])/g, '$1 $2');
-}
+import { getAllergyItems } from '@/utils/allergy-utils';
 
 const RegisterStep3Screen = forwardRef<StepRef>((_, ref) => {
     const { formData, setFormData } = useRegister();
@@ -31,12 +26,8 @@ const RegisterStep3Screen = forwardRef<StepRef>((_, ref) => {
     const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>([]);
     
     useEffect(() => {
-        // Create allergy items based on the current language
-        const allergyItems = Object.entries(EAllergy).map(([key, value]) => ({
-            label: isRtl ? value : formatAllergyName(key),
-            value: value
-        }));
-        setAllergiesItems(allergyItems);
+        // Use the utility function to get allergies items based on language
+        setAllergiesItems(getAllergyItems(isRtl));
     }, [isRtl, language]);
     
     const {
@@ -112,6 +103,7 @@ const RegisterStep3Screen = forwardRef<StepRef>((_, ref) => {
                                         setItems={setAllergiesItems}
                                         selectedValues={value}
                                         setSelectedValues={onChange}
+                                        isRtl={isRtl}
                                     />
                                 )}
                             />

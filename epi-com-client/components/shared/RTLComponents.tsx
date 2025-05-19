@@ -4,19 +4,30 @@ import { useAppTranslation } from '../../hooks/useAppTranslation';
 
 interface RTLTextProps extends TextProps {
   children: ReactNode;
-  style?: TextStyle | TextStyle[];
+  style?: TextStyle | TextStyle[] | undefined;
   className?: string;
 }
 
 export const RTLText: React.FC<RTLTextProps> = ({ children, style, className, ...props }) => {
   const { isRtl } = useAppTranslation();
   
+  // Create a base style that's always applied
+  const baseStyle = isRtl ? styles.rtlText : styles.ltrText;
+  
+  // Handle different types of style props safely
+  let combinedStyle;
+  if (Array.isArray(style)) {
+    // Filter out any null/undefined values in the array
+    combinedStyle = [baseStyle, ...style.filter(s => s !== null && s !== undefined)];
+  } else if (style) {
+    combinedStyle = [baseStyle, style];
+  } else {
+    combinedStyle = baseStyle;
+  }
+  
   return (
     <Text
-      style={[
-        isRtl ? styles.rtlText : styles.ltrText,
-        Array.isArray(style) ? style : style ? [style] : null
-      ]}
+      style={combinedStyle}
       className={className}
       {...props}
     >
@@ -28,20 +39,29 @@ export const RTLText: React.FC<RTLTextProps> = ({ children, style, className, ..
 // RTL-aware Row component for horizontal layouts
 interface RTLRowProps extends ViewProps {
   children: ReactNode;
-  style?: ViewStyle | ViewStyle[];
+  style?: ViewStyle | ViewStyle[] | undefined;
   className?: string;
 }
 
 export const RTLRow: React.FC<RTLRowProps> = ({ children, style, className, ...props }) => {
   const { isRtl } = useAppTranslation();
   
+  // Create base styles that won't cause type conflicts
+  const baseStyle = isRtl ? { ...styles.row, ...styles.rtlRow } : styles.row;
+  
+  // Combine with provided styles
+  let combinedStyle;
+  if (Array.isArray(style)) {
+    combinedStyle = [baseStyle, ...style.filter(s => s !== null && s !== undefined)];
+  } else if (style) {
+    combinedStyle = [baseStyle, style];
+  } else {
+    combinedStyle = baseStyle;
+  }
+  
   return (
     <View
-      style={[
-        styles.row,
-        isRtl ? styles.rtlRow : null,
-        Array.isArray(style) ? style : style ? [style] : null
-      ]}
+      style={combinedStyle}
       className={className}
       {...props}
     >
@@ -53,19 +73,29 @@ export const RTLRow: React.FC<RTLRowProps> = ({ children, style, className, ...p
 // RTL-aware View that adjusts alignment for RTL
 interface RTLViewProps extends ViewProps {
   children: ReactNode;
-  style?: ViewStyle | ViewStyle[];
+  style?: ViewStyle | ViewStyle[] | undefined;
   className?: string;
 }
 
 export const RTLView: React.FC<RTLViewProps> = ({ children, style, className, ...props }) => {
   const { isRtl } = useAppTranslation();
   
+  // Create base style
+  const baseStyle = isRtl ? styles.rtlContainer : styles.ltrContainer;
+  
+  // Combine with provided styles
+  let combinedStyle;
+  if (Array.isArray(style)) {
+    combinedStyle = [baseStyle, ...style.filter(s => s !== null && s !== undefined)];
+  } else if (style) {
+    combinedStyle = [baseStyle, style];
+  } else {
+    combinedStyle = baseStyle;
+  }
+  
   return (
     <View
-      style={[
-        isRtl ? styles.rtlContainer : styles.ltrContainer,
-        Array.isArray(style) ? style : style ? [style] : null
-      ]}
+      style={combinedStyle}
       className={className}
       {...props}
     >

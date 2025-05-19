@@ -33,7 +33,10 @@ export const register = async (req: Request, res: Response) => {
             gender: gender || '',
         });
         res.status(201).send(user);
-    } catch (err: unknown) {
+    } catch (err: any) {
+
+        console.log(err);
+
         // Handle duplicate key error (MongoDB unique constraint)
         if (typeof err === "object" && err !== null && "code" in err && (err as any).code === 11000) {
             const field = Object.keys((err as any).keyPattern)[0];
@@ -56,6 +59,7 @@ export const register = async (req: Request, res: Response) => {
             res.status(400).json({ message: errors.join(", ") });
             return;
         }
+
         res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
 };

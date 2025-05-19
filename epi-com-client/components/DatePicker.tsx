@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Platform } from 'react-native';
+import { View, Platform, Pressable, Text, StyleSheet } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Input, InputField } from '@/components/ui/input';
 import {
@@ -11,19 +11,24 @@ import {
 } from '@/components/ui/modal';
 import { Button, ButtonText } from '@/components/ui/button';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { Calendar } from 'lucide-react-native';
+import { Icon } from '@/components/ui/icon';
 
-type DateInputProps = {
+interface DatePickerProps {
     onChange: (date: Date) => void;
-    onBlur?: () => void;
+    onBlur?: (...event: any[]) => void;
     value?: Date;
+    isRtl?: boolean;
     placeholder?: string;
-};
+}
 
-const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => {
+const DateInput = ({ onChange, onBlur, value, isRtl: isRtlProp, placeholder }: DatePickerProps) => {
     const [date, setDate] = useState<Date>(value || new Date());
     const [show, setShow] = useState(false);
     const [dateDisplay, setDateDisplay] = useState<string>("");
-    const { t, isRtl, language } = useAppTranslation();
+    const { t, isRtl: isRtlContext, language } = useAppTranslation();
+
+    const isRtl = isRtlProp !== undefined ? isRtlProp : isRtlContext;
 
     useEffect(() => {
         if (value instanceof Date && !isNaN(value.getTime())) {
@@ -56,16 +61,15 @@ const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => 
 
     return (
         <View>
-            <Input>
-                <InputField
-                    onPress={openModal}
-                    className={isRtl ? "text-right" : "text-left"}
-                    placeholder={placeholder || t('auth.register.step2.date_of_birth')}
-                    value={dateDisplay}
-                    onBlur={onBlur}
-                    editable={false}
-                />
-            </Input>
+            <Pressable
+                onPress={openModal}
+                style={[styles.datePickerButton, isRtl && styles.rtlDatePickerButton]}
+            >
+                <Text style={[styles.dateText, isRtl && styles.rtlText]}>
+                    {value ? dateDisplay : t('auth.register.step2.date_of_birth')}
+                </Text>
+                <Icon as={Calendar} size="md" color="#666" />
+            </Pressable>
 
             {show && (
                 <Modal
@@ -98,5 +102,26 @@ const DateInput = ({ onChange, onBlur, value, placeholder }: DateInputProps) => 
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    datePickerButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+    },
+    rtlDatePickerButton: {
+        flexDirection: 'row-reverse',
+    },
+    dateText: {
+        flex: 1,
+        marginLeft: 10,
+    },
+    rtlText: {
+        textAlign: 'right',
+    },
+});
 
 export default DateInput;
