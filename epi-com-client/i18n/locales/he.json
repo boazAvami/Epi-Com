@@ -228,6 +228,19 @@
       "7": "מחפשים את המגיבים הקרובים ביותר...",
       "8": "מוודאים שעזרה כבר בדרך...",
       "9": "כמעט סיימנו, מחפשים עבורך את ההתאמה הטובה ביותר..."
+    },
+    "alertReceived": "התקבלה קריאת מצוקה!",
+    "locationSharedSuccess": "פרטי המיקום שותפו בהצלחה ✅",
+    "shareLocation": "שתף פרטי מיקום",
+    "cannotHelp": "לא יכול לעזור",
+    "locationPermissionDenied": "לא אושרה גישה למיקום. לא ניתן לשלוח תגובת SOS.",
+    "distanceMeters": "{{meters}} מטרים ממך",
+    "distanceKm": "{{km}} ק״מ ממך",
+    "unknownLocation": "מיקום לא ידוע",
+    "bottomSheet": {
+      "helpNearby": "נמצאה עזרה בקרבת מקום",
+      "noResponders": "אין כרגע מגיבים זמינים",
+      "cancelSOS": "הכול בסדר, אפשר להפסיק את הקריאה"
     }
   },
   "profile": {

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, StyleSheet, Image, Linking} from 'react-native';
+import {View, StyleSheet, Image} from 'react-native';
 import {Button, ButtonText} from '@/components/ui/button';
 import MapView, { Marker } from 'react-native-maps';
 import {useLocalSearchParams, useRouter} from 'expo-router';
@@ -14,6 +14,7 @@ import {colors} from "@/constants/Colors";
 import {useSOS} from "@/hooks/useSOS";
 import * as Location from 'expo-location';
 import {useNavigationApps} from "@/hooks/useNavigationApps";
+import {useAppTranslation} from "@/hooks/useAppTranslation";
 
 export default function SOSResponseScreen() {
     const { sosId, userId, location, timestamp } = useLocalSearchParams();
@@ -23,6 +24,7 @@ export default function SOSResponseScreen() {
     const [sosUser, setSosUser] = useState<Partial<IUser> | null>(null);
     const [hasSharedLocation, setHasSharedLocation] = useState(false);
     const {responseToSOS} = useSOS();
+    const { t } = useAppTranslation();
 
     useEffect(() => {
         const getSOSUser = async () => {
@@ -38,7 +40,7 @@ export default function SOSResponseScreen() {
     const handleHelp = async () => {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-            alert('לא אושרה גישה למיקום. לא ניתן לשלוח תגובת SOS.');
+            alert(t('sos.locationPermissionDenied'));
             return;
         }
 
@@ -88,11 +90,11 @@ export default function SOSResponseScreen() {
                     </Button>
                 </View>
                 <View style={styles.alertBox}>
-                    <Text style={styles.alertText}>התקבלה קריאת מצוקה!</Text>
+                    <Text style={styles.alertText}>{t('sos.alertReceived')}</Text>
                 </View>
 
                 <Center>
-                    <VStack space="sm">
+                    <VStack space="sm" style={styles.userBox}>
                         <Avatar size="xl" style={styles.avatar}>
                             <AvatarFallbackText>{sosUser?.firstName}</AvatarFallbackText>
                             <AvatarImage
@@ -111,13 +113,13 @@ export default function SOSResponseScreen() {
                  <VStack>
                     <Center>
                         {hasSharedLocation ?
-                            <Text> פרטי המיקום שותפו בהצלחה ✅ </Text>
+                            <Text>{t('sos.locationSharedSuccess')}</Text>
                             : <>
                                 <Button onPress={handleHelp} style={styles.primaryButton}>
-                                    <ButtonText>שתף פרטי מיקום</ButtonText>
+                                    <ButtonText>{t('sos.shareLocation')}</ButtonText>
                                 </Button>
                                 <Button variant="link" onPress={handleCannotHelp}>
-                                    <ButtonText>לא יכול לעזור</ButtonText>
+                                    <ButtonText>{t('sos.cannotHelp')}</ButtonText>
                                 </Button>
                             </>}
                     </Center>
@@ -157,9 +159,9 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     }
     ,
-    userBox: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+    userBox: {alignItems: 'center', justifyContent: 'center' },
     avatar: {  marginLeft: 10 },
     name: { fontSize: 18, fontWeight: 'bold' },
     condition: { color: '#555' },
-    primaryButton: { marginVertical: 5, width: '40%', backgroundColor: '#FE385C', borderRadius: 20 },
+    primaryButton: { marginVertical: 5, width: '70%', backgroundColor: '#FE385C', borderRadius: 20 },
 });

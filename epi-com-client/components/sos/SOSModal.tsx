@@ -25,6 +25,7 @@ import { VStack } from "@/components/ui/vstack";
 import { Center } from "@/components/ui/center";
 import { colors } from "@/constants/Colors";
 import haversine from "haversine-distance";
+import {useAppTranslation} from "@/hooks/useAppTranslation";
 
 interface Props {
     visible: boolean;
@@ -40,6 +41,7 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
     const [distanceText, setDistanceText] = useState<string>('');
     const { responseToSOS } = useSOS();
     const { handleGoogleNavigate, handleWazeNavigate } = useNavigationApps();
+    const { t } = useAppTranslation();
 
     useEffect(() => {
         if (!visible) return;
@@ -49,7 +51,7 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
     const handleHelp = async () => {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-            alert("לא אושרה גישה למיקום.");
+            alert(t('sos.locationPermissionDenied'));
             return;
         }
 
@@ -66,8 +68,8 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
     const getDistanceText = (from: ILocation, to: ILocation) => {
         const dist = haversine(from, to);
         return dist < 1000
-            ? `${Math.round(dist)} מטרים ממך`
-            : `${(dist / 1000).toFixed(1)} ק״מ ממך`;
+            ? t('sos.distanceMeters', { meters: Math.round(dist) })
+            : t('sos.distanceKm', { km: (dist / 1000).toFixed(1) });
     };
 
     const getCurrentLocation = async () => {
@@ -84,6 +86,8 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
     };
 
     useEffect(() => {
+        if (!location) return;
+
         const getDistanceString = async () => {
             try {
                 const loc: ILocation = await getCurrentLocation();
@@ -100,7 +104,7 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
         };
 
         getDistanceString();
-    }, []);
+    }, [location]);
 
     return (
         <Modal isOpen={visible} onClose={onClose} size="lg">
@@ -110,7 +114,7 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
                     <View style={styles.mapContainer}>
                         <Center>
                             <Heading size="md" className="text-typography-950 mb-4">
-                                קריאת SOS התקבלה 🚨
+                                {t('sos.alertReceived')}
                             </Heading>
                         </Center>
 
@@ -135,7 +139,7 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
                     </View>
 
                     <Center>
-                        <VStack space="xs">
+                        <VStack space="xs" style={styles.userBox}>
                             <Avatar size="xl" style={styles.avatar}>
                                 <AvatarFallbackText>{sosUser?.firstName}</AvatarFallbackText>
                                 <AvatarImage
@@ -155,10 +159,10 @@ const SOSModal: React.FC<Props> = ({ visible, onClose, sosId, userId, location, 
 
                 <Center>
                     <Button onPress={handleHelp} style={styles.primaryButton}>
-                        <ButtonText>שתף פרטי מיקום</ButtonText>
+                        <ButtonText>{t('sos.shareLocation')}</ButtonText>
                     </Button>
                     <Button variant="link" onPress={onClose}>
-                        <ButtonText>לא יכול לעזור</ButtonText>
+                        <ButtonText>{t('sos.cannotHelp')}</ButtonText>
                     </Button>
                 </Center>
             </ModalContent>
@@ -206,4 +210,5 @@ const styles = StyleSheet.create({
     text: { marginBottom: 10, fontSize: 16, textAlign: "center" },
     bold: { fontWeight: "bold" },
     small: { fontSize: 14, fontStyle: "italic" },
+    userBox: {alignItems: 'center', justifyContent: 'center' },
 });

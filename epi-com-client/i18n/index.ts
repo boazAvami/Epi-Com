@@ -6,6 +6,7 @@ import * as RNLocalize from 'react-native-localize';
 
 import en from './locales/en.json';
 import he from './locales/he.json';
+import dayjs from "dayjs";
 
 const LANGUAGES = {
   en: {
@@ -25,6 +26,7 @@ const LANGUAGE_DETECTOR = {
       // Try to get stored language
       const storedLanguage = await AsyncStorage.getItem('language');
       if (storedLanguage && ['en', 'he'].includes(storedLanguage)) {
+        dayjs.locale(storedLanguage);
         return callback(storedLanguage);
       }
       
@@ -33,6 +35,7 @@ const LANGUAGE_DETECTOR = {
     //   callback(locale?.languageTag || 'en');
     } catch (error) {
       console.error('Error detecting language:', error);
+      dayjs.locale('en');
       callback('en');
     }
   },
@@ -70,6 +73,7 @@ i18n
 
 export const changeLanguage = async (language: 'en' | 'he') => {
   await i18n.changeLanguage(language);
+  dayjs.locale(language);
 };
 
 export const isRTL = () => {

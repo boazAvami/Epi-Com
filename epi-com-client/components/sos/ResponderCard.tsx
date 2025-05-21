@@ -15,9 +15,8 @@ import {colors} from "@/constants/Colors";
 import {Divider} from "@/components/ui/divider";
 import {EpipenList} from "@/components/epipenList/EpipenList";
 import {EpipenMarker} from "@/types";
-import {EpipenItem} from "@/components/epipenItem/EpipenItem";
-import {EpipenInfoCard} from "@/components/epipenDetails/EpipenInfoCard";
 import {EpipenDetails} from "@/components/epipenDetails/EpipenDetails";
+import {useAppTranslation} from "@/hooks/useAppTranslation";
 
 export interface ResponderCardProps {
     user: IUser;
@@ -31,6 +30,7 @@ export default function ResponderCard({ user, userLocation, epipenList, mapRef }
     const [showEpipenInfo, setShowEpipenInfo] = useState<boolean>(false);
     const [selectedEpipen, setSelectedEpipen] = useState<EpipenMarker | undefined>();
     const {handleGoogleNavigate, handleWazeNavigate} = useNavigationApps();
+    const { t } = useAppTranslation();
 
     useEffect(() => {
         const getDistanceString = async () => {
@@ -48,8 +48,8 @@ export default function ResponderCard({ user, userLocation, epipenList, mapRef }
     const getDistanceText = (from: ILocation, to: ILocation) => {
         const dist = haversine(from, to);
         return dist < 1000
-            ? `${Math.round(dist)} מטרים ממך`
-            : `${(dist / 1000).toFixed(1)} ק״מ ממך`;
+            ? t('sos.distanceMeters', { meters: Math.round(dist) })
+            : t('sos.distanceKm', { km: (dist / 1000).toFixed(1) });
     };
 
     const getCurrentLocation = async () => {
@@ -99,7 +99,7 @@ export default function ResponderCard({ user, userLocation, epipenList, mapRef }
                         />
                     </Avatar>
                     <Text bold>{user.firstName} {user.lastName}</Text>
-                    <Text size="sm">{distanceText || 'מיקום לא ידוע'}</Text>
+                    <Text size="sm">{distanceText || t('sos.unknownLocation')}</Text>
                 </Center>
 
                 <Center>

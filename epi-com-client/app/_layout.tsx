@@ -23,8 +23,6 @@ import SOSModal from "@/components/sos/SOSModal";
 import {ILocation} from "@shared/types";
 
 dayjs.extend(relativeTime);
-dayjs.locale('he');
-
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutInner() {

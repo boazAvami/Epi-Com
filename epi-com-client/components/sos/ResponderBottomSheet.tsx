@@ -9,6 +9,7 @@ import { Text } from "@/components/ui/text";
 import { Center } from "@/components/ui/center";
 import { VStack } from "@/components/ui/vstack";
 import { Button, ButtonText } from "@/components/ui/button";
+import {useAppTranslation} from "@/hooks/useAppTranslation";
 
 interface Props {
     responders: ResponderCardProps[];
@@ -22,6 +23,7 @@ const ResponderListBottomSheet = forwardRef<BottomSheet, Props>(({ responders, o
     const carouselRef = React.useRef<ICarouselInstance>(null);
     const progress = useSharedValue<number>(0);
     const [sheetHeight, setSheetHeight] = useState<number>(0);
+    const { t } = useAppTranslation();
 
     const onLayout = (event: LayoutChangeEvent) => {
         setSheetHeight(event.nativeEvent.layout.height);
@@ -44,11 +46,11 @@ const ResponderListBottomSheet = forwardRef<BottomSheet, Props>(({ responders, o
         >
             <BottomSheetView onLayout={onLayout} style={styles.container}>
                 <VStack className="mt-4">
-                    <Text style={styles.title}>נמצאה עזרה בקרבת מקום</Text>
+                    <Text style={styles.title}>{t('sos.bottomSheet.helpNearby')}</Text>
 
                     {responders.length === 0 ? (
                         <Center>
-                            <Text>אין כרגע מגיבים זמינים</Text>
+                            <Text>{t('sos.bottomSheet.noResponders')}</Text>
                         </Center>
                     ) : responders.length === 1 ? (
                         <ResponderCard
@@ -81,7 +83,7 @@ const ResponderListBottomSheet = forwardRef<BottomSheet, Props>(({ responders, o
 
                     <Center>
                         <Button onPress={onCancelSOS} style={styles.cancelButton}>
-                            <ButtonText>הכול בסדר, אפשר להפסיק את הקריאה</ButtonText>
+                            <ButtonText>{t('sos.bottomSheet.cancelSOS')}</ButtonText>
                         </Button>
                     </Center>
                 </VStack>

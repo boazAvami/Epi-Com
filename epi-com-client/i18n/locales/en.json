@@ -263,6 +263,19 @@
         "7": "Searching for the closest responders...",
         "8": "Making sure help is on the way...",
         "9": "Almost done, finding the best match for you..."
+      },
+      "alertReceived": "An SOS alert has been received!",
+      "locationSharedSuccess": "Location details successfully shared ✅",
+      "shareLocation": "Share location details",
+      "cannotHelp": "Cannot help",
+      "locationPermissionDenied": "Location access not granted. Unable to send SOS response.",
+      "distanceMeters": "{{meters}} meters away from you",
+      "distanceKm": "{{km}} km away from you",
+      "unknownLocation": "Unknown location",
+      "bottomSheet": {
+        "helpNearby": "Help found nearby",
+        "noResponders": "No responders available at the moment",
+        "cancelSOS": "All good, cancel the SOS"
       }
     }
   }

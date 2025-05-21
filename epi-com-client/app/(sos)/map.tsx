@@ -1,17 +1,18 @@
 import React, { useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { IUser } from '@shared/types';
 import ResponderBottomSheet from "@/components/sos/ResponderBottomSheet";
 import SearchMessageOverlay from "@/components/sos/SearchMessageOverlay";
 import MapSection from "@/components/sos/MapSection";
 import useSOSMapController from "@/hooks/useSOSMapController";
 import { Button, ButtonText } from "@/components/ui/button";
 import {ResponderCardProps} from "@/components/sos/ResponderCard";
+import {useAppTranslation} from "@/hooks/useAppTranslation";
 
 export default function SOSMapScreen() {
     const mapRef = useRef(null);
     const bottomSheetRef = useRef(null);
     const [respondersData, setRespondersData] = useState<ResponderCardProps[]>([]);
+    const { t } = useAppTranslation();
 
     const {
         location,
@@ -42,7 +43,7 @@ export default function SOSMapScreen() {
 
                 <View style={styles.cancelWrapper}>
                     <Button onPress={handleCancel} style={styles.cancelButton}>
-                        <ButtonText>ביטול</ButtonText>
+                        <ButtonText>{t('buttons.cancel')}</ButtonText>
                     </Button>
                 </View>
 
