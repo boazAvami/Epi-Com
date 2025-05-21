@@ -41,8 +41,8 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control";
 import { AlertTriangle } from 'lucide-react-native';
 import PhoneNumberInput from "@/components/PhoneNumberInput";
-import DropdownComponent from "@/components/Dropdown";
-import { genderOptions } from "@/utils/gender-utils";
+import DropdownComponent, {IDropdownItem} from "@/components/Dropdown";
+import { getGenderOptions } from "@/utils/gender-utils";
 import Chips from "@/components/Chips";
 import { ChipItem } from "@/components/Chip";
 import {
@@ -70,10 +70,12 @@ export default function ProfileSettingsScreen() {
   const [isLoading, setIsLoading] = useState(!user);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>([]);
-  
+  const [genderOptions, setGenderOptions] = useState<IDropdownItem[]>([]);
+
   // Update allergies items when language changes
   useEffect(() => {
     setAllergiesItems(getAllergyItems(isRtl));
+    setGenderOptions(getGenderOptions());
   }, [isRtl, language]);
   
   // Helper function to safely convert error messages to strings

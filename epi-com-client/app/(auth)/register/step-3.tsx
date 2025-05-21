@@ -12,7 +12,6 @@ import { Center } from '@/components/ui/center';
 import { AlertTriangle } from 'lucide-react-native';
 import { StepRef } from '@/app/(auth)/register/step-1';
 import { registerStep3Schema, registerStep3Type } from '@/schemas/register/step-3-schema';
-import {EAllergy} from "@shared/types";
 import {ChipItem} from "@/components/Chip";
 import Chips from "@/components/Chips";
 import {RegisterData} from "@/shared/types/register-data.type";
