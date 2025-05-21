@@ -72,6 +72,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
     if (userData.date_of_birth !== undefined) variables.date_of_birth = userData.date_of_birth;
     if (userData.profile_picture_uri !== undefined) variables.profile_picture_uri = userData.profile_picture_uri;
     if (userData.gender !== undefined) variables.gender = userData.gender; // This is now passing the enum value directly
+    if (userData.language !== undefined) variables.language = userData.language;
     if (userData.allergies !== undefined) variables.allergies = userData.allergies;
     if (userData.emergencyContacts !== undefined) variables.emergencyContacts = userData.emergencyContacts;
 
@@ -87,6 +88,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
             $gender: Gender,
             $allergies: [String],
             $emergencyContacts: [EmergencyContactInput]
+            $language: String
         ) {
             updateUser(
                 userName: $userName,
@@ -99,6 +101,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
                 gender: $gender,
                 allergies: $allergies,
                 emergencyContacts: $emergencyContacts
+                language: $language,
             ) {
                 id
                 userName
@@ -114,6 +117,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
                     name
                     phone
                 }
+                language
                 date_joined
             }
         }`;

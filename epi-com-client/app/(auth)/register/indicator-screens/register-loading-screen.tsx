@@ -14,11 +14,12 @@ const RegisterLoadingScreen = () => {
     const { formData } = useRegister();
     const { login, getUserInfo } = useAuth();
     const router = useRouter();
-    const { t } = useAppTranslation();
+    const { t, language } = useAppTranslation();
 
     useEffect(() => {
         const handleRegister = async () => {
             try {
+                formData.language = language;
                 await register(formData);
             } catch (e) {
                 console.error('Registration failed:', e);
