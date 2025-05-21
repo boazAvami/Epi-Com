@@ -23,7 +23,7 @@ import { altairExpress } from "altair-express-middleware";
 // Load environment variables
 dotenv.config();
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5432;
 const NODE_ENV = process.env.NODE_ENV || "development"; // Default to development
 const HTTPS_KEY = process.env.HTTPS_KEY || undefined;
 const HTTPS_CERT = process.env.HTTPS_CERT || undefined;
