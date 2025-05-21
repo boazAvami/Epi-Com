@@ -4,13 +4,16 @@ import {ESOSNotificationType, ILocation, IUser} from "@shared/types";
 import {ISOS} from "../models/sosModel";
 import { EpiPenModel } from '../models/epipenModel';
 import mongoose from "mongoose";
+import {translations} from "src/consts/translations";
 const PUSH_REQUESTS_URL: string = 'https://exp.host/--/api/v2/push/send';
 
-const createSendSOSPayload = (token: string, sosId: string, userId: string, userLocation: ILocation) => {
+const createSendSOSPayload = (token: string, sosId: string, userId: string, userLocation: ILocation, lang: string) => {
+    const t = translations[lang] ?? translations.he;
+
     return {
         to: token,
-        title: '🚨 קריאת SOS דחופה',
-        body: 'משתמש סמוך אליך זקוק לאפיפן. האם תוכל לסייע?',
+        title: t.sosSent.title,
+        body: t.sosSent.body,
         sound: 'default',
         priority: 'high',
         data: {
@@ -23,11 +26,13 @@ const createSendSOSPayload = (token: string, sosId: string, userId: string, user
     };
 }
 
-const createSOSResponsePayload = (token: string, responder: IUser, userLocation: ILocation) => {
+const createSOSResponsePayload = (token: string, responder: IUser, userLocation: ILocation, lang: string) => {
+    const t = translations[lang] ?? translations.he;
+
     return {
         to: token,
-        title: '📍 מישהו הגיב לקריאה שלך',
-        body: `${responder.firstName + ' ' + responder.lastName} שיתף איתך את מיקומו ופרטי ההתקשרות.`,
+        title: t.sosResponse.title,
+        body: t.sosResponse.body(responder),
         sound: 'default',
         priority: 'high',
         data: {
@@ -39,11 +44,13 @@ const createSOSResponsePayload = (token: string, responder: IUser, userLocation:
     };
 }
 
-const createSOSStoppedPayload = (token: string, sosUser: IUser) => {
+const createSOSStoppedPayload = (token: string, sosUser: IUser, lang: string) => {
+    const t = translations[lang] ?? translations.he;
+
     return {
         to: token,
-        title: '❌ קריאת החירום בוטלה',
-        body: `${sosUser.firstName} ביטל את קריאת ה-SOS.`,
+        title: t.sosStopped.title,
+        body: t.sosStopped.body(sosUser),
         sound: 'default',
         priority: 'default',
         data: {
@@ -86,7 +93,7 @@ export async function getNearbyUserIdsWithEpipens(
         ...new Set(
             nearbyEpipens
                 .map(epi => epi.userId.toString())
-                // .filter(id => id !== excludeUserId)
+                .filter(id => id !== excludeUserId)
         ),
     ];
 }
@@ -113,7 +120,7 @@ export async function notifyUsersAndUpdateSOS(
 
     for (const user of users) {
         await sendPushNotification(
-            createSendSOSPayload(user.pushToken, sosId, senderId, location)
+            createSendSOSPayload(user.pushToken, sosId, senderId, location, user.language)
         );
     }
 
@@ -128,7 +135,7 @@ export async function notifyUserResponse(responderId: string, sos: ISOS, locatio
     const responder: IUser = await userModel.findOne({_id: responderId});
 
     if (sosUser) {
-        await sendPushNotification(createSOSResponsePayload(sosUser.pushToken, responder, location));
+        await sendPushNotification(createSOSResponsePayload(sosUser.pushToken, responder, location, sosUser.language));
     } else {
         throw new Error('Error while trying to respond to SOS - SOS user not found');
     }
@@ -151,7 +158,7 @@ export async function notifyRespondersSOSStopped(sos: ISOS): Promise<void> {
     });
 
     for (const user of users) {
-        await sendPushNotification(createSOSStoppedPayload(user.pushToken, sosUser));
+        await sendPushNotification(createSOSStoppedPayload(user.pushToken, sosUser, user.language));
     }
 }
 
