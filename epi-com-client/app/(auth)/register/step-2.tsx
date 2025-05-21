@@ -7,15 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
 import {AlertTriangle} from "lucide-react-native";
-import { Text } from "@/components/ui/text";
 import { useRegister } from '@/context/RegisterContext';
 import { registerStep2Schema, registerStep2Type } from '@/schemas/register/step-2-schema';
-import DropdownComponent from "@/components/Dropdown";
-import {genderOptions} from "@/utils/gender-utils";
+import DropdownComponent, {IDropdownItem} from "@/components/Dropdown";
+import {getGenderOptions} from "@/utils/gender-utils";
 import DateInput from "@/components/DatePicker";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
 import {RegisterData} from "@/shared/types/register-data.type";
-import {forwardRef, useImperativeHandle} from "react";
+import {forwardRef, useEffect, useImperativeHandle} from "react";
 import {StepRef} from "@/app/(auth)/register/step-1";
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { RTLText } from '@/components/shared/RTLComponents';
@@ -23,7 +22,8 @@ import React from 'react';
 
 const RegisterStep2Screen = forwardRef<StepRef>((_, ref) => {
     const { formData, setFormData } = useRegister();
-    const { t, isRtl } = useAppTranslation();
+    const { t, isRtl, language } = useAppTranslation();
+    const [genderOptions, setGenderOptions] = React.useState<IDropdownItem[]>([]);
 
     const {
         control,
@@ -39,6 +39,10 @@ const RegisterStep2Screen = forwardRef<StepRef>((_, ref) => {
             gender: formData.gender || undefined,
         }
     });
+
+    useEffect(() => {
+        setGenderOptions(getGenderOptions());
+    }, [language]);
 
     const onSubmit = (data: registerStep2Type) => {
         setFormData({ ...formData, ...(data as Partial<RegisterData>) });
@@ -151,7 +155,7 @@ const RegisterStep2Screen = forwardRef<StepRef>((_, ref) => {
                                         <PhoneNumberInput 
                                             onChange={onChange} 
                                             onBlur={onBlur} 
-                                            value={value} 
+                                            value={value as string}
                                             isInvalid={!!errors.phone_number} 
                                         />
                                     )}
@@ -217,11 +221,10 @@ const RegisterStep2Screen = forwardRef<StepRef>((_, ref) => {
                                     }}
                                     render={({ field: { onChange, value } }) => (
                                         <DropdownComponent 
-                                            value={value} 
+                                            value={value as string}
                                             onChange={onChange} 
-                                            items={genderOptions} 
+                                            items={genderOptions}
                                             isInvalid={!!errors.gender} 
-                                            placeholder={t('auth.register.step2.gender')} 
                                         />
                                     )}
                                 />

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/authContext';
 import { Settings } from "lucide-react-native";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth as useAuthStore } from '@/stores/useAuth';
-import { getUserEpiPens } from '@/services/graphql/graphqlEpipenService';
+import { getCurrentUserEpiPens } from '@/services/graphql/graphqlEpipenService';
 
 // Import UI components
 import { Center } from "@/components/ui/center";
@@ -67,8 +67,8 @@ export default function ProfileScreen() {
       try {
         setIsLoadingEpiPens(true);
         
-        // Get EpiPens using the getUserEpiPens function
-        const response = await getUserEpiPens();
+        // Get EpiPens using the getCurrentUserEpiPens function
+        const response = await getCurrentUserEpiPens();
 
         if (response && response.epiPensByUser) {
           setEpiPens(response.epiPensByUser);
@@ -201,16 +201,6 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
         {/* Profile header section */}
         <View style={[styles.header, { paddingTop: Math.max(20, insets.top) }]}>
-          <TouchableOpacity 
-            style={[styles.settingsButton, { top: Math.max(20, insets.top) }]} 
-            onPress={() => {
-              console.log("Settings button pressed");
-              router.push("/(tabs)/profile_settings");
-            }}
-          >
-            <Icon as={Settings} size="lg" color="#333333" />
-          </TouchableOpacity>
-          
           <Center>
             <View style={styles.profileImageContainer}>
               {user?.profile_picture_uri ? (
@@ -313,12 +303,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
     paddingBottom: 24,
-  },
-  settingsButton: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    zIndex: 10,
   },
   profileImageContainer: {
     marginBottom: 16,

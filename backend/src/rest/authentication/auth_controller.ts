@@ -17,7 +17,7 @@ export const hashPassword = async (password: string) => {
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { password, userName, email, phone_number, allergies, emergencyContacts, firstName, lastName, date_of_birth, profile_picture_uri, gender } = req.body;
+        const { password, userName, email, phone_number, allergies, emergencyContacts, firstName, lastName, date_of_birth, profile_picture_uri, gender, language } = req.body;
         const hashedPassword = await hashPassword(password);
         const user: IUser = await userModel.create({
             email: email.toLowerCase(),
@@ -31,6 +31,7 @@ export const register = async (req: Request, res: Response) => {
             date_of_birth: new Date(date_of_birth) || null,
             profile_picture_uri: profile_picture_uri || null,
             gender: gender || '',
+            language
         });
         res.status(201).send(user);
     } catch (err: any) {
@@ -211,7 +212,22 @@ export const logout = async (req: Request, res: Response) => {
     }
 };
 
+export const updatePushToken = async (req: Request, res: Response) => {
+    const userId = (req as any).user?.id;
+    const { pushToken } = req.body;
 
+    if (!userId || !pushToken) {
+        return res.status(400).json({ message: 'Missing user or push token' });
+    }
+
+    try {
+        await userModel.updateOne({ _id: userId }, { pushToken });
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('🔴 Error updating push token:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
 
 export const client = new OAuth2Client();
 export const googleSignin = async (req: Request, res: Response) => {    

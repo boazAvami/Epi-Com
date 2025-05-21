@@ -31,6 +31,30 @@ export const GetLoggedUser = async () => {
 };
 
 /**
+ * Fetch user's information by id
+ * @returns Promise with the user data
+ */
+export const GetUser = async (userId: string) => {
+    const query = `
+        query GetUser($userId: ID!) {
+          user(userId: $userId) {
+            userName
+            firstName,
+            lastName,
+            phone_number,
+            profile_picture_uri,
+            gender,
+            allergies
+          }
+        }`;
+
+    const variables = {
+        userId
+    }
+    return graphqlRequest<{ user: Partial<IUser> }>(query, variables);
+};
+
+/**
  * Update the currently logged in user's information
  * @param userData Partial user data to update
  * @returns Promise with the updated user
@@ -48,6 +72,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
     if (userData.date_of_birth !== undefined) variables.date_of_birth = userData.date_of_birth;
     if (userData.profile_picture_uri !== undefined) variables.profile_picture_uri = userData.profile_picture_uri;
     if (userData.gender !== undefined) variables.gender = userData.gender; // This is now passing the enum value directly
+    if (userData.language !== undefined) variables.language = userData.language;
     if (userData.allergies !== undefined) variables.allergies = userData.allergies;
     if (userData.emergencyContacts !== undefined) variables.emergencyContacts = userData.emergencyContacts;
 
@@ -63,6 +88,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
             $gender: Gender,
             $allergies: [String],
             $emergencyContacts: [EmergencyContactInput]
+            $language: String
         ) {
             updateUser(
                 userName: $userName,
@@ -75,6 +101,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
                 gender: $gender,
                 allergies: $allergies,
                 emergencyContacts: $emergencyContacts
+                language: $language,
             ) {
                 id
                 userName
@@ -90,6 +117,7 @@ export const UpdateUser = async (userData: Partial<RegisterData>) => {
                     name
                     phone
                 }
+                language
                 date_joined
             }
         }`;

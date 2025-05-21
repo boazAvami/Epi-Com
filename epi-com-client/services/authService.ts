@@ -31,3 +31,15 @@ export const register = async (userData: RegisterData) => {
         throw (err.response.data || 'Login failed');
     });
 };
+
+export const refreshAccessToken = async (refreshToken: string): Promise<{ accessToken: string, refreshToken: string, _id: string }> => {
+    const res = await fetch(`${API_URL}/auth/refreshToken`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) throw new Error('Failed to refresh token');
+
+    return await res.json();
+};

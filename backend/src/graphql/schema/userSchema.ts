@@ -27,6 +27,7 @@ export const userTypeDefs = gql`
     gender: Gender
     refreshToken: [String]
     emergencyContacts: [EmergencyContact]!
+    language: String
   }
 
   type AuthPayload {
@@ -36,6 +37,7 @@ export const userTypeDefs = gql`
 
   type Query {
     me: User
+    user(userId: ID!): User
   }
 
   type Mutation {
@@ -51,6 +53,7 @@ export const userTypeDefs = gql`
       allergies: [String]!
       gender: Gender
       emergencyContacts: [EmergencyContactInput]!
+      language: String
     ): AuthPayload
 
     updateUser(
@@ -64,6 +67,7 @@ export const userTypeDefs = gql`
       allergies: [String]
       gender: Gender
       emergencyContacts: [EmergencyContactInput]
+      language: String
     ): User!
 
     login(email: String!, password: String!): AuthPayload

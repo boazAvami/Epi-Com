@@ -12,4 +12,5 @@ export type RegisterData = {
     date_of_birth: Date | null;
     profile_picture_uri: string | null;
     gender: EGender | null;
+    language: string | null;
 };

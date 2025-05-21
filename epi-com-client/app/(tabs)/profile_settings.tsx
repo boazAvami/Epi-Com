@@ -41,8 +41,8 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control";
 import { AlertTriangle } from 'lucide-react-native';
 import PhoneNumberInput from "@/components/PhoneNumberInput";
-import DropdownComponent from "@/components/Dropdown";
-import { genderOptions } from "@/utils/gender-utils";
+import DropdownComponent, {IDropdownItem} from "@/components/Dropdown";
+import { getGenderOptions } from "@/utils/gender-utils";
 import Chips from "@/components/Chips";
 import { ChipItem } from "@/components/Chip";
 import {
@@ -70,10 +70,12 @@ export default function ProfileSettingsScreen() {
   const [isLoading, setIsLoading] = useState(!user);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [allergiesItems, setAllergiesItems] = useState<ChipItem[]>([]);
-  
+  const [genderOptions, setGenderOptions] = useState<IDropdownItem[]>([]);
+
   // Update allergies items when language changes
   useEffect(() => {
     setAllergiesItems(getAllergyItems(isRtl));
+    setGenderOptions(getGenderOptions());
   }, [isRtl, language]);
   
   // Helper function to safely convert error messages to strings
@@ -420,14 +422,7 @@ export default function ProfileSettingsScreen() {
       >
         {/* Header with back button */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => router.push("/(tabs)/profile")}
-          >
-            <Icon as={ChevronLeft} size="lg" color="#333333" />
-          </TouchableOpacity>
-          <Heading size="lg">{t('profile.settings')}</Heading>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.logoutTopButton}
             onPress={() => {
               if (isLoggingOut) return;
@@ -814,19 +809,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
+    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  backButton: {
-    padding: 4,
-  },
   logoutTopButton: {
+    position: "absolute",
     padding: 8,
     borderRadius: 8,
+    right: 0
   },
   placeholder: {
     width: 28, // Same width as the back button for balanced layout

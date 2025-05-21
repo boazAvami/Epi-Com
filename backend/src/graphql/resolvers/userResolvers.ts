@@ -6,6 +6,9 @@ export const userResolvers = {
     me: async (_: any, __: any, { userId }: any) => { // Use userId from context
       return await userModel.findById(userId);
     },
+    user: async (_: any, {}, { userId }: {userId?: string}) => {
+          return userModel.findById(userId);
+    },
   },
   Mutation: {
     deleteUser: async (_: any, __: any, { userId }: any) => { // Use userId from context
@@ -26,6 +29,7 @@ export const userResolvers = {
         date_of_birth,
         profile_picture_uri,
         gender,
+        language
       }: Partial<IUser>,
       { userId }: any // Use userId from context
     ) => {
@@ -42,6 +46,7 @@ export const userResolvers = {
       if (lastName) userToUpdate.lastName = lastName;
       if (date_of_birth) userToUpdate.date_of_birth = date_of_birth;
       if (gender) userToUpdate.gender = gender;
+      if (language) userToUpdate.language = language;
       if (profile_picture_uri !== undefined) {
         // Set the value, which could be null to remove the picture
         userToUpdate.profile_picture_uri = profile_picture_uri;

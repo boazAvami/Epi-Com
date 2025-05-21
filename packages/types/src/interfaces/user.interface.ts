@@ -16,4 +16,6 @@ export interface IUser {
     gender: EGender;
     refreshToken?: string[];
     emergencyContacts: { name: string; phone: string }[];
+    pushToken?: string;
+    language?: string;
 }

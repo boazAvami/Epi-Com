@@ -16,7 +16,7 @@ export default StyleSheet.create({
   },
   searchBarContainer: {
     position: 'absolute',
-    top: 10,
+    top:70,
     left: 0,
     right: 0,
     paddingHorizontal: 20,
@@ -110,7 +110,7 @@ export default StyleSheet.create({
   mapButtonsContainer: {
     position: 'absolute',
     right: 20,
-    top: 80,
+    top: 150,
     alignItems: 'center',
   },
   mapButton: {
