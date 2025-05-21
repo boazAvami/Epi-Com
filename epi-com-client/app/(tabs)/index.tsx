@@ -101,9 +101,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
-      <Header onLogout={logout} />
-      
+
       <EpipenMap
           ref={mapRef}
           region={region}

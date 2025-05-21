@@ -12,22 +12,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/authContext';
 import { useAuth as useAuthStore } from '@/stores/useAuth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import UI components
-import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { Alert, AlertText, AlertIcon } from '@/components/ui/alert';
-import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
 import { Send, RefreshCw, AlertTriangle } from 'lucide-react-native';
-import { colors } from '../../constants/Colors';
-import { Header } from '../../components/shared/Header';
-import { useAppTranslation } from '../../hooks/useAppTranslation';
-import { chatbotService } from '../../services/graphql/graphqlChatbotService';
-import { RTLText, RTLView, RTLRow } from '@/components/shared/RTLComponents';
+import { Header } from '@/components/shared/Header';
+import { useAppTranslation } from '@/hooks/useAppTranslation';
+import { chatbotService } from '@/services/graphql/graphqlChatbotService';
+import { RTLText } from '@/components/shared/RTLComponents';
 
 // Define message type
 type Message = {
@@ -221,14 +217,8 @@ const ChatScreen: React.FC = () => {
   
   return (
     <SafeAreaView style={styles.safeArea} edges={['right', 'left']}>
-      <StatusBar barStyle="dark-content" />
-      
       {/* Using the Header component for the title */}
       <View style={styles.headerContainer}>
-        <Header 
-          title={t('chat.title')} 
-        />
-        
         {/* Reset Button - icon only without borders */}
         <View style={styles.resetButtonContainer}>
           <TouchableOpacity 
@@ -260,7 +250,7 @@ const ChatScreen: React.FC = () => {
       </Alert>
       
       {/* Session Limit Warning - UPDATED with reset button explanation */}
-      {showLimitWarning && (
+      {isLimitReached && (
         <Alert action="error" style={styles.limitWarning}>
           <View style={{ flex: 1 }}>
             <AlertText style={[{ flexShrink: 1 }, isRtl && styles.rtlText]}>
@@ -393,10 +383,6 @@ const styles = StyleSheet.create({
   bottomContainer: {
     marginBottom: 35, // bottom padding to the input area
   },
-  headerContainer: {
-    position: 'relative',
-    zIndex: 1,
-  },
   resetButtonContainer: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 50 : 16,
@@ -439,15 +425,18 @@ const styles = StyleSheet.create({
     margin: 8,
     flexDirection: 'row',
     alignItems: 'flex-start',
+    top: 100
   },
   limitWarning: {
     margin: 8,
     flexDirection: 'row',
     alignItems: 'flex-start',
+    top: 100
   },
   messagesContainer: {
     flex: 1,
     paddingHorizontal: 12,
+    top: 120
   },
   messagesContent: {
     paddingTop: 10,

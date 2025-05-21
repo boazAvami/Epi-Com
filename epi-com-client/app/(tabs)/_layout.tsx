@@ -1,7 +1,7 @@
 import {Redirect, Tabs} from 'expo-router';
 import {View, TouchableOpacity, Text, StyleSheet, Pressable} from 'react-native';
 import {Icon} from "@/components/ui/icon";
-import {CirclePlus, CircleUser, Home, MessageCircle} from "lucide-react-native";
+import {CirclePlus, CircleUser, Home, MessageCircle, SettingsIcon} from "lucide-react-native";
 import {useAuth} from "@/context/authContext";
 
 export default function TabLayout() {
@@ -25,9 +25,9 @@ export default function TabLayout() {
                         ),
                     },
                     {
-                        name: 'create',
+                        name: 'chatbot',
                         icon: (focused: boolean) => (
-                            <Icon size="xl" as={CirclePlus} color="black"/>
+                            <Icon size="xl" as={MessageCircle} color="black"/>
                         ),
                     },
                     {
@@ -35,15 +35,15 @@ export default function TabLayout() {
                         isCenter: true,
                     },
                     {
-                        name: 'chatbot',
-                        icon: (focused: boolean) => (
-                            <Icon size="xl" as={MessageCircle} color="black"/>
-                        ),
-                    },
-                    {
                         name: 'profile',
                         icon: (focused: boolean) => (
                             <Icon size="xl" as={CircleUser} color="black"/>
+                        ),
+                    },
+                    {
+                        name: 'profile_settings',
+                        icon: (focused: boolean) => (
+                            <Icon size="xl" as={SettingsIcon} color="black"/>
                         ),
                     },
                 ];
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     tabContainer: {
         flexDirection: 'row',
         backgroundColor: 'white',
-        height: 60,
+        height: 80,
         alignItems: 'center',
         justifyContent: 'space-around',
         paddingHorizontal: 10,

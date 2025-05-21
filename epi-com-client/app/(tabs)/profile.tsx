@@ -201,16 +201,6 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
         {/* Profile header section */}
         <View style={[styles.header, { paddingTop: Math.max(20, insets.top) }]}>
-          <TouchableOpacity 
-            style={[styles.settingsButton, { top: Math.max(20, insets.top) }]} 
-            onPress={() => {
-              console.log("Settings button pressed");
-              router.push("/(tabs)/profile_settings");
-            }}
-          >
-            <Icon as={Settings} size="lg" color="#333333" />
-          </TouchableOpacity>
-          
           <Center>
             <View style={styles.profileImageContainer}>
               {user?.profile_picture_uri ? (
@@ -313,12 +303,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
     paddingBottom: 24,
-  },
-  settingsButton: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    zIndex: 10,
   },
   profileImageContainer: {
     marginBottom: 16,

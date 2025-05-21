@@ -422,14 +422,7 @@ export default function ProfileSettingsScreen() {
       >
         {/* Header with back button */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => router.push("/(tabs)/profile")}
-          >
-            <Icon as={ChevronLeft} size="lg" color="#333333" />
-          </TouchableOpacity>
-          <Heading size="lg">{t('profile.settings')}</Heading>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.logoutTopButton}
             onPress={() => {
               if (isLoggingOut) return;
@@ -816,19 +809,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
+    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  backButton: {
-    padding: 4,
-  },
   logoutTopButton: {
+    position: "absolute",
     padding: 8,
     borderRadius: 8,
+    right: 0
   },
   placeholder: {
     width: 28, // Same width as the back button for balanced layout
