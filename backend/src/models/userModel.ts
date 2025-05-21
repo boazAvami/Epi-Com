@@ -69,6 +69,10 @@ const userSchema = new mongoose.Schema<IUser>({
   pushToken: {
     type: String,
     default: null,
+  },
+  language: {
+    type: String,
+    default: 'he'
   }
 });
 

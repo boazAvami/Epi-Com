@@ -17,4 +17,5 @@ export interface IUser {
     refreshToken?: string[];
     emergencyContacts: { name: string; phone: string }[];
     pushToken?: string;
+    language?: string;
 }
