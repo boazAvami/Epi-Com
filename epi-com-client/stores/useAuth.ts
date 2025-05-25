@@ -42,11 +42,7 @@ export const useAuth = create<AuthState>((set) => ({
 
         const pushToken = await registerForPushNotificationsAsync();
         if (pushToken) {
-            const stored = await AsyncStorage.getItem("pushToken");
-            if (stored !== pushToken) {
-                await updatePushToken(pushToken);
-                await AsyncStorage.setItem("pushToken", pushToken);
-            }
+            await updatePushToken(pushToken);
         }
     },
 
