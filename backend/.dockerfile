@@ -30,5 +30,5 @@ CMD ["npm", "run", "serve"]
 
 
 #docker build -t epi-backend -f ./backend/.dockerfile .
-#docker run --name epi-backend -p 5432:5432 -d epi-backend
+#docker run --name epi-backend -p 8082:8082 -d epi-backend
 #docker logs -f epi-backend
