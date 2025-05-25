@@ -20,7 +20,7 @@ RUN npm install
 RUN npm run build
 
 # Expose your port
-EXPOSE 5432
+EXPOSE 8082
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production
