@@ -1,26 +1,34 @@
-# Use an official Node.js runtime as a parent image
 FROM node:18-slim
 
-# Set the working directory to /app
 WORKDIR /app
 
-# Copy the package.json and package-lock.json (if exists)
-COPY package*.json ./
+# Copy backend code and configs
+COPY backend/package*.json ./
+COPY backend/tsconfig*.json ./
+COPY backend/src ./src
 
-# Install dependencies (both regular and dev dependencies)
+# Copy shared package (used by @shared/types)
+COPY packages/types ../packages/types
+
+# Copy prod.env to .env
+COPY backend/.envprod .env
+
+# Install dependencies
 RUN npm install
 
-# Copy the rest of your application
-COPY . .
-
-# Build the app using the build script from package.json
+# Build the app
 RUN npm run build
 
-# Expose the port that the app will run on
-EXPOSE 4000
+# Expose your port
+EXPOSE 5432
 
-# Set environment variable for HTTPS in production
+# Set NODE_ENV to production
 ENV NODE_ENV=production
 
-# Command to run the app (production)
+# Start the app
 CMD ["npm", "run", "serve"]
+
+
+#docker build -t epi-backend -f ./backend/.dockerfile .
+#docker run --name epi-backend -p 5432:5432 -d epi-backend
+#docker logs -f epi-backend

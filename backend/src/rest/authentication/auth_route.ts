@@ -1,5 +1,6 @@
 import express from 'express';
-import { googleSignin, login, logout, refreshToken, register} from "./auth_controller";
+import {googleSignin, login, logout, refreshToken, register, updatePushToken} from "./auth_controller";
+import authMiddleware from "./auth_middleware";
 
 export const authRouter = express.Router();
 
@@ -196,3 +197,42 @@ authRouter.post('/logout', logout)
  *               message: "Server Error"
  */
 authRouter.post("/google", googleSignin);
+
+/**
+ * @swagger
+ * /push-token:
+ *   put:
+ *     summary: Update FCM push token for a user
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pushToken
+ *               - userId
+ *             properties:
+ *               pushToken:
+ *                 type: string
+ *                 example: ExponentPushToken[abc123xyz]
+ *               userId:
+ *                 type: string
+ *                 example: 64f1a44bb472cf0012b0e8f3
+ *     responses:
+ *       200:
+ *         description: Push token updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Missing token or user
+ */
+authRouter.put("/push-token", authMiddleware, updatePushToken);

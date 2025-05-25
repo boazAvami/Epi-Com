@@ -5,10 +5,15 @@
     "target": "es6",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "./src"
+    "baseUrl": "src",
+    "paths": {
+      "src/*": ["./*"],                    // Fixes 'src/...' imports
+      "@shared/types": ["../../packages/types/src"]  // Fixes @shared/types
+    },
   },
   "include": [
     "src/**/*.ts",
-    "src/tests/**/*.ts"  // Include the tests directory
+    "src/tests/**/*.ts",
+    "src/types/global.d.ts"
   ]
 }

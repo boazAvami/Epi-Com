@@ -23,7 +23,7 @@ export default (req: Request, res: Response, next: NextFunction) => {
             res.status(401).send('Access Denied');
             return;
         }
-        (req as any).user = { _id: (payload as any)._id }; // ✅ Store user in req.user
+        (req as any).user = { id: (payload as any)._id }; // ✅ Store user in req.user
         
         next();
     });

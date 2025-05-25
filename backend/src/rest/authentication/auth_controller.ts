@@ -1,9 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { IUser, userModel } from '../../models/userModel';
+import { userModel } from '../../models/userModel';
 import mongoose, { Document } from 'mongoose';
 import { OAuth2Client } from 'google-auth-library';
+import { IUser } from '@shared/types';
 
 export const hashPassword = async (password: string) => {
     try {
@@ -16,10 +17,10 @@ export const hashPassword = async (password: string) => {
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { password, userName, email, phone_number, allergies, emergencyContacts, firstName, lastName, date_of_birth, profile_picture_uri, gender } = req.body;
+        const { password, userName, email, phone_number, allergies, emergencyContacts, firstName, lastName, date_of_birth, profile_picture_uri, gender, language } = req.body;
         const hashedPassword = await hashPassword(password);
         const user: IUser = await userModel.create({
-            email,
+            email: email.toLowerCase(),
             password: hashedPassword,
             userName,
             phone_number,
@@ -27,12 +28,16 @@ export const register = async (req: Request, res: Response) => {
             emergencyContacts: emergencyContacts || [],
             firstName: firstName || null,
             lastName: lastName || null,
-            date_of_birth: date_of_birth || null,
+            date_of_birth: new Date(date_of_birth) || null,
             profile_picture_uri: profile_picture_uri || null,
             gender: gender || '',
+            language
         });
         res.status(201).send(user);
-    } catch (err: unknown) {
+    } catch (err: any) {
+
+        console.log(err);
+
         // Handle duplicate key error (MongoDB unique constraint)
         if (typeof err === "object" && err !== null && "code" in err && (err as any).code === 11000) {
             const field = Object.keys((err as any).keyPattern)[0];
@@ -55,6 +60,7 @@ export const register = async (req: Request, res: Response) => {
             res.status(400).json({ message: errors.join(", ") });
             return;
         }
+
         res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
 };
@@ -85,7 +91,7 @@ export const generateToken = (userId: string): tTokens | null => {
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const user = await userModel.findOne({ email: req.body.email });
+        const user = await userModel.findOne({ email: req.body.email.toLowerCase() });
         if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
             res.status(400).send('wrong email or password');
             return;
@@ -206,7 +212,22 @@ export const logout = async (req: Request, res: Response) => {
     }
 };
 
+export const updatePushToken = async (req: Request, res: Response) => {
+    const userId = (req as any).user?.id;
+    const { pushToken } = req.body;
 
+    if (!userId || !pushToken) {
+        return res.status(400).json({ message: 'Missing user or push token' });
+    }
+
+    try {
+        await userModel.updateOne({ _id: userId }, { pushToken });
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('🔴 Error updating push token:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
 
 export const client = new OAuth2Client();
 export const googleSignin = async (req: Request, res: Response) => {    

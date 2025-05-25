@@ -1,6 +1,12 @@
 import { gql } from "apollo-server-express";
 
 export const userTypeDefs = gql`
+  enum Gender {
+    male
+    female
+    other
+  }
+
   type EmergencyContact {
     name: String!
     phone: String!
@@ -18,9 +24,10 @@ export const userTypeDefs = gql`
     profile_picture_uri: String
     allergies: [String]!
     is_connected: Boolean
-    gender: String
+    gender: Gender
     refreshToken: [String]
     emergencyContacts: [EmergencyContact]!
+    language: String
   }
 
   type AuthPayload {
@@ -30,6 +37,7 @@ export const userTypeDefs = gql`
 
   type Query {
     me: User
+    user(userId: ID!): User
   }
 
   type Mutation {
@@ -43,8 +51,9 @@ export const userTypeDefs = gql`
       date_of_birth: String
       profile_picture_uri: String
       allergies: [String]!
-      gender: String
+      gender: Gender
       emergencyContacts: [EmergencyContactInput]!
+      language: String
     ): AuthPayload
 
     updateUser(
@@ -56,8 +65,9 @@ export const userTypeDefs = gql`
       date_of_birth: String
       profile_picture_uri: String
       allergies: [String]
-      gender: String
+      gender: Gender
       emergencyContacts: [EmergencyContactInput]
+      language: String
     ): User!
 
     login(email: String!, password: String!): AuthPayload

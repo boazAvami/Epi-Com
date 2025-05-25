@@ -1,22 +1,5 @@
 import mongoose from "mongoose";
-
-export interface IUser {
-  _id?: string;
-  userName: string;
-  password: string;
-  email: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  phone_number?: string | null;
-  date_of_birth?: Date | null;
-  date_joined?: Date | null;
-  profile_picture_uri?: string;
-  allergies: string[];
-  is_connected?: boolean;
-  gender?: string;
-  refreshToken?: string[];
-  emergencyContacts: { name: string; phone: string }[];
-}
+import {EGender, IUser} from '@shared/types';
 
 const userSchema = new mongoose.Schema<IUser>({
   userName: {
@@ -59,8 +42,8 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   gender: {
     type: String,
-    enum: ['Male', 'Female', 'Other', ''], // Restrict to valid gender values
-    default: '',
+    enum: Object.values(EGender), // Restrict to valid gender values
+    default: null,
   },
   email: {
     type: String,
@@ -82,6 +65,14 @@ const userSchema = new mongoose.Schema<IUser>({
   refreshToken: {
     type: [String],
     default: [],
+  },
+  pushToken: {
+    type: String,
+    default: null,
+  },
+  language: {
+    type: String,
+    default: 'he'
   }
 });
 

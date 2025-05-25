@@ -1,0 +1,281 @@
+{
+    "app": {
+      "title": "Where Is Epi"
+    },
+    "auth": {
+      "welcome": "Welcome 👋",
+      "login_subtitle": "Sign in to keep yourself and others safe.",
+      "email": "Email address",
+      "password": "Password",
+      "login_button": "Login",
+      "login_with_google": "Sign in with Google",
+      "sign_up_link": "Sign up",
+      "no_account": "Don't have an account?",
+      "loading": {
+        "checking": "Checking your details...",
+        "almost": "Soon you'll see who can help nearby...",
+        "final": "Almost there...",
+        "title": "Saving your details...",
+        "subtitle": "Just a moment ✨"
+      },
+      "register": {
+        "title": "Register",
+        "subtitle": "Sign up now to receive and provide help in emergency situations.",
+        "description": "Where's Epi connects people with life-threatening allergies to EpiPen carriers nearby. Registration is quick and secure — so you can be protected, all the time.",
+        "benefits": {
+          "fast": "⚡ Fast registration",
+          "privacy": "🔒 Your privacy is protected",
+          "help": "❤️ Help in the most critical moments"
+        },
+        "continue": "Continue to registration",
+        "step1": {
+          "title": "Let's get started",
+          "subtitle": "Create your account to use all features",
+          "username": "Username",
+          "confirm_password": "Confirm password"
+        },
+        "step2": {
+          "title": "Tell us about yourself",
+          "subtitle": "We need some personal details to complete your registration",
+          "first_name": "First Name",
+          "last_name": "Last Name",
+          "phone": "Phone Number",
+          "date_of_birth": "Date of Birth",
+          "gender": "Gender"
+        },
+        "step3": {
+          "title": "Do you have any allergies?",
+          "subtitle": "Do you have allergies? Choose from the list below.",
+          "subtitle2": "If you don't have allergies, you can simply continue."
+        },
+        "step4": {
+          "title": "Who can we contact in case of emergency?",
+          "subtitle": "Add a contact who can help you in an emergency. This information will only be used when you need help - and it's secure and protected.",
+          "contact_name": "Contact Name"
+        },
+        "step5": {
+          "title": "We're finishing! Just choose a photo 📸",
+          "subtitle": "It's time to choose a profile picture to accompany you in the app.",
+          "subtitle2": "You can also skip and add it later."
+        },
+        "loading": {
+          "title": "Saving your details...",
+          "subtitle": "Just a moment ✨"
+        },
+        "success": {
+          "title": "Glad you're here – you're now part of us",
+          "subtitle": "From now on, you're never alone with your allergy.\nThe app connects people, injects confidence,\nand provides immediate assistance in emergencies.",
+          "button": "Let's start"
+        },
+        "error": {
+          "title": "Something went wrong 😞",
+          "subtitle": "We couldn't complete the registration.\nPlease check your connection and try again.",
+          "button": "Try again"
+        },
+        "finish_button": "Finish"
+      },
+      "sign_in": "Sign In"
+    },
+    "search": {
+      "placeholder": "Search for a location...",
+      "no_results": "No results found",
+      "error": "Error searching",
+      "selected_location": "Selected location"
+    },
+    "filters": {
+      "all": "All EpiPens",
+      "nearby": "< 1km"
+    },
+    "epipens": {
+      "nearby": "Nearby EpiPens",
+      "none": "No EpiPens found nearby",
+      "distance": "{{distance}} km away"
+    },
+    "epipen": {
+      "types": {
+        "adult": "Adult",
+        "junior": "Junior"
+      }
+    },
+    "details": {
+      "expiration": "Expiration Date:",
+      "contact": "Contact:",
+      "contactName": "Contact Name:",
+      "contactPhone": "Phone Number:",
+      "hours": "Hours:",
+      "notes": "Notes:",
+      "directions": "Get Directions"
+    },
+    "add": {
+      "title": "Add EpiPen Injector",
+      "name": "EpiPen Name",
+      "type": "EpiPen Type",
+      "notes": "Notes",
+      "location_desc": "Location Description",
+      "location": "Location",
+      "phone": "Phone Number",
+      "contact_info": "Contact Information",
+      "contact_name": "Contact Name",
+      "hours": "Operating Hours",
+      "expire_date": "Expiration Date",
+      "select_month_year": "Select month and year",
+      "photo": "Photo",
+      "use_current": "Use Current Location",
+      "select_custom": "Select Custom Location",
+      "tap_select": "Tap on the map to select location",
+      "description": "Description"
+    },
+    "photo": {
+      "take": "Take a Picture",
+      "choose": "Choose from Gallery",
+      "remove": "Remove Photo"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "change_language": "Switch to Hebrew",
+      "logout": "Logout",
+      "next": "Next",
+      "confirm": "Confirm",
+      "select": "Select",
+      "ok": "OK",
+      "go_back": "Go Back",
+      "add": "Add"
+    },
+    "actions": {
+      "openWhatsApp": "Open in WhatsApp"
+    },
+    "profile": {
+      "save": "Save",
+      "logout": "Logout",
+      "settings": "Settings",
+      "accountInfo": "Account Information",
+      "medicalInfo": "Medical Information",
+      "allergies_description": "List any allergies or medical conditions that emergency responders should know about.",
+      "emergencyContacts": "Emergency Contacts",
+      "emergency_contacts_description": "People to contact in case of emergency.",
+      "add": "Add",
+      "remove": "Remove",
+      "saving": "Saving...",
+      "save_changes": "Save Changes",
+      "loading": "Loading your profile settings...",
+      "profile_picture": "Profile Picture",
+      "select_option": "Select an option",
+      "confirm_remove_picture": "Are you sure you want to remove your profile picture?",
+      "passwords_dont_match": "Passwords do not match.",
+      "info": "Info",
+      "no_changes": "No changes detected.",
+      "success": "Success",
+      "profile_updated": "Your profile has been updated.",
+      "update_failed": "Failed to update profile. Please try again.",
+      "no_refresh_token": "No refresh token found.",
+      "logout_failed": "Failed to logout. Please try again.",
+      "confirm_logout": "Are you sure you want to logout?",
+      "yes_logout": "Yes, Logout",
+      "language": "Language",
+      "languageDescription": "Change the application language",
+      "changeLanguage": "Switch Language",
+      "logoutConfirmation": "Are you sure you want to logout?",
+      "no_changes_title": "Information",
+      "no_changes_message": "No changes detected.",
+      "update_success_title": "Success",
+      "update_success_message": "Your profile has been updated successfully.",
+      "email_in_use": "This email address is already in use. Please use a different email."
+    },
+    "validation": {
+      "error_title": "Missing Required Fields",
+      "error_message": "Please fill in all required fields:",
+      "contact_name_required": "Contact name is required",
+      "contact_phone_required": "Phone number is required",
+      "photo_required": "A photo is optional",
+      "location_required": "Please select a location",
+      "expiration_required": "Expiration date is required (MM/YYYY)",
+      "required": "Required",
+      "required_fields": "Fields marked with asterisk (*) are required",
+      "optional": "Optional",
+      "ok": "OK",
+      "register": {
+        "email_required": "Please enter an email address",
+        "email_invalid": "Invalid email address",
+        "username_required": "Please enter a username",
+        "username_min": "Username must be at least 2 characters",
+        "username_max": "Username cannot exceed 30 characters",
+        "password_required": "Please enter a password",
+        "password_min": "Password must be at least 6 characters",
+        "confirm_password_required": "Please confirm your password",
+        "confirm_password_min": "Confirm password must be at least 6 characters",
+        "passwords_match": "Passwords don't match",
+        "first_name_min": "First name must be at least 2 characters",
+        "first_name_max": "First name cannot exceed 30 characters",
+        "last_name_min": "Last name must be at least 2 characters",
+        "last_name_max": "Last name cannot exceed 50 characters",
+        "phone_required": "Please enter a phone number",
+        "phone_invalid": "Invalid phone number",
+        "prefix_invalid": "Invalid prefix",
+        "dob_required": "Please enter your date of birth",
+        "gender_required": "Please select your gender",
+        "emergency_contact_required": "Please add at least one emergency contact",
+        "contact_name_min": "Contact name must be at least 2 characters",
+        "contact_name_max": "Contact name cannot exceed 30 characters",
+        "profile_picture_invalid": "Invalid image URL"
+      }
+    },
+    "errors": {
+      "error": "Error",
+      "location_denied": "Location access denied",
+      "location_error": "Couldn't get your location",
+      "permission_denied": "Permission denied",
+      "media_permission_required": "You need to grant permission to access your photos.",
+      "camera_permission_required": "You need to grant camera permission to take a photo.",
+      "image_picker_error": "Failed to select image. Please try again.",
+      "camera_error": "Failed to take photo. Please try again.",
+      "loading_profile": "Failed to load profile",
+      "server_response_error": "Server response error",
+      "server_error": "Server error",
+      "retry": "Retry"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "chat": {
+      "title": "AI Assistant",
+      "welcome_message": "Hello! How can I help you today with questions about allergies and EpiPens?",
+      "disclaimer": "For informational purposes only. Not a substitute for medical advice. Call emergency services in case of emergency.",
+      "limit_warning": "You have reached the session limit of {limit} messages. Please tap the refresh icon (⟳) in the top-right corner to reset the session and continue.",
+      "error_message": "Sorry, I couldn't process your request. Please try again later.",
+      "typing": "Assistant is typing...",
+      "input_placeholder": "Type your message here...",
+      "messages_remaining_suffix": "messages remaining"
+    },
+    "sos": {
+      "explanation": "Pressing the emergency button will send an immediate help request",
+      "bold": " to nearby users who carry an EpiPen 🚨",
+      "search": {
+        "0": "Looking for help in your area...",
+        "1": "Checking availability of EpiPen holders...",
+        "2": "Connecting you to someone who can help...",
+        "3": "Coordinating medical assistance for you...",
+        "4": "Linking you to a nearby EpiPen holder...",
+        "5": "Checking immediate response options...",
+        "6": "Hang tight, we're almost there...",
+        "7": "Searching for the closest responders...",
+        "8": "Making sure help is on the way...",
+        "9": "Almost done, finding the best match for you..."
+      },
+      "alertReceived": "An SOS alert has been received!",
+      "locationSharedSuccess": "Location details successfully shared ✅",
+      "shareLocation": "Share location details",
+      "cannotHelp": "Cannot help",
+      "locationPermissionDenied": "Location access not granted. Unable to send SOS response.",
+      "distanceMeters": "{{meters}} meters away from you",
+      "distanceKm": "{{km}} km away from you",
+      "unknownLocation": "Unknown location",
+      "bottomSheet": {
+        "helpNearby": "Help found nearby",
+        "noResponders": "No responders available at the moment",
+        "cancelSOS": "All good, cancel the SOS"
+      }
+    }
+  }

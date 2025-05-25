@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "517074396777",
+    "project_id": "epi-com-c6c90",
+    "storage_bucket": "epi-com-c6c90.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:517074396777:android:d0d63bfdb7ca4f6164e4f8",
+        "android_client_info": {
+          "package_name": "com.colman.epicom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU-YWOBkUH_TdnEk9--_Bc8w8ilFFd3pk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

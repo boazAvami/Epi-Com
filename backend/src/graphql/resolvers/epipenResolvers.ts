@@ -16,16 +16,22 @@ export const epiPenResolvers = {
       if (existingEpiPen) {
         throw new Error(`EpiPen with serial number ${input.serialNumber} already exists.`);
       }
+
+      const geoLocation = {
+        type: 'Point',
+        coordinates: [input.location.longitude, input.location.latitude], //first longitude!
+      };
     
       // Proceed with adding the EpiPen
       const epiPen = new EpiPenModel({
         userId: userId,
-        location: input.location,
+        location: geoLocation,
         description: input.description,
         expiryDate: new Date(input.expiryDate),
         contact: input.contact,
         image: input.image,
         serialNumber: input.serialNumber,
+        kind: input.kind, 
       });
     
       await epiPen.save();
@@ -47,13 +53,19 @@ export const epiPenResolvers = {
         throw new Error('You are not authorized to update this EpiPen.');
       }
 
+      const geoLocation = {
+        type: 'Point',
+        coordinates: [input.location.longitude, input.location.latitude], //first longitude!
+      };
+
       await EpiPenModel.findByIdAndUpdate(input._id, {
-        location: input.location,
+        location: geoLocation,
         description: input.description,
         expiryDate: input.expiryDate ? new Date(input.expiryDate) : undefined,
         contact: input.contact,
         image: input.image,
         serialNumber: input.serialNumber,
+        kind: input.kind,
       });
       return { message: 'EpiPen location updated successfully' , _id : input._id};
     },
@@ -95,7 +107,43 @@ export const epiPenResolvers = {
       if (!userId) {
         throw new Error('User ID is required.');
       }
-      return await EpiPenModel.find({ userId: new mongoose.Types.ObjectId(userId) });
+      
+      const epipens = await EpiPenModel.find({ userId: new mongoose.Types.ObjectId(userId) });
+      return epipens.map(epipen => ({
+        _id: epipen._id,
+        userId: epipen.userId,
+        location: {
+          latitude: epipen.location.coordinates[1],  // MongoDB stores as [longitude, latitude]
+          longitude: epipen.location.coordinates[0]
+        },
+        description: epipen.description,
+        expiryDate: epipen.expiryDate.toISOString(),
+        contact: epipen.contact,
+        image: epipen.image,
+        serialNumber: epipen.serialNumber,
+        kind: epipen.kind
+      }));
+    },
+    allEpiPens: async (_: any, {}) => {
+      
+      // Return all epipens in the database
+      const epipens = await EpiPenModel.find({});
+      
+      // Format the response to match the GraphQL schema
+      return epipens.map(epipen => ({
+        _id: epipen._id,
+        userId: epipen.userId,
+        location: {
+          latitude: epipen.location.coordinates[1],  // MongoDB stores as [longitude, latitude]
+          longitude: epipen.location.coordinates[0]
+        },
+        description: epipen.description,
+        expiryDate: epipen.expiryDate.toISOString(),
+        contact: epipen.contact,
+        image: epipen.image,
+        serialNumber: epipen.serialNumber,
+        kind: epipen.kind
+      }));
     },
     nearbyEpiPens: async (_: any, { input }: { input: NearbyEpiPenInput }) => {
       const nearbyEpiPens = await EpiPenModel.find({
@@ -118,8 +166,8 @@ export const epiPenResolvers = {
         distance: calculateDistance(
           input.location.latitude,
           input.location.longitude,
-          epiPen.location.latitude,
-          epiPen.location.longitude
+          epiPen.location.coordinates[1],
+          epiPen.location.coordinates[0]
         ),
         description: epiPen.description,
       }));
