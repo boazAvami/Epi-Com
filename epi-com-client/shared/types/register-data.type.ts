@@ -13,4 +13,5 @@ export type RegisterData = {
     profile_picture_uri: string | null;
     gender: EGender | null;
     language: string | null;
+    pushToken?: string
 };

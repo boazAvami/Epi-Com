@@ -18,6 +18,7 @@ const defaultRegisterData: RegisterData = {
     date_of_birth: null,
     profile_picture_uri: null,
     gender: null,
+    pushToken: '',
 };
 
 const RegisterContext = createContext<RegisterContextType | undefined>(undefined);

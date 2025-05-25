@@ -17,7 +17,7 @@ export const hashPassword = async (password: string) => {
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { password, userName, email, phone_number, allergies, emergencyContacts, firstName, lastName, date_of_birth, profile_picture_uri, gender, language } = req.body;
+        const { password, userName, email, phone_number, allergies, emergencyContacts, firstName, lastName, date_of_birth, profile_picture_uri, gender, language, pushToken } = req.body;
         const hashedPassword = await hashPassword(password);
         const user: IUser = await userModel.create({
             email: email.toLowerCase(),
@@ -31,7 +31,8 @@ export const register = async (req: Request, res: Response) => {
             date_of_birth: new Date(date_of_birth) || null,
             profile_picture_uri: profile_picture_uri || null,
             gender: gender || '',
-            language
+            language,
+            pushToken
         });
         res.status(201).send(user);
     } catch (err: any) {

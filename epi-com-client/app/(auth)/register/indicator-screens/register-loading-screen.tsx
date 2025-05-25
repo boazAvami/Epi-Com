@@ -9,6 +9,8 @@ import { useAuth } from "@/context/authContext";
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { RTLText } from '@/components/shared/RTLComponents';
 import {registerForPushNotificationsAsync} from "@/utils/sos-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {updatePushToken} from "@/services/commonService";
 
 const RegisterLoadingScreen = () => {
     const { formData } = useRegister();
@@ -20,6 +22,11 @@ const RegisterLoadingScreen = () => {
         const handleRegister = async () => {
             try {
                 formData.language = language;
+                const pushToken = await registerForPushNotificationsAsync();
+                if (pushToken) {
+                    formData.pushToken = pushToken;
+                }
+
                 await register(formData);
             } catch (e) {
                 console.error('Registration failed:', e);
