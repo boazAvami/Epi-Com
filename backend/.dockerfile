@@ -20,7 +20,7 @@ RUN npm install
 RUN npm run build
 
 # Expose your port
-EXPOSE 5432
+EXPOSE 8082
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production
@@ -30,5 +30,5 @@ CMD ["npm", "run", "serve"]
 
 
 #docker build -t epi-backend -f ./backend/.dockerfile .
-#docker run --name epi-backend -p 5432:5432 -d epi-backend
+#docker run --name epi-backend -p 8082:8082 -d epi-backend
 #docker logs -f epi-backend
