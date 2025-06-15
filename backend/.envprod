@@ -1,8 +1,8 @@
 NODE_ENV=production
 PORT=8082
 
-#HTTPS_KEY=/path/to/private-key.pem
-#HTTPS_CERT=/path/to/certificate.pem
+HTTPS_KEY=/certs/myserver.key
+HTTPS_CERT=/certs/CSB.crt
 
 MONGO_URI=mongodb://admin:bartar20%40CS@10.10.248.95:21771/epicom?authSource=admin
 
