@@ -10,6 +10,9 @@ COPY backend/src ./src
 # Copy shared package (used by @shared/types)
 COPY packages/types ../packages/types
 
+# Copy certs into the image!
+COPY backend/certs ./certs
+
 # Copy prod.env to .env
 COPY backend/.envprod .env
 
@@ -24,6 +27,9 @@ EXPOSE 8082
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production
+
+# Ensure app starts from the right dir
+WORKDIR /app/dist/app/src
 
 # Start the app
 CMD ["npm", "run", "serve"]
